@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="FinanceHub">
+  <rect width="96" height="96" rx="20" fill="#1D9E75"/>
+  <path d="M24 62V35.5C24 33.6 25.6 32 27.5 32H70" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M26 62H70" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <path d="M37 52L47 42L55 50L69 36" fill="none" stroke="#DDF8EC" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="37" cy="52" r="3.5" fill="#FFFFFF"/>
+  <circle cx="47" cy="42" r="3.5" fill="#FFFFFF"/>
+  <circle cx="55" cy="50" r="3.5" fill="#FFFFFF"/>
+  <circle cx="69" cy="36" r="3.5" fill="#FFFFFF"/>
+</svg>
