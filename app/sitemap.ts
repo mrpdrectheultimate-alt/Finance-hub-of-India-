@@ -3,7 +3,6 @@ import { createServerClient } from "@/lib/supabase";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
-  const supabase = createServerClient();
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -26,6 +25,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
   ];
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return staticPages;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerClient();
+  } catch {
+    return staticPages;
+  }
 
   const { data: tracks } = await supabase
     .from("tracks")

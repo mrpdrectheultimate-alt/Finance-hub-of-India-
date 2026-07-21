@@ -4,8 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { rateLimitMemory } from "@/lib/rate-limit";
 import { requireAuth, sanitizeNumber, sanitizeString } from "@/lib/security";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export async function POST(req: NextRequest) {
   const { user, error: authErr } = await requireAuth(req);
   if (authErr) return authErr;
@@ -21,6 +19,7 @@ export async function POST(req: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "ANTHROPIC_API_KEY is not configured" }, { status: 500 });
   }
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   try {
     const body = await req.json();
