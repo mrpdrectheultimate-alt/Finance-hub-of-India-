@@ -4,6 +4,8 @@ import { rateLimitMemory } from "@/lib/rate-limit";
 import { requireAuth, sanitizeString } from "@/lib/security";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 type WeakTopic = {
   topic_title?: string;
 };

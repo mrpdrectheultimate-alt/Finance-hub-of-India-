@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeUUID } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { user, error: authError, supabase } = await requireAuth(req);
   if (authError) return authError;

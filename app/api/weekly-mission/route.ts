@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 type WeeklyMissionRow = {
   id: string;
   theme: string;

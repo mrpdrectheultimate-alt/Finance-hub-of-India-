@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeString, sanitizeUUID } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 type InterviewQuestion = {
   id: string;
   question: string;

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeString } from "@/lib/security";
 
+export const dynamic = "force-dynamic";
+
 type Scope = "global" | "weekly";
 type ActiveSeason = {
   id: string;

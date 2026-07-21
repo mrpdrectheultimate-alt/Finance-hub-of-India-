@@ -3,6 +3,8 @@ import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeNumber, sanitizeString, sanitizeUUID } from "@/lib/security";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const { user, error: authErr } = await requireAuth(req);
   if (authErr) return authErr;
