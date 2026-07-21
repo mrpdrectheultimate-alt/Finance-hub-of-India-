@@ -25,11 +25,24 @@ const AUTH_ONLY = ["/auth/login", "/auth/signup"];
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isLocalPreview = ["localhost", "127.0.0.1"].includes(req.nextUrl.hostname);
+  const hasSupabaseEnv =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   if (
     isLocalPreview &&
     [...PROTECTED, ...ADMIN_ROUTES].some((route) => path.startsWith(route))
   ) {
+    return NextResponse.next();
+  }
+
+  if (!hasSupabaseEnv) {
+    if ([...PROTECTED, ...ADMIN_ROUTES].some((route) => path.startsWith(route))) {
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("redirect", path);
+      return NextResponse.redirect(loginUrl);
+    }
+
     return NextResponse.next();
   }
 
