@@ -1,8 +1,11 @@
 import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function requireAuth(req: NextRequest) {
-  const supabase = createServerClient();
+export async function requireAuth(req: NextRequest): Promise<{
+  user: any;
+  error: NextResponse | null;
+  supabase: any;
+}> {
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "");
 
@@ -10,10 +13,11 @@ export async function requireAuth(req: NextRequest) {
     return {
       user: null,
       error: NextResponse.json({ error: "Authorization header required" }, { status: 401 }),
-      supabase,
+      supabase: null,
     };
   }
 
+  const supabase = createServerClient();
   const { data: { user }, error } = await supabase.auth.getUser(token);
 
   if (error || !user) {
