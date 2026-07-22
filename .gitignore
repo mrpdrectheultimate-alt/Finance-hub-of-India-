@@ -53,3 +53,6 @@ coverage/
 # Misc
 *.pem
 *.log
+
+.vercel
+.env*
