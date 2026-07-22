@@ -5,151 +5,122 @@ import { useState } from "react";
 
 const tracks = [
   {
-    icon: "💰",
-    title: "Personal finance",
-    desc: "Budgeting, saving, loans, taxes, and insurance: life skills no school taught you.",
-    levels: ["Absolute beginner", "Working adult", "Wealth builder"],
-    color: "#E1F5EE",
+    code: "PF",
+    title: "Personal Finance",
+    slug: "personal-finance",
+    desc: "Budgeting, saving, tax, insurance, investing, and wealth building from first principles.",
+    levels: ["Absolute Beginner", "Intermediate", "Wealth Builder"],
+    tint: "#E1F5EE",
     accent: "#0F6E56",
   },
   {
-    icon: "📈",
-    title: "Trading and markets",
-    desc: "From reading a candlestick to running a strategy, across three complete levels.",
-    levels: ["Markets 101", "Technical analysis", "Advanced strategies"],
-    color: "#E6F1FB",
+    code: "TM",
+    title: "Trading and Markets",
+    slug: "trading-markets",
+    desc: "Market structure, charts, technical analysis, risk management, and trading psychology.",
+    levels: ["Markets 101", "Technical Analysis", "Advanced Strategies"],
+    tint: "#E6F1FB",
     accent: "#185FA5",
   },
   {
-    icon: "₿",
+    code: "CR",
     title: "Crypto and DeFi",
-    desc: "Blockchain fundamentals, wallets, DeFi protocols, and portfolio management.",
-    levels: ["What is crypto", "DeFi basics", "On-chain strategies"],
-    color: "#FAEEDA",
+    slug: "crypto-defi",
+    desc: "Blockchain, Bitcoin, Ethereum, wallets, DeFi, security, and portfolio basics.",
+    levels: ["Crypto Basics", "DeFi Basics", "On-chain Strategy"],
+    tint: "#FAEEDA",
     accent: "#854F0B",
   },
   {
-    icon: "🏢",
-    title: "Corporate and founder finance",
-    desc: "Valuation, fundraising, M&A, and unit economics for people building companies.",
-    levels: ["Business basics", "Startup finance", "Advanced corporate"],
-    color: "#EEEDFE",
+    code: "CF",
+    title: "Corporate Finance",
+    slug: "corporate-finance",
+    desc: "P&L, balance sheets, unit economics, valuation, fundraising, and founder finance.",
+    levels: ["Business Basics", "Startup Finance", "Advanced Corporate"],
+    tint: "#EEEDFE",
     accent: "#534AB7",
   },
 ];
 
 const audiences = [
-  { label: "School student", desc: "Saving, compound interest, first bank account", icon: "🎒" },
-  { label: "Working adult", desc: "Budgeting, EMIs, mutual funds, tax filing", icon: "💼" },
-  { label: "Trader", desc: "Charts, risk management, derivatives, psychology", icon: "📊" },
-  { label: "Founder", desc: "Cap tables, fundraising, valuation, board decks", icon: "🚀" },
-  { label: "Exam aspirant", desc: "CFA, FRM, CA, and banking certification prep", icon: "📝" },
+  { label: "Student", desc: "Saving, compounding, first bank account, and money habits." },
+  { label: "Working adult", desc: "Budgeting, SIPs, EMIs, insurance, tax planning, and goals." },
+  { label: "Trader", desc: "Charts, risk, position sizing, market psychology, and execution." },
+  { label: "Founder", desc: "Cash flow, unit economics, cap tables, fundraising, and runway." },
+  { label: "Exam aspirant", desc: "CFA, FRM, CA, NISM, banking, and interview preparation." },
 ];
 
 const stats = [
-  { value: "500+", label: "Lessons" },
-  { value: "5", label: "Levels per track" },
-  { value: "Free", label: "Core content" },
-  { value: "AI", label: "Doubt solver" },
-];
-
-const quizQuestions = [
-  {
-    q: "Who are you?",
-    key: "who",
-    options: [
-      "School / college student",
-      "Working professional",
-      "Trader / investor",
-      "Founder / business owner",
-      "Preparing for finance exams",
-    ],
-  },
-  {
-    q: "What's your finance goal?",
-    key: "goal",
-    options: [
-      "Stop living paycheck to paycheck",
-      "Start investing confidently",
-      "Learn trading from scratch",
-      "Understand my business better",
-      "Pass a finance certification",
-    ],
-  },
-  {
-    q: "How much do you know already?",
-    key: "level",
-    options: ["Almost nothing", "I know the basics", "Intermediate: I've started", "Advanced: I want depth"],
-  },
+  { value: "115+", label: "Structured lessons" },
+  { value: "8", label: "Learning tracks" },
+  { value: "25", label: "Curated playlists" },
+  { value: "AI", label: "Tutor and practice" },
 ];
 
 const features = [
   {
-    icon: "🤖",
-    title: "AI tutor",
-    body: "Ask anything and get explanations tuned to your level.",
+    title: "Learn",
+    body: "Four-tab lesson player with reading, videos, quizzes, comments, notes, and completion tracking.",
   },
   {
-    icon: "🎮",
-    title: "Learn by doing",
-    body: "Budget simulators, mock trading, and portfolio challenges.",
+    title: "Practice",
+    body: "SIP, EMI, tax, retirement, startup cash flow, forex paper trading, and crypto paper trading labs.",
   },
   {
-    icon: "🏆",
-    title: "Streaks and XP",
-    body: "Daily streaks, badges, and leaderboards for steady progress.",
+    title: "Adapt",
+    body: "Mastery tracking and spaced repetition recommend what to revise next.",
   },
   {
-    icon: "📜",
-    title: "Certificates",
-    body: "Complete a track and earn a certificate you can share.",
+    title: "Grow",
+    body: "Daily challenges, weekly missions, XP, leaderboards, certificates, and career roadmaps.",
   },
 ];
 
 const plans = [
   {
     name: "Free",
-    price: "₹0",
+    price: "INR 0",
     period: "forever",
-    features: [
-      "Beginner lessons across all tracks",
-      "5 AI tutor questions/day",
-      "Basic quizzes and games",
-      "Progress tracking",
-      "Community access",
-    ],
-    cta: "Get started",
-    accent: false,
+    features: ["Beginner lessons", "Daily AI limit", "Quizzes", "Progress tracking", "Community access"],
+    cta: "Start free",
+    href: "/auth/signup",
+    featured: false,
   },
   {
     name: "Pro",
-    price: "₹499",
-    period: "/month",
-    features: [
-      "Everything in Free",
-      "Full beginner + intermediate content",
-      "Unlimited AI tutor",
-      "Exam prep modules",
-      "Certificates on completion",
-      "Ad-free experience",
-    ],
-    cta: "Start 7-day trial",
-    accent: true,
+    price: "INR 499",
+    period: "per month",
+    features: ["Intermediate content", "Unlimited AI tutor", "Exam practice", "Downloads", "Certificates"],
+    cta: "Explore Pro",
+    href: "/pricing",
+    featured: true,
   },
   {
     name: "Expert",
-    price: "₹999",
-    period: "/month",
-    features: [
-      "Everything in Pro",
-      "Advanced trading strategies",
-      "Corporate and founder track",
-      "Live trading simulator",
-      "Mock interviews",
-      "Priority support",
-    ],
-    cta: "Start 7-day trial",
-    accent: false,
+    price: "INR 999",
+    period: "per month",
+    features: ["Advanced trading", "Founder finance", "Career prep", "Priority support", "Premium labs"],
+    cta: "Explore Expert",
+    href: "/pricing",
+    featured: false,
+  },
+];
+
+const quizQuestions = [
+  {
+    q: "Who are you?",
+    key: "who",
+    options: ["Student", "Working adult", "Trader", "Founder", "Exam aspirant"],
+  },
+  {
+    q: "What do you want first?",
+    key: "goal",
+    options: ["Budget better", "Start investing", "Learn trading", "Understand business", "Prepare for exams"],
+  },
+  {
+    q: "Current level?",
+    key: "level",
+    options: ["New beginner", "Know basics", "Intermediate", "Advanced"],
   },
 ];
 
@@ -159,218 +130,156 @@ export default function FinanceHubLanding() {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
 
-  const getRecommendation = () => {
+  const recommendation = (() => {
     const who = quizAnswers.who || "";
+    if (who === "Trader") return { track: "Trading and Markets", level: "Markets 101" };
+    if (who === "Founder") return { track: "Corporate Finance", level: "Business Basics" };
+    if (who === "Exam aspirant") return { track: "Career Hub", level: "Interview and exam prep" };
+    return { track: "Personal Finance", level: who === "Working adult" ? "Intermediate" : "Absolute Beginner" };
+  })();
 
-    if (who.includes("School")) {
-      return {
-        track: "Personal finance",
-        level: "Absolute beginner",
-        path: "Start with money basics: saving, budgeting, and compound interest.",
-      };
-    }
-
-    if (who.includes("Trader")) {
-      return {
-        track: "Trading and markets",
-        level: "Markets 101",
-        path: "Begin with how markets work, then progress to charts and strategies.",
-      };
-    }
-
-    if (who.includes("Founder")) {
-      return {
-        track: "Corporate and founder finance",
-        level: "Business basics",
-        path: "Start with unit economics and cap tables, then move into fundraising.",
-      };
-    }
-
-    if (who.includes("exam")) {
-      return {
-        track: "Exam prep",
-        level: "CFA Level 1",
-        path: "Use structured exam prep with mock tests, revision plans, and question banks.",
-      };
-    }
-
-    return {
-      track: "Personal finance",
-      level: "Working adult",
-      path: "Investing, taxes, and insurance: the essentials for financial independence.",
-    };
-  };
-
-  const handleQuizAnswer = (key: string, val: string) => {
-    setQuizAnswers((answers) => ({ ...answers, [key]: val }));
-
+  const answerQuestion = (key: string, value: string) => {
+    setQuizAnswers((current) => ({ ...current, [key]: value }));
     if (quizStep < quizQuestions.length - 1) {
-      setQuizStep((step) => step + 1);
+      setQuizStep((current) => current + 1);
     } else {
       setShowResult(true);
     }
   };
 
-  const recommendation = getRecommendation();
-
   return (
-    <main className="page">
-      <nav className="nav" aria-label="Main navigation">
-        <Link className="brand" href="/">
-          <span className="mark">F</span>
+    <main className="landing-page">
+      <nav className="landing-nav" aria-label="Main navigation">
+        <Link className="landing-brand" href="/">
+          <span className="landing-mark">F</span>
           <span>FinanceHub</span>
         </Link>
-        <div className="nav-links">
+        <div className="landing-links">
           <a href="#tracks">Tracks</a>
           <a href="#quiz">Find your path</a>
           <a href="#pricing">Pricing</a>
+          <Link href="/library">Library</Link>
           <Link href="/dashboard">Dashboard</Link>
         </div>
-        <div className="nav-actions">
-          <Link className="btn" href="/auth/login">
-            Log in
-          </Link>
-          <Link className="btn primary" href="/auth/signup">
-            Start free
-          </Link>
+        <div className="landing-actions">
+          <Link className="landing-btn" href="/auth/login">Log in</Link>
+          <Link className="landing-btn primary" href="/auth/signup">Start free</Link>
         </div>
       </nav>
 
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="eyebrow">
-            <span className="pulse" />
-            Free to start, no credit card needed
-          </div>
-          <h1>
-            FinanceHub <span>for every level.</span>
-          </h1>
-          <p className="hero-text">
-            From your first savings account to running a fundraising round: structured lessons, games, quizzes, and an
-            AI tutor that explains finance in plain language.
+      <section className="landing-hero">
+        <div className="landing-hero-copy">
+          <p className="landing-eyebrow">Free to start. Built for India. No credit card needed.</p>
+          <h1>FinanceHub for every level.</h1>
+          <p className="landing-lede">
+            Master personal finance, investing, trading, crypto, forex, and corporate finance through structured
+            lessons, AI tutoring, live simulators, and curated resources.
           </p>
-          <div className="button-row">
-            <Link className="btn primary" href="/onboarding">
-              Find your learning path
-            </Link>
-            <a className="btn" href="#tracks">
-              Browse all tracks
-            </a>
+          <div className="landing-button-row">
+            <Link className="landing-btn primary large" href="/onboarding">Find your learning path</Link>
+            <a className="landing-btn large" href="#tracks">Browse tracks</a>
           </div>
         </div>
-        <div className="hero-visual" aria-label="FinanceHub learning workspace visual">
+        <div className="landing-visual" aria-hidden="true">
           <img src="/hero-financehub.png" alt="" />
         </div>
       </section>
 
-      <section className="stats" aria-label="FinanceHub statistics">
+      <section className="landing-stats" aria-label="FinanceHub statistics">
         {stats.map((stat) => (
-          <div className="stat" key={stat.label}>
+          <div className="landing-stat" key={stat.label}>
             <strong>{stat.value}</strong>
             <span>{stat.label}</span>
           </div>
         ))}
       </section>
 
-      <section className="band">
-        <div className="section">
-          <div className="section-header">
-            <p className="kicker">Who it's for</p>
-            <h2>Finance knowledge for everyone</h2>
+      <section className="landing-section">
+        <div className="landing-section-head">
+          <p className="landing-kicker">Who it is for</p>
+          <h2>Finance knowledge for everyone</h2>
+        </div>
+        <div className="landing-pill-row" role="tablist" aria-label="Audience types">
+          {audiences.map((audience, index) => (
+            <button
+              className={`landing-pill ${activeAudience === index ? "active" : ""}`}
+              key={audience.label}
+              type="button"
+              aria-selected={activeAudience === index}
+              onClick={() => setActiveAudience(index)}
+            >
+              {audience.label}
+            </button>
+          ))}
+        </div>
+        <div className="landing-audience-panel">
+          <div>
+            <strong>{audiences[activeAudience].label}</strong>
+            <p>{audiences[activeAudience].desc}</p>
           </div>
-          <div className="audience-tabs" role="tablist" aria-label="Audience types">
-            {audiences.map((audience, index) => (
-              <button
-                className={`pill ${activeAudience === index ? "active" : ""}`}
-                key={audience.label}
-                type="button"
-                role="tab"
-                aria-selected={activeAudience === index}
-                onClick={() => setActiveAudience(index)}
-              >
-                {audience.icon} {audience.label}
-              </button>
-            ))}
-          </div>
-          <div className="audience-panel">
-            <div className="audience-icon">{audiences[activeAudience].icon}</div>
-            <div>
-              <strong>{audiences[activeAudience].label}</strong>
-              <span>{audiences[activeAudience].desc}</span>
-            </div>
-            <Link className="btn" href="/onboarding">
-              See curriculum →
-            </Link>
-          </div>
+          <Link className="landing-btn" href="/onboarding">See curriculum</Link>
         </div>
       </section>
 
-      <section className="section" id="tracks">
-        <div className="section-header">
-          <p className="kicker">Learning tracks</p>
-          <h2>Four tracks. Infinite depth.</h2>
-          <p>Each track goes from complete beginner to expert. Follow one, or combine them.</p>
+      <section className="landing-section" id="tracks">
+        <div className="landing-section-head">
+          <p className="landing-kicker">Learning tracks</p>
+          <h2>Eight tracks. One clear path.</h2>
+          <p>Start with a beginner level, then move into deeper tracks as your confidence grows.</p>
         </div>
-        <div className="tracks-grid">
+        <div className="landing-track-grid">
           {tracks.map((track) => (
-            <article className="track-card" key={track.title}>
-              <div className="track-top" style={{ background: track.color }}>
-                <div className="track-icon">{track.icon}</div>
+            <article className="landing-track-card" key={track.title}>
+              <div className="landing-track-top" style={{ background: track.tint }}>
+                <span style={{ color: track.accent }}>{track.code}</span>
                 <h3>{track.title}</h3>
               </div>
-              <div className="track-body">
+              <div className="landing-track-body">
                 <p>{track.desc}</p>
-                <div className="level-list">
-                  {track.levels.map((level, index) => (
-                    <span className="level" key={level}>
-                      <span className="dot" style={{ background: track.accent, opacity: 0.45 + index * 0.25 }} />
-                      {level}
-                    </span>
+                <div className="landing-levels">
+                  {track.levels.map((level) => (
+                    <span key={level}>{level}</span>
                   ))}
                 </div>
-                <Link className="btn" href="/onboarding" style={{ color: track.accent, borderColor: track.accent }}>
-                  Explore track →
-                </Link>
+                <Link className="landing-btn" href={`/track/${track.slug}`}>Explore track</Link>
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="dark-band">
-        <div className="section">
-          <div className="feature-grid">
-            {features.map((feature) => (
-              <article className="feature" key={feature.title}>
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.body}</p>
-              </article>
-            ))}
-          </div>
+      <section className="landing-feature-band">
+        <div className="landing-feature-grid">
+          {features.map((feature) => (
+            <article className="landing-feature" key={feature.title}>
+              <span>{feature.title.slice(0, 2).toUpperCase()}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="section quiz-shell" id="quiz">
-        <p className="kicker">Personalised path</p>
+      <section className="landing-section landing-quiz" id="quiz">
+        <p className="landing-kicker">Personalised path</p>
         <h2>Find your starting point</h2>
-        <p className="quiz-intro">3 questions. We'll tell you exactly where to begin.</p>
+        <p>Answer three quick questions and FinanceHub will suggest where to begin.</p>
 
         {!showResult ? (
-          <div>
-            <div className="progress" aria-label={`Question ${quizStep + 1} of ${quizQuestions.length}`}>
+          <div className="landing-question-card">
+            <div className="landing-progress" aria-label={`Question ${quizStep + 1} of ${quizQuestions.length}`}>
               {quizQuestions.map((question, index) => (
-                <span className={`bar ${index <= quizStep ? "done" : ""}`} key={question.key} />
+                <span className={index <= quizStep ? "done" : ""} key={question.key} />
               ))}
             </div>
-            <div className="question">{quizQuestions[quizStep].q}</div>
-            <div className="options">
+            <h3>{quizQuestions[quizStep].q}</h3>
+            <div className="landing-options">
               {quizQuestions[quizStep].options.map((option) => (
                 <button
-                  className="option"
+                  className="landing-option"
                   key={option}
                   type="button"
-                  onClick={() => handleQuizAnswer(quizQuestions[quizStep].key, option)}
+                  onClick={() => answerQuestion(quizQuestions[quizStep].key, option)}
                 >
                   {option}
                 </button>
@@ -378,17 +287,14 @@ export default function FinanceHubLanding() {
             </div>
           </div>
         ) : (
-          <div className="result">
-            <div className="result-label">Your recommended path</div>
+          <div className="landing-result">
+            <p className="landing-kicker">Recommended path</p>
             <h3>{recommendation.track}</h3>
-            <p>Starting level: {recommendation.level}</p>
-            <p>{recommendation.path}</p>
-            <div className="button-row">
-              <Link className="btn primary" href="/auth/signup">
-                Start this path, it's free
-              </Link>
+            <p>Start with: {recommendation.level}</p>
+            <div className="landing-button-row">
+              <Link className="landing-btn primary" href="/auth/signup">Start this path</Link>
               <button
-                className="btn"
+                className="landing-btn"
                 type="button"
                 onClick={() => {
                   setQuizStep(0);
@@ -403,49 +309,44 @@ export default function FinanceHubLanding() {
         )}
       </section>
 
-      <section className="pricing" id="pricing">
-        <div className="section">
-          <div className="section-header">
-            <p className="kicker">Pricing</p>
-            <h2>Start free. Upgrade when ready.</h2>
-            <p>Core content is always free. Premium unlocks depth.</p>
-          </div>
-          <div className="pricing-grid">
-            {plans.map((plan) => (
-              <article className={`price-card ${plan.accent ? "featured" : ""}`} key={plan.name}>
-                {plan.accent ? <div className="badge">Most popular</div> : null}
-                <h3>{plan.name}</h3>
-                <div className="price">
-                  <strong>{plan.price}</strong>
-                  <span>{plan.period}</span>
-                </div>
-                <ul className="feature-list">
-                  {plan.features.map((feature) => (
-                    <li key={feature}>
-                      <span className="check">✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link className={`btn ${plan.accent ? "primary" : ""}`} href="/auth/signup">
-                  {plan.cta}
-                </Link>
-              </article>
-            ))}
-          </div>
+      <section className="landing-pricing" id="pricing">
+        <div className="landing-section-head">
+          <p className="landing-kicker">Pricing</p>
+          <h2>Start free. Upgrade when ready.</h2>
+          <p>Core content is free. Premium plans unlock deeper AI, downloads, certificates, and advanced labs.</p>
+        </div>
+        <div className="landing-price-grid">
+          {plans.map((plan) => (
+            <article className={`landing-price-card ${plan.featured ? "featured" : ""}`} key={plan.name}>
+              {plan.featured ? <span className="landing-badge">Most popular</span> : null}
+              <h3>{plan.name}</h3>
+              <div className="landing-price">
+                <strong>{plan.price}</strong>
+                <span>{plan.period}</span>
+              </div>
+              <ul>
+                {plan.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+              <Link className={`landing-btn ${plan.featured ? "primary" : ""}`} href={plan.href}>
+                {plan.cta}
+              </Link>
+            </article>
+          ))}
         </div>
       </section>
 
-      <footer className="footer">
-        <div className="brand">
-          <span className="mark">F</span>
+      <footer className="landing-footer">
+        <Link className="landing-brand" href="/">
+          <span className="landing-mark">F</span>
           <span>FinanceHub</span>
-        </div>
-        <p>All content is educational only and does not constitute financial advice.</p>
-        <div className="footer-links">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Contact</a>
+        </Link>
+        <p>Educational content only. Not investment advice.</p>
+        <div>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/pricing">Pricing</Link>
         </div>
       </footer>
     </main>
