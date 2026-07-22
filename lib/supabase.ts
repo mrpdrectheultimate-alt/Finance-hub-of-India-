@@ -1,3 +1,4 @@
+import { createBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
@@ -8,7 +9,12 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   "placeholder-anon-key";
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+export const supabase =
+  typeof window === "undefined"
+    ? createClient<Database>(supabaseUrl, supabaseAnonKey)
+    : createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+        isSingleton: true,
+      });
 
 export const createServerClient = () => {
   const serverUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
