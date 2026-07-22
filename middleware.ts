@@ -6,8 +6,6 @@ const PROTECTED = [
   "/dashboard",
   "/learn",
   "/practice",
-  "/simulators",
-  "/library",
   "/profile",
   "/leaderboard",
   "/certificates",
@@ -16,7 +14,6 @@ const PROTECTED = [
   "/ai-roadmap-planner",
   "/ai-exam",
   "/roadmap",
-  "/career",
   "/progress",
 ];
 const ADMIN_ROUTES = ["/admin"];
@@ -27,7 +24,10 @@ export async function middleware(req: NextRequest) {
   const isLocalPreview = ["localhost", "127.0.0.1"].includes(req.nextUrl.hostname);
   const hasSupabaseEnv =
     Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    );
 
   if (
     isLocalPreview &&
@@ -54,7 +54,8 @@ export async function middleware(req: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!,
     {
       cookies: {
         getAll() {
