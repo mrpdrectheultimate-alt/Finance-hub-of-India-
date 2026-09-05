@@ -34,13 +34,6 @@ export default function SignUpPage() {
     setLoading(false);
   };
 
-  const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
-    });
-  };
-
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -63,7 +56,7 @@ export default function SignUpPage() {
           </div>
         ) : (
           <>
-            <button onClick={handleGoogle} style={styles.googleBtn} type="button">
+            <a href="/api/auth/google?next=/dashboard" style={styles.googleBtn}>
               <svg width="18" height="18" viewBox="0 0 48 48" style={{ marginRight: 8, flexShrink: 0 }}>
                 <path
                   fill="#FFC107"
@@ -83,7 +76,7 @@ export default function SignUpPage() {
                 />
               </svg>
               Continue with Google
-            </button>
+            </a>
 
             <div style={styles.divider}>
               <span style={styles.dividerText}>or sign up with email</span>

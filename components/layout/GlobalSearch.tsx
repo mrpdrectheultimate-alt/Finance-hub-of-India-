@@ -114,7 +114,7 @@ export default function GlobalSearch() {
 
           {!loading && query && results.length === 0 && (
             <div style={s.emptyRow}>
-              <div style={s.emptyTitle}>No lessons found for "{query}"</div>
+              <div style={s.emptyTitle}>No lessons found for &quot;{query}&quot;</div>
               <div style={s.emptySub}>Try a different keyword or browse all tracks.</div>
             </div>
           )}

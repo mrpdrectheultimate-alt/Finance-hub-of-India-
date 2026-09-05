@@ -37,10 +37,10 @@ export async function requireAdmin(req: NextRequest) {
 
   const adminEmails = (process.env.ADMIN_EMAILS || "")
     .split(",")
-    .map((email) => email.trim())
+    .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
 
-  if (!adminEmails.includes(user!.email || "")) {
+  if (!adminEmails.includes((user!.email || "").toLowerCase())) {
     return {
       user: null,
       error: NextResponse.json({ error: "Admin access required" }, { status: 403 }),

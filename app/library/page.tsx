@@ -3,19 +3,21 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import AppLayout from "@/components/layout/AppLayout";
+import VideoPlayer from "@/components/video/VideoPlayer";
 import { supabase } from "@/lib/supabase";
 
-type Playlist = {
+type Video = {
   id: string;
   title: string;
   channel_name: string;
   description: string | null;
-  playlist_url: string;
+  playlist_url: string | null;
   embed_id: string;
-  embed_type: string;
+  embed_type: string | null;
+  video_type: "video" | "playlist" | "short" | null;
   category: string;
   level: string;
-  video_count: number;
+  video_count: number | null;
   duration_hrs: number | null;
   curator_note: string | null;
   is_featured: boolean;
@@ -25,7 +27,6 @@ type Book = {
   id: string;
   title: string;
   author: string;
-  cover_url: string | null;
   description: string;
   key_takeaways: string[] | string | null;
   why_read: string | null;
@@ -37,19 +38,27 @@ type Book = {
   is_free_legal: boolean;
 };
 
-type Tab = "playlists" | "books";
+type Tab = "videos" | "books";
+type TypeFilter = "all" | "video" | "playlist";
 
 const CATEGORIES = [
   { id: "all", label: "All", mark: "ALL" },
   { id: "personal-finance", label: "Personal Finance", mark: "PF" },
-  { id: "trading-markets", label: "Trading", mark: "TR" },
+  { id: "trading-markets", label: "Stock Market", mark: "TR" },
   { id: "crypto-defi", label: "Crypto", mark: "CR" },
   { id: "corporate-finance", label: "Corporate", mark: "CF" },
   { id: "behavioral-finance", label: "Behavioral", mark: "BH" },
-  { id: "general", label: "General", mark: "GN" },
+  { id: "forex-currency", label: "Forex", mark: "FX" },
+  { id: "technical-analysis", label: "Technical", mark: "TA" },
+  { id: "general", label: "Economics", mark: "GN" },
 ];
 
-const LEVELS = ["all", "beginner", "intermediate", "advanced"];
+const LEVELS = [
+  { id: "all", label: "All levels" },
+  { id: "beginner", label: "Beginner" },
+  { id: "intermediate", label: "Intermediate" },
+  { id: "advanced", label: "Advanced" },
+];
 
 const DIFF_COLOR: Record<string, string> = {
   easy: "#1D9E75",
@@ -58,14 +67,16 @@ const DIFF_COLOR: Record<string, string> = {
 };
 
 export default function LibraryPage() {
-  const [tab, setTab] = useState<Tab>("playlists");
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [tab, setTab] = useState<Tab>("videos");
+  const [videos, setVideos] = useState<Video[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [category, setCategory] = useState("all");
   const [level, setLevel] = useState("all");
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [activeVideo, setActiveVideo] = useState<Video | null>(null);
+  const [expandedBook, setExpandedBook] = useState<string | null>(null);
   const [bookStatus, setBookStatus] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState("");
   const [profileRole, setProfileRole] = useState("free");
@@ -75,15 +86,13 @@ export default function LibraryPage() {
   }, []);
 
   useEffect(() => {
-    if (tab === "playlists") void loadPlaylists();
+    if (tab === "videos") void loadVideos();
     else void loadBooks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, category, level]);
 
   const loadUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     setUserId(user.id);
@@ -92,15 +101,16 @@ export default function LibraryPage() {
       supabase.from("user_book_reads" as never).select("book_id, status").eq("user_id", user.id),
     ]);
 
-    setProfileRole(profile?.role || "free");
+    setProfileRole((profile as { role?: string } | null)?.role || "free");
+
     const next: Record<string, string> = {};
-    ((reads as { book_id: string; status: string }[] | null) || []).forEach((row) => {
+    ((reads as unknown as Array<{ book_id: string; status: string }> | null) || []).forEach((row) => {
       next[row.book_id] = row.status;
     });
     setBookStatus(next);
   };
 
-  const loadPlaylists = async () => {
+  const loadVideos = async () => {
     setLoading(true);
     let query = supabase
       .from("curated_playlists" as never)
@@ -112,9 +122,18 @@ export default function LibraryPage() {
 
     const { data } = await query
       .order("is_featured", { ascending: false })
-      .order("view_count", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    setPlaylists((data as Playlist[] | null) || []);
+    const rows = ((data as unknown as Video[] | null) || []).map((video) => ({
+      ...video,
+      video_type: video.video_type || (video.embed_type === "playlist" ? "playlist" : "video"),
+    }));
+
+    setVideos(rows);
+    setActiveVideo((current) => {
+      if (current && rows.some((video) => video.id === current.id)) return current;
+      return rows.find((video) => video.is_featured) || rows[0] || null;
+    });
     setLoading(false);
   };
 
@@ -125,13 +144,18 @@ export default function LibraryPage() {
       .select("*")
       .eq("is_published", true);
 
-    if (category !== "all") query = query.eq("category", category);
-    if (level !== "all") {
-      query = query.eq("difficulty", level === "beginner" ? "easy" : level === "intermediate" ? "medium" : "advanced");
+    if (category !== "all") {
+      const catMap: Record<string, string> = {
+        "personal-finance": "personal-finance",
+        "trading-markets": "investing",
+        "corporate-finance": "corporate-finance",
+        "behavioral-finance": "behavioral-finance",
+      };
+      if (catMap[category]) query = query.eq("category", catMap[category]);
     }
 
     const { data } = await query.order("created_at", { ascending: false });
-    setBooks((data as Book[] | null) || []);
+    setBooks((data as unknown as Book[] | null) || []);
     setLoading(false);
   };
 
@@ -149,15 +173,17 @@ export default function LibraryPage() {
     setBookStatus((current) => ({ ...current, [bookId]: status }));
   };
 
-  const filteredPlaylists = useMemo(() => {
+  const filteredVideos = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return playlists;
-    return playlists.filter((playlist) =>
-      playlist.title.toLowerCase().includes(term) ||
-      playlist.channel_name.toLowerCase().includes(term) ||
-      (playlist.description || "").toLowerCase().includes(term),
-    );
-  }, [playlists, search]);
+    return videos.filter((video) => {
+      const matchesSearch = !term ||
+        video.title.toLowerCase().includes(term) ||
+        video.channel_name.toLowerCase().includes(term) ||
+        (video.description || "").toLowerCase().includes(term);
+      const matchesType = typeFilter === "all" || normalizeVideoType(video) === typeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [videos, search, typeFilter]);
 
   const filteredBooks = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -169,69 +195,134 @@ export default function LibraryPage() {
     );
   }, [books, search]);
 
+  const featured = filteredVideos.filter((video) => video.is_featured);
+  const regular = filteredVideos.filter((video) => !video.is_featured);
+  const playlistCount = filteredVideos.filter((video) => normalizeVideoType(video) === "playlist").length;
+  const videoCount = filteredVideos.filter((video) => normalizeVideoType(video) === "video").length;
+
   return (
     <AppLayout userRole={profileRole}>
       <div style={s.page}>
         <Link href="/dashboard" style={s.back}>Dashboard</Link>
 
         <section style={s.hero}>
-          <div style={s.heroBadge}>LIB</div>
+          <div style={s.heroBadge}>Free learning resources</div>
           <h1 style={s.heroTitle}>Finance Library</h1>
           <p style={s.heroSub}>
-            Curated video playlists from trusted educators plus the essential finance reading list.
+            Curated videos and playlists from trusted educators, plus summaries of essential finance books.
           </p>
           <div style={s.heroStats}>
-            <Stat num="25+" label="Curated playlists" />
-            <div style={s.heroStatDivider} />
-            <Stat num="500+" label="Free video hours" />
-            <div style={s.heroStatDivider} />
-            <Stat num="30" label="Essential books" />
+            <HeroStat value={videoCount.toString()} label="videos" color="#1D9E75" />
+            <div style={s.heroStatDot} />
+            <HeroStat value={playlistCount.toString()} label="playlists" color="#185FA5" />
+            <div style={s.heroStatDot} />
+            <HeroStat value="30" label="books" color="#7C3AED" />
           </div>
         </section>
 
-        <div style={s.tabRow}>
-          <button onClick={() => setTab("playlists")} style={{ ...s.tabBtn, ...(tab === "playlists" ? s.tabBtnActive : {}) }} type="button">
-            Video Playlists
+        <div style={s.mainTabs}>
+          <button onClick={() => setTab("videos")} style={{ ...s.mainTab, ...(tab === "videos" ? s.mainTabActive : {}) }} type="button">
+            Videos & Playlists
           </button>
-          <button onClick={() => setTab("books")} style={{ ...s.tabBtn, ...(tab === "books" ? s.tabBtnActive : {}) }} type="button">
-            Book Library
+          <button onClick={() => setTab("books")} style={{ ...s.mainTab, ...(tab === "books" ? s.mainTabActive : {}) }} type="button">
+            Book Summaries
           </button>
         </div>
 
-        <div style={s.filters}>
-          <div style={s.catTabs}>
+        <div style={s.filtersWrap}>
+          <div style={s.categoryRow}>
             {CATEGORIES.map((item) => (
-              <button key={item.id} onClick={() => setCategory(item.id)} style={{ ...s.catBtn, ...(category === item.id ? s.catBtnActive : {}) }} type="button">
+              <button key={item.id} onClick={() => setCategory(item.id)} style={{ ...s.catPill, ...(category === item.id ? s.catPillActive : {}) }} type="button">
                 <span style={s.catMark}>{item.mark}</span>
                 {item.label}
               </button>
             ))}
           </div>
+
           <div style={s.filterRow}>
             <input
-              placeholder={`Search ${tab}...`}
+              placeholder={`Search ${tab === "videos" ? "videos or channels" : "books or authors"}...`}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               style={s.searchInput}
             />
-            <div style={s.levelTabs}>
+            <div style={s.levelRow}>
               {LEVELS.map((item) => (
-                <button key={item} onClick={() => setLevel(item)} style={{ ...s.levelBtn, ...(level === item ? s.levelBtnActive : {}) }} type="button">
-                  {capitalize(item)}
+                <button key={item.id} onClick={() => setLevel(item.id)} style={{ ...s.levelBtn, ...(level === item.id ? s.levelBtnActive : {}) }} type="button">
+                  {item.label}
                 </button>
               ))}
             </div>
+            {tab === "videos" ? (
+              <div style={s.typeRow}>
+                {(["all", "video", "playlist"] as TypeFilter[]).map((item) => (
+                  <button key={item} onClick={() => setTypeFilter(item)} style={{ ...s.typeBtn, ...(typeFilter === item ? s.typeBtnActive : {}) }} type="button">
+                    {capitalize(item)}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {tab === "playlists" ? (
-          <PlaylistsView loading={loading} playlists={filteredPlaylists} />
+        {tab === "videos" ? (
+          <div style={s.videosLayout}>
+            <main style={s.playerCol}>
+              {activeVideo ? (
+                <div style={s.playerWrap}>
+                  <VideoPlayer
+                    videoId={activeVideo.embed_id}
+                    videoType={normalizeVideoType(activeVideo)}
+                    title={activeVideo.title}
+                    channel={activeVideo.channel_name}
+                    description={activeVideo.description}
+                    curatorNote={activeVideo.curator_note}
+                    externalUrl={activeVideo.playlist_url}
+                    size="lg"
+                  />
+                  <div style={s.videoBadges}>
+                    <span style={s.levelBadge}>{activeVideo.level}</span>
+                    <span style={s.catBadge}>{categoryLabel(activeVideo.category)}</span>
+                    {normalizeVideoType(activeVideo) === "playlist" ? (
+                      <span style={s.countBadge}>{activeVideo.video_count || 1} videos - {activeVideo.duration_hrs || 0}h</span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div style={s.playerEmpty}>
+                  <div style={s.playerEmptyTitle}>Select a video to watch</div>
+                  <div style={s.playerEmptySub}>Choose any video from the list.</div>
+                </div>
+              )}
+              <div style={s.disclaimer}>
+                Videos are embedded from YouTube. FinanceHub does not host external video content.
+              </div>
+            </main>
+
+            <aside style={s.listCol}>
+              {loading ? <LoadingList /> : filteredVideos.length === 0 ? (
+                <Empty title="No videos found" subtitle="Try a different category, level, or search term." />
+              ) : (
+                <>
+                  {featured.length > 0 && !search && typeFilter === "all" ? (
+                    <VideoSection title="Featured" videos={featured} activeVideo={activeVideo} onSelect={setActiveVideo} />
+                  ) : null}
+                  <VideoSection
+                    title={search || typeFilter !== "all" ? `Results (${filteredVideos.length})` : `All videos (${filteredVideos.length})`}
+                    videos={search || typeFilter !== "all" ? filteredVideos : regular}
+                    activeVideo={activeVideo}
+                    onSelect={setActiveVideo}
+                  />
+                </>
+              )}
+            </aside>
+          </div>
         ) : (
-          <BooksView
+          <BooksTab
             loading={loading}
             books={filteredBooks}
-            expanded={expanded}
-            setExpanded={setExpanded}
+            expandedBook={expandedBook}
+            setExpandedBook={setExpandedBook}
             userId={userId}
             bookStatus={bookStatus}
             markBookStatus={markBookStatus}
@@ -242,235 +333,197 @@ export default function LibraryPage() {
   );
 }
 
-function Stat({ num, label }: { num: string; label: string }) {
+function HeroStat({ value, label, color }: { value: string; label: string; color: string }) {
+  return <div style={s.heroStat}><strong style={{ color }}>{value}</strong> {label}</div>;
+}
+
+function VideoSection({
+  title,
+  videos,
+  activeVideo,
+  onSelect,
+}: {
+  title: string;
+  videos: Video[];
+  activeVideo: Video | null;
+  onSelect: (video: Video) => void;
+}) {
+  if (videos.length === 0) return null;
   return (
-    <div style={s.heroStat}>
-      <span style={s.heroStatNum}>{num}</span>
-      <span style={s.heroStatLabel}>{label}</span>
-    </div>
+    <section style={s.listSection}>
+      <div style={s.listSectionTitle}>{title}</div>
+      {videos.map((video) => (
+        <VideoListItem key={video.id} video={video} active={activeVideo?.id === video.id} onClick={() => onSelect(video)} />
+      ))}
+    </section>
   );
 }
 
-function PlaylistsView({ loading, playlists }: { loading: boolean; playlists: Playlist[] }) {
-  const featured = playlists.filter((playlist) => playlist.is_featured);
+function VideoListItem({ video, active, onClick }: { video: Video; active: boolean; onClick: () => void }) {
+  const levelColor: Record<string, string> = {
+    beginner: "#1D9E75",
+    intermediate: "#854F0B",
+    advanced: "#B91C1C",
+    all: "#185FA5",
+  };
+  const isPlaylist = normalizeVideoType(video) === "playlist";
 
   return (
-    <div>
-      {featured.length > 0 ? (
-        <section style={s.section}>
-          <div style={s.sectionTitle}>Editor's picks</div>
-          <div style={s.featuredGrid}>
-            {featured.slice(0, 3).map((playlist) => <PlaylistCard key={playlist.id} playlist={playlist} featured />)}
-          </div>
-        </section>
-      ) : null}
-
-      <section style={s.section}>
-        <div style={s.sectionTitle}>All playlists ({playlists.length})</div>
-        {loading ? <LoadingGrid /> : playlists.length === 0 ? <Empty msg="No playlists found for these filters." /> : (
-          <div style={s.grid}>
-            {playlists.map((playlist) => <PlaylistCard key={playlist.id} playlist={playlist} />)}
-          </div>
-        )}
-      </section>
-
-      <div style={s.disclaimer}>
-        Videos are embedded from YouTube. FinanceHub does not host or download external video content.
+    <button onClick={onClick} style={{ ...s.videoItem, ...(active ? s.videoItemActive : {}) }} type="button">
+      <div style={{ ...s.thumb, ...(isPlaylist ? s.thumbPlaylist : { backgroundImage: `url(https://img.youtube.com/vi/${video.embed_id}/default.jpg)` }) }}>
+        <span style={s.thumbPlay}>{isPlaylist ? "PL" : "PLAY"}</span>
+        {isPlaylist ? <span style={s.thumbCount}>{video.video_count || 1}</span> : null}
       </div>
-    </div>
-  );
-}
-
-function PlaylistCard({ playlist, featured = false }: { playlist: Playlist; featured?: boolean }) {
-  const [showEmbed, setShowEmbed] = useState(false);
-  const levelColor: Record<string, string> = { beginner: "#1D9E75", intermediate: "#854F0B", advanced: "#B91C1C", all: "#185FA5" };
-
-  const embedUrl = playlist.embed_type === "playlist"
-    ? `https://www.youtube.com/embed/videoseries?list=${playlist.embed_id}&rel=0`
-    : `https://www.youtube.com/embed/${playlist.embed_id}?rel=0`;
-
-  return (
-    <article style={{ ...s.playlistCard, ...(featured ? s.playlistCardFeatured : {}) }}>
-      {playlist.is_featured ? <div style={s.featuredBadge}>Editor's pick</div> : null}
-      <div style={s.plMeta}>
-        <span style={{ ...s.plLevel, color: levelColor[playlist.level] || "#888", background: `${levelColor[playlist.level] || "#888"}18` }}>
-          {playlist.level}
-        </span>
-        <span style={s.plVideos}>{playlist.video_count} videos / {playlist.duration_hrs || 0}h</span>
+      <div style={s.videoItemInfo}>
+        <div style={{ ...s.videoItemTitle, color: active ? "var(--accent, #0e6163)" : "var(--text-primary, #1c2b3a)" }}>
+          {video.title}
+        </div>
+        <div style={s.videoItemChannel}>{video.channel_name}</div>
+        <div style={s.videoItemMeta}>
+          <span style={{ ...s.smallLevel, color: levelColor[video.level] || "#888", background: `${levelColor[video.level] || "#888"}18` }}>
+            {video.level}
+          </span>
+          <span>{isPlaylist ? `${video.video_count || 1} videos` : `${video.duration_hrs || 0.2}h`}</span>
+        </div>
       </div>
-      <h3 style={s.plTitle}>{playlist.title}</h3>
-      <p style={s.plChannel}>{playlist.channel_name}</p>
-      <p style={s.plDesc}>{truncate(playlist.description || "", 120)}</p>
-      {playlist.curator_note ? <div style={s.curatorNote}>{playlist.curator_note}</div> : null}
-
-      {showEmbed ? (
-        <div style={s.embedWrap}>
-          <iframe
-            src={embedUrl}
-            style={s.iframe}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-            title={playlist.title}
-          />
-          <button onClick={() => setShowEmbed(false)} style={s.hideBtn} type="button">Hide player</button>
-        </div>
-      ) : (
-        <div style={s.plBtns}>
-          <button onClick={() => setShowEmbed(true)} style={s.watchHereBtn} type="button">Watch here</button>
-          <a href={playlist.playlist_url} target="_blank" rel="noopener noreferrer" style={s.ytBtn}>Open on YouTube</a>
-        </div>
-      )}
-    </article>
+    </button>
   );
 }
 
-function BooksView({
+function BooksTab({
   loading,
   books,
-  expanded,
-  setExpanded,
+  expandedBook,
+  setExpandedBook,
   userId,
   bookStatus,
   markBookStatus,
 }: {
   loading: boolean;
   books: Book[];
-  expanded: string | null;
-  setExpanded: (id: string | null) => void;
+  expandedBook: string | null;
+  setExpandedBook: (id: string | null) => void;
   userId: string;
   bookStatus: Record<string, string>;
   markBookStatus: (bookId: string, status: string) => Promise<void>;
 }) {
-  return (
-    <section style={s.section}>
-      <div style={s.sectionTitle}>{books.length} essential finance books</div>
-      {loading ? <LoadingGrid /> : books.length === 0 ? <Empty msg="No books found for these filters." /> : (
-        <div style={s.booksGrid}>
-          {books.map((book) => (
-            <BookCard
-              key={book.id}
-              book={book}
-              isOpen={expanded === book.id}
-              setExpanded={setExpanded}
-              userId={userId}
-              status={bookStatus[book.id]}
-              markBookStatus={markBookStatus}
-            />
-          ))}
-        </div>
-      )}
-      <div style={s.disclaimer}>
-        FinanceHub provides summaries and purchase links only. Free PDF links should only be used for legally free books.
+  if (loading) {
+    return (
+      <div style={s.booksGrid}>
+        {Array.from({ length: 6 }).map((_, index) => <div key={index} style={s.bookSkeleton} />)}
       </div>
-    </section>
-  );
-}
+    );
+  }
 
-function BookCard({
-  book,
-  isOpen,
-  setExpanded,
-  userId,
-  status,
-  markBookStatus,
-}: {
-  book: Book;
-  isOpen: boolean;
-  setExpanded: (id: string | null) => void;
-  userId: string;
-  status?: string;
-  markBookStatus: (bookId: string, status: string) => Promise<void>;
-}) {
-  const takeaways = parseTakeaways(book.key_takeaways);
+  if (books.length === 0) return <Empty title="No books found" />;
 
   return (
-    <article style={{ ...s.bookCard, ...(isOpen ? s.bookCardOpen : {}) }}>
-      <div style={s.bookHeader}>
-        <div style={{ ...s.bookCover, background: getCoverColor(book.category) }}>
-          <span style={s.coverIcon}>{getCoverMark(book.category)}</span>
-        </div>
-        <div style={s.bookInfo}>
-          <div style={s.bookMeta}>
-            <span style={{ ...s.diffBadge, color: DIFF_COLOR[book.difficulty] || "#888", background: `${DIFF_COLOR[book.difficulty] || "#888"}18` }}>
-              {book.difficulty}
-            </span>
-            <span style={s.catBadge}>{book.category.replaceAll("-", " ")}</span>
-          </div>
-          <h3 style={s.bookTitle}>{book.title}</h3>
-          <p style={s.bookAuthor}>by {book.author}</p>
-          <p style={s.bookDesc}>{truncate(book.description, 140)}</p>
-        </div>
-      </div>
+    <div>
+      <div style={s.booksGrid}>
+        {books.map((book) => {
+          const isOpen = expandedBook === book.id;
+          const status = bookStatus[book.id];
+          const takeaways = parseTakeaways(book.key_takeaways);
 
-      <button onClick={() => setExpanded(isOpen ? null : book.id)} style={s.expandBtn} type="button">
-        {isOpen ? "Show less" : "Key takeaways and why read"}
-      </button>
+          return (
+            <article key={book.id} style={{ ...s.bookCard, ...(isOpen ? s.bookCardOpen : {}) }}>
+              <div style={s.bookHeader}>
+                <div style={{ ...s.bookCover, background: getCoverBg(book.category) }}>
+                  <span style={s.bookCoverMark}>{getCoverMark(book.category)}</span>
+                </div>
+                <div style={s.bookInfo}>
+                  <div style={s.bookMeta}>
+                    <span style={{ ...s.diffBadge, color: DIFF_COLOR[book.difficulty] || "#888", background: `${DIFF_COLOR[book.difficulty] || "#888"}18` }}>
+                      {book.difficulty}
+                    </span>
+                  </div>
+                  <h3 style={s.bookTitle}>{book.title}</h3>
+                  <p style={s.bookAuthor}>by {book.author}</p>
+                  <p style={s.bookDesc}>{truncate(book.description, 120)}</p>
+                </div>
+              </div>
 
-      {isOpen ? (
-        <div style={s.bookExpanded}>
-          {book.why_read ? (
-            <div style={s.whyRead}>
-              <div style={s.whyReadTitle}>Why read this</div>
-              <p style={s.whyReadText}>{book.why_read}</p>
-            </div>
-          ) : null}
-          <div style={s.takeawaysTitle}>Key takeaways</div>
-          <ul style={s.takeawaysList}>
-            {takeaways.map((item, index) => (
-              <li key={`${book.id}-${index}`} style={s.takeawayItem}>
-                <span style={s.takeawayBullet}>-</span>
-                <span style={s.takeawayText}>{item}</span>
-              </li>
-            ))}
-          </ul>
-          {book.best_for?.length ? (
-            <div style={s.bestFor}>
-              Best for:
-              {book.best_for.map((item) => <span key={item} style={s.bestForTag}>{item}</span>)}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div style={s.bookFooter}>
-        {userId ? (
-          <div style={s.statusBtns}>
-            {[
-              { id: "want_to_read", label: "Want" },
-              { id: "reading", label: "Reading" },
-              { id: "completed", label: "Done" },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => void markBookStatus(book.id, item.id)}
-                style={{ ...s.statusBtn, ...(status === item.id ? s.statusBtnActive : {}) }}
-                type="button"
-              >
-                {item.label}
+              <button onClick={() => setExpandedBook(isOpen ? null : book.id)} style={s.expandBtn} type="button">
+                {isOpen ? "Show less" : "Key takeaways"}
               </button>
-            ))}
-          </div>
-        ) : null}
-        <div style={s.bookLinks}>
-          {book.amazon_url ? <a href={book.amazon_url} target="_blank" rel="noopener noreferrer" style={s.buyLink}>Buy</a> : null}
-          {book.is_free_legal && book.free_pdf_url ? <a href={book.free_pdf_url} target="_blank" rel="noopener noreferrer" style={s.freeLink}>Free PDF</a> : null}
-        </div>
+
+              {isOpen ? (
+                <div style={s.bookExpanded}>
+                  {book.why_read ? (
+                    <div style={s.whyRead}>
+                      <div style={s.takeawaysTitle}>Why read this</div>
+                      <p style={s.whyReadText}>{book.why_read}</p>
+                    </div>
+                  ) : null}
+                  <div style={s.takeawaysTitle}>Key takeaways</div>
+                  <ul style={s.takeawaysList}>
+                    {takeaways.slice(0, 5).map((item, index) => (
+                      <li key={index} style={s.takeawayItem}>
+                        <span style={s.takeawayBullet}>-</span>
+                        <span style={s.takeawayText}>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <div style={s.bookFooter}>
+                {userId ? (
+                  <div style={s.statusBtns}>
+                    {[
+                      { id: "want_to_read", label: "Want" },
+                      { id: "reading", label: "Reading" },
+                      { id: "completed", label: "Done" },
+                    ].map((item) => (
+                      <button key={item.id} onClick={() => void markBookStatus(book.id, item.id)} style={{ ...s.statusBtn, ...(status === item.id ? s.statusBtnActive : {}) }} type="button">
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <div style={s.bookLinks}>
+                  {book.amazon_url ? <a href={book.amazon_url} target="_blank" rel="noopener noreferrer" style={s.buyLink}>Buy</a> : null}
+                  {book.is_free_legal && book.free_pdf_url ? <a href={book.free_pdf_url} target="_blank" rel="noopener noreferrer" style={s.freeLink}>Free PDF</a> : null}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
-    </article>
-  );
-}
-
-function Empty({ msg }: { msg: string }) {
-  return <div style={s.empty}>{msg}</div>;
-}
-
-function LoadingGrid() {
-  return (
-    <div style={s.grid}>
-      {Array.from({ length: 6 }).map((_, index) => <div key={index} style={s.skeleton} />)}
+      <div style={s.disclaimer}>
+        FinanceHub provides summaries and purchase links only. Free PDF links are only shown for legally free books.
+      </div>
     </div>
   );
+}
+
+function LoadingList() {
+  return (
+    <div>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} style={s.loadingVideoItem}>
+          <div style={s.loadingThumb} />
+          <div style={s.loadingCopy}>
+            <div style={s.loadingLine} />
+            <div style={{ ...s.loadingLine, width: "58%" }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Empty({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div style={s.empty}>
+      <div style={s.emptyTitle}>{title}</div>
+      {subtitle ? <div style={s.emptySub}>{subtitle}</div> : null}
+    </div>
+  );
+}
+
+function normalizeVideoType(video: Video): "video" | "playlist" {
+  return video.video_type === "playlist" || video.embed_type === "playlist" ? "playlist" : "video";
 }
 
 function parseTakeaways(value: Book["key_takeaways"]) {
@@ -484,15 +537,19 @@ function parseTakeaways(value: Book["key_takeaways"]) {
   }
 }
 
-function truncate(value: string, length: number) {
-  return value.length > length ? `${value.slice(0, length)}...` : value;
+function categoryLabel(category: string) {
+  return CATEGORIES.find((item) => item.id === category)?.label || category;
 }
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function getCoverColor(category: string) {
+function truncate(value: string, length: number) {
+  return value.length > length ? `${value.slice(0, length)}...` : value;
+}
+
+function getCoverBg(category: string) {
   const colors: Record<string, string> = {
     "personal-finance": "#E1F5EE",
     investing: "#E6F1FB",
@@ -517,83 +574,90 @@ function getCoverMark(category: string) {
 }
 
 const s: Record<string, CSSProperties> = {
-  page: { minHeight: "100vh", background: "var(--bg-page, #fafafa)", fontFamily: "system-ui,-apple-system,sans-serif", padding: "24px 24px 60px", maxWidth: 1120, margin: "0 auto" },
-  back: { fontSize: 13, color: "var(--text-muted, #888)", textDecoration: "none", display: "block", marginBottom: 16 },
-  hero: { background: "#0a0a0a", borderRadius: 16, padding: "36px 32px", marginBottom: 24, textAlign: "center" },
-  heroBadge: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 11, background: "#1D9E75", color: "#fff", fontWeight: 800, fontSize: 12, marginBottom: 12 },
-  heroTitle: { fontSize: 30, fontWeight: 800, color: "#fff", margin: "0 0 10px", letterSpacing: "-0.7px" },
-  heroSub: { fontSize: 15, color: "#aaa", margin: "0 auto 24px", maxWidth: 620, lineHeight: 1.6 },
-  heroStats: { display: "flex", justifyContent: "center", gap: 0, flexWrap: "wrap" },
-  heroStat: { display: "flex", flexDirection: "column", alignItems: "center", padding: "0 24px" },
-  heroStatNum: { fontSize: 26, fontWeight: 800, color: "#1D9E75", letterSpacing: "-0.5px" },
-  heroStatLabel: { fontSize: 11, color: "#777", marginTop: 2 },
-  heroStatDivider: { width: 1, background: "#333", margin: "4px 0" },
-  tabRow: { display: "flex", gap: 8, marginBottom: 16 },
-  tabBtn: { padding: "10px 22px", fontSize: 13, fontWeight: 700, border: "0.5px solid var(--border, #ddd)", borderRadius: 24, background: "var(--bg-card, #fff)", color: "var(--text-secondary, #666)", cursor: "pointer", fontFamily: "system-ui" },
-  tabBtnActive: { background: "var(--text-primary, #0a0a0a)", color: "var(--bg-card, #fff)", border: "0.5px solid var(--text-primary, #0a0a0a)" },
-  filters: { marginBottom: 20 },
-  catTabs: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 },
-  catBtn: { display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12, border: "0.5px solid var(--border, #ddd)", borderRadius: 20, background: "var(--bg-card, #fff)", color: "var(--text-secondary, #666)", cursor: "pointer", fontFamily: "system-ui" },
+  page: { minHeight: "100vh", background: "var(--bg-page, #f7f4ee)", fontFamily: "var(--font-ui, system-ui)", padding: "20px 22px 60px", maxWidth: 1280, margin: "0 auto" },
+  back: { fontSize: 13, color: "var(--text-muted, #718096)", textDecoration: "none", display: "block", marginBottom: 16 },
+  hero: { background: "linear-gradient(135deg, #0D1117 0%, #1A2A40 60%, #0E6163 100%)", borderRadius: 16, padding: "32px 28px", marginBottom: 22 },
+  heroBadge: { fontSize: 11, fontWeight: 700, color: "#1D9E75", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 },
+  heroTitle: { fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 800, color: "#fff", margin: "0 0 10px", letterSpacing: "-0.6px" },
+  heroSub: { fontSize: 14, color: "#d1d5db", lineHeight: 1.7, margin: "0 0 18px", maxWidth: 620 },
+  heroStats: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
+  heroStat: { fontSize: 14, color: "#d1d5db" },
+  heroStatDot: { width: 3, height: 3, borderRadius: "50%", background: "#6b7280" },
+  mainTabs: { display: "flex", gap: 6, marginBottom: 16 },
+  mainTab: { padding: "9px 20px", fontSize: 13, fontWeight: 600, border: "1.5px solid var(--border, #e2ddd5)", borderRadius: 24, background: "var(--bg-card, #fff)", color: "var(--text-muted, #718096)", cursor: "pointer", fontFamily: "var(--font-ui, system-ui)", transition: "all 0.15s" },
+  mainTabActive: { background: "#0a0a0a", color: "#fff", border: "1.5px solid #0a0a0a" },
+  filtersWrap: { marginBottom: 20 },
+  categoryRow: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 },
+  catPill: { display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", fontSize: 12, border: "1px solid var(--border, #e2ddd5)", borderRadius: 20, background: "var(--bg-card, #fff)", color: "var(--text-muted, #718096)", cursor: "pointer", fontFamily: "var(--font-ui, system-ui)", transition: "all 0.15s" },
+  catPillActive: { background: "#0a0a0a", color: "#fff", border: "1px solid #0a0a0a" },
   catMark: { fontSize: 9, fontWeight: 800, color: "#1D9E75" },
-  catBtnActive: { background: "var(--text-primary, #0a0a0a)", color: "var(--bg-card, #fff)", border: "0.5px solid var(--text-primary, #0a0a0a)" },
   filterRow: { display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" },
-  searchInput: { flex: 1, minWidth: 240, padding: "9px 14px", fontSize: 13, border: "0.5px solid var(--border, #ddd)", borderRadius: 9, outline: "none", fontFamily: "system-ui" },
-  levelTabs: { display: "flex", gap: 4, flexWrap: "wrap" },
-  levelBtn: { padding: "7px 12px", fontSize: 11, fontWeight: 600, border: "0.5px solid var(--border, #ddd)", borderRadius: 20, background: "var(--bg-card, #fff)", color: "var(--text-secondary, #666)", cursor: "pointer", fontFamily: "system-ui" },
-  levelBtnActive: { background: "#1D9E75", color: "#fff", border: "0.5px solid #1D9E75" },
-  section: { marginBottom: 28 },
-  sectionTitle: { fontSize: 13, fontWeight: 700, color: "var(--text-secondary, #555)", marginBottom: 14 },
-  featuredGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: 14, marginBottom: 28 },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px,1fr))", gap: 14 },
-  playlistCard: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #e5e5e5)", borderRadius: 14, padding: 18 },
-  playlistCardFeatured: { border: "1.5px solid #1D9E75" },
-  featuredBadge: { fontSize: 10, fontWeight: 800, color: "#1D9E75", background: "#E1F5EE", padding: "2px 8px", borderRadius: 10, display: "inline-block", marginBottom: 8 },
-  plMeta: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, gap: 8 },
-  plLevel: { fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 12 },
-  plVideos: { fontSize: 11, color: "var(--text-muted, #888)" },
-  plTitle: { fontSize: 15, fontWeight: 750, color: "var(--text-primary, #0a0a0a)", margin: "0 0 4px", letterSpacing: "-0.3px" },
-  plChannel: { fontSize: 12, color: "var(--text-muted, #888)", margin: "0 0 6px" },
-  plDesc: { fontSize: 12, color: "var(--text-secondary, #666)", lineHeight: 1.5, margin: "0 0 10px" },
-  curatorNote: { background: "#F0FAF6", borderRadius: 8, padding: "8px 10px", marginBottom: 12, fontSize: 11, color: "#0F6E56", lineHeight: 1.5 },
-  embedWrap: { borderRadius: 10, overflow: "hidden", marginBottom: 10 },
-  iframe: { width: "100%", aspectRatio: "16/9", border: "none", display: "block" },
-  hideBtn: { width: "100%", padding: 8, fontSize: 11, color: "#888", background: "#fafafa", border: "0.5px solid #eee", borderRadius: "0 0 10px 10px", cursor: "pointer", fontFamily: "system-ui" },
-  plBtns: { display: "flex", gap: 8, flexWrap: "wrap" },
-  watchHereBtn: { flex: 1, padding: 9, fontSize: 12, fontWeight: 700, border: "none", borderRadius: 9, background: "#1D9E75", color: "#fff", cursor: "pointer", fontFamily: "system-ui" },
-  ytBtn: { padding: "9px 14px", fontSize: 12, fontWeight: 600, border: "0.5px solid var(--border, #ddd)", borderRadius: 9, color: "var(--text-secondary, #555)", textDecoration: "none", display: "flex", alignItems: "center" },
-  booksGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px,1fr))", gap: 14 },
-  bookCard: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #e5e5e5)", borderRadius: 14, padding: 18, transition: "border-color .2s" },
-  bookCardOpen: { border: "1.5px solid #1D9E75" },
+  searchInput: { flex: 1, minWidth: 220, padding: "8px 14px", fontSize: 13, border: "1px solid var(--border, #e2ddd5)", borderRadius: 9, outline: "none", fontFamily: "var(--font-ui, system-ui)", background: "var(--bg-card, #fff)", color: "var(--text-primary, #1c2b3a)" },
+  levelRow: { display: "flex", gap: 4, background: "var(--bg-surface, #f5f5f3)", border: "1px solid var(--border, #e2ddd5)", borderRadius: 9, padding: 3, flexWrap: "wrap" },
+  levelBtn: { padding: "5px 11px", fontSize: 11, fontWeight: 500, border: "none", borderRadius: 7, background: "transparent", color: "var(--text-muted, #718096)", cursor: "pointer", fontFamily: "var(--font-ui, system-ui)" },
+  levelBtnActive: { background: "var(--bg-card, #fff)", color: "var(--text-primary, #1c2b3a)", fontWeight: 600, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" },
+  typeRow: { display: "flex", gap: 4, background: "var(--bg-surface, #f5f5f3)", border: "1px solid var(--border, #e2ddd5)", borderRadius: 9, padding: 3 },
+  typeBtn: { padding: "5px 11px", fontSize: 11, fontWeight: 500, border: "none", borderRadius: 7, background: "transparent", color: "var(--text-muted, #718096)", cursor: "pointer", fontFamily: "var(--font-ui, system-ui)" },
+  typeBtnActive: { background: "var(--bg-card, #fff)", color: "var(--text-primary, #1c2b3a)", fontWeight: 600, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" },
+  videosLayout: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: 24, alignItems: "start" },
+  playerCol: { position: "sticky", top: 80 },
+  playerWrap: { background: "var(--bg-card, #fff)", border: "1px solid var(--border, #e2ddd5)", borderRadius: 14, padding: 18 },
+  videoBadges: { display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" },
+  playerEmpty: { background: "var(--bg-card, #fff)", border: "1.5px dashed var(--border, #e2ddd5)", borderRadius: 14, padding: "40px 20px", textAlign: "center" },
+  playerEmptyTitle: { fontWeight: 600, fontSize: 15, color: "var(--text-secondary, #4a5568)", marginBottom: 6 },
+  playerEmptySub: { fontSize: 13, color: "var(--text-muted, #718096)" },
+  levelBadge: { fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: "#E1F5EE", color: "#1D9E75" },
+  catBadge: { fontSize: 10, color: "var(--text-muted, #718096)", background: "var(--bg-surface, #f5f5f3)", padding: "2px 8px", borderRadius: 12 },
+  countBadge: { fontSize: 10, color: "var(--text-muted, #718096)", background: "var(--bg-surface, #f5f5f3)", padding: "2px 8px", borderRadius: 12 },
+  disclaimer: { fontSize: 11, color: "var(--text-muted, #718096)", background: "var(--bg-surface, #f5f5f3)", borderRadius: 9, padding: "10px 14px", lineHeight: 1.6, marginTop: 14 },
+  listCol: { background: "var(--bg-card, #fff)", border: "1px solid var(--border, #e2ddd5)", borderRadius: 14, padding: "10px 8px", maxHeight: "calc(100vh - 200px)", overflowY: "auto" },
+  listSection: { marginBottom: 16 },
+  listSectionTitle: { fontSize: 11, fontWeight: 700, color: "var(--text-muted, #718096)", textTransform: "uppercase", letterSpacing: ".07em", padding: "4px 12px 8px", borderBottom: "1px solid var(--bg-surface, #f5f5f3)", marginBottom: 6 },
+  videoItem: { width: "100%", display: "flex", gap: 10, textAlign: "left", padding: "10px 12px", borderRadius: "var(--radius-md, 10px)", cursor: "pointer", background: "transparent", border: "1.5px solid transparent", transition: "all 0.15s", marginBottom: 4, fontFamily: "var(--font-ui, system-ui)" },
+  videoItemActive: { background: "var(--accent-light, #e6f3f3)", border: "1.5px solid var(--accent-muted, #6bb5b6)" },
+  thumb: { width: 80, height: 52, borderRadius: 6, overflow: "hidden", flexShrink: 0, backgroundColor: "#0a0a0a", backgroundSize: "cover", backgroundPosition: "center", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" },
+  thumbPlaylist: { background: "linear-gradient(135deg, #0f172a, #0e6163)" },
+  thumbPlay: { color: "#fff", background: "rgba(0,0,0,0.5)", fontSize: 8, fontWeight: 800, padding: "2px 5px", borderRadius: 4 },
+  thumbCount: { position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 4px", borderRadius: 3 },
+  videoItemInfo: { flex: 1, minWidth: 0 },
+  videoItemTitle: { fontSize: 13, fontWeight: 600, lineHeight: 1.4, marginBottom: 3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" },
+  videoItemChannel: { fontSize: 11, color: "var(--text-muted, #718096)", marginBottom: 4 },
+  videoItemMeta: { display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap", fontSize: 10, color: "var(--text-muted, #718096)" },
+  smallLevel: { fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 10 },
+  empty: { textAlign: "center", padding: "40px 20px", color: "var(--text-muted, #718096)" },
+  emptyTitle: { fontWeight: 600, fontSize: 15, color: "var(--text-secondary, #4a5568)", marginBottom: 6 },
+  emptySub: { fontSize: 13 },
+  loadingVideoItem: { display: "flex", gap: 10, padding: "10px 12px", marginBottom: 4 },
+  loadingThumb: { width: 80, height: 52, borderRadius: 6, background: "#eee", flexShrink: 0 },
+  loadingCopy: { flex: 1, paddingTop: 4 },
+  loadingLine: { height: 12, background: "#eee", borderRadius: 4, marginBottom: 7 },
+  booksGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 },
+  bookSkeleton: { height: 210, background: "var(--bg-surface, #f5f5f3)", borderRadius: 12 },
+  bookCard: { background: "var(--bg-card, #fff)", border: "1px solid var(--border, #e2ddd5)", borderRadius: 14, padding: 18, transition: "border-color 0.2s" },
+  bookCardOpen: { border: "1.5px solid var(--accent, #0e6163)" },
   bookHeader: { display: "flex", gap: 14, marginBottom: 12 },
-  bookCover: { width: 64, height: 80, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" },
-  coverIcon: { fontSize: 13, fontWeight: 800, color: "#0a0a0a" },
+  bookCover: { width: 60, height: 76, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" },
+  bookCoverMark: { fontSize: 13, fontWeight: 800, color: "#0a0a0a" },
   bookInfo: { flex: 1, minWidth: 0 },
-  bookMeta: { display: "flex", gap: 6, marginBottom: 6, flexWrap: "wrap" },
-  diffBadge: { fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 12 },
-  catBadge: { fontSize: 10, color: "#888", background: "#f0f0f0", padding: "2px 8px", borderRadius: 12 },
-  bookTitle: { fontSize: 14, fontWeight: 750, color: "var(--text-primary, #0a0a0a)", margin: "0 0 3px", letterSpacing: "-0.2px" },
-  bookAuthor: { fontSize: 12, color: "var(--text-muted, #888)", margin: "0 0 5px" },
-  bookDesc: { fontSize: 12, color: "var(--text-secondary, #666)", lineHeight: 1.5, margin: 0 },
-  expandBtn: { width: "100%", padding: 8, fontSize: 12, color: "#1D9E75", background: "#F0FAF6", border: "0.5px solid #9FE1CB", borderRadius: 8, cursor: "pointer", fontFamily: "system-ui", fontWeight: 700, marginBottom: 10 },
-  bookExpanded: { background: "var(--bg-surface, #fafafa)", borderRadius: 9, padding: 14, marginBottom: 12 },
+  bookMeta: { marginBottom: 5 },
+  diffBadge: { fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 12 },
+  bookTitle: { fontSize: 14, fontWeight: 700, color: "var(--text-primary, #1c2b3a)", margin: "0 0 3px", letterSpacing: "-0.2px" },
+  bookAuthor: { fontSize: 12, color: "var(--text-muted, #718096)", margin: "0 0 5px" },
+  bookDesc: { fontSize: 12, color: "var(--text-secondary, #4a5568)", lineHeight: 1.5, margin: 0 },
+  expandBtn: { width: "100%", padding: 7, fontSize: 12, color: "var(--accent, #0e6163)", background: "var(--accent-light, #e6f3f3)", border: "1px solid var(--accent-muted, #6bb5b6)", borderRadius: 8, cursor: "pointer", fontFamily: "var(--font-ui, system-ui)", fontWeight: 600, marginBottom: 10 },
+  bookExpanded: { background: "var(--bg-surface, #f5f5f3)", borderRadius: 9, padding: 14, marginBottom: 12 },
   whyRead: { marginBottom: 12 },
-  whyReadTitle: { fontSize: 10, fontWeight: 800, color: "var(--text-muted, #888)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 5 },
-  whyReadText: { fontSize: 13, color: "var(--text-secondary, #333)", lineHeight: 1.6, margin: 0 },
-  takeawaysTitle: { fontSize: 10, fontWeight: 800, color: "var(--text-muted, #888)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 8 },
+  whyReadText: { fontSize: 13, color: "var(--text-secondary, #4a5568)", lineHeight: 1.6, margin: 0 },
+  takeawaysTitle: { fontSize: 10, fontWeight: 700, color: "var(--text-muted, #718096)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 8 },
   takeawaysList: { listStyle: "none", padding: 0, margin: "0 0 12px" },
-  takeawayItem: { display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 7 },
-  takeawayBullet: { color: "#1D9E75", fontWeight: 800, flexShrink: 0, fontSize: 12, marginTop: 1 },
-  takeawayText: { fontSize: 13, color: "var(--text-secondary, #444)", lineHeight: 1.5 },
-  bestFor: { fontSize: 11, color: "var(--text-muted, #888)", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" },
-  bestForTag: { background: "var(--bg-surface, #eee)", padding: "2px 8px", borderRadius: 10, fontSize: 10 },
+  takeawayItem: { display: "flex", gap: 8, marginBottom: 7, alignItems: "flex-start" },
+  takeawayBullet: { color: "var(--accent, #0e6163)", fontWeight: 700, flexShrink: 0, fontSize: 12, marginTop: 2 },
+  takeawayText: { fontSize: 13, color: "var(--text-secondary, #4a5568)", lineHeight: 1.5 },
   bookFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 },
   statusBtns: { display: "flex", gap: 5 },
-  statusBtn: { padding: "5px 9px", fontSize: 10, fontWeight: 600, border: "0.5px solid var(--border, #ddd)", borderRadius: 8, background: "var(--bg-card, #fff)", color: "var(--text-secondary, #666)", cursor: "pointer", fontFamily: "system-ui" },
-  statusBtnActive: { background: "#1D9E75", color: "#fff", border: "0.5px solid #1D9E75" },
+  statusBtn: { padding: "4px 9px", fontSize: 10, fontWeight: 500, border: "1px solid var(--border, #e2ddd5)", borderRadius: 8, background: "var(--bg-card, #fff)", color: "var(--text-muted, #718096)", cursor: "pointer", fontFamily: "var(--font-ui, system-ui)" },
+  statusBtnActive: { background: "var(--accent, #0e6163)", color: "#fff", border: "1px solid var(--accent, #0e6163)" },
   bookLinks: { display: "flex", gap: 8 },
-  buyLink: { fontSize: 11, fontWeight: 700, color: "#185FA5", textDecoration: "none" },
-  freeLink: { fontSize: 11, fontWeight: 700, color: "#1D9E75", textDecoration: "none", background: "#E1F5EE", padding: "3px 9px", borderRadius: 8 },
-  disclaimer: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #eee)", borderRadius: 10, padding: "12px 14px", fontSize: 11, color: "var(--text-muted, #888)", lineHeight: 1.6, marginTop: 20 },
-  skeleton: { height: 220, background: "var(--bg-surface, #eee)", borderRadius: 12 },
-  empty: { textAlign: "center", padding: 40, color: "var(--text-muted, #888)", fontSize: 14 },
+  buyLink: { fontSize: 11, fontWeight: 600, color: "#185FA5", textDecoration: "none" },
+  freeLink: { fontSize: 11, fontWeight: 600, color: "var(--accent, #0e6163)", textDecoration: "none", background: "var(--accent-light, #e6f3f3)", padding: "3px 9px", borderRadius: 8 },
 };

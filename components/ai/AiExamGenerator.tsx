@@ -112,7 +112,7 @@ export default function AiExamGenerator() {
               placeholder="e.g. Compound interest, Options Greeks, Working capital management"
               style={s.input}
             />
-            <div style={s.hint}>Be specific. "P/E ratio interpretation" is better than "stocks".</div>
+            <div style={s.hint}>Be specific. &quot;P/E ratio interpretation&quot; is better than &quot;stocks&quot;.</div>
           </div>
 
           <div style={s.field}>

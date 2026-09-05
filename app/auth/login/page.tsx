@@ -27,14 +27,8 @@ export default function LoginPage() {
       return;
     }
 
+    router.refresh();
     router.push("/dashboard");
-  };
-
-  const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
-    });
   };
 
   const handleForgot = async () => {
@@ -61,7 +55,7 @@ export default function LoginPage() {
         <h1 style={styles.title}>Welcome back</h1>
         <p style={styles.sub}>Continue your learning streak.</p>
 
-        <button onClick={handleGoogle} style={styles.googleBtn} type="button">
+        <a href="/api/auth/google?next=/dashboard" style={styles.googleBtn}>
           <svg width="18" height="18" viewBox="0 0 48 48" style={{ marginRight: 8, flexShrink: 0 }}>
             <path
               fill="#FFC107"
@@ -81,7 +75,7 @@ export default function LoginPage() {
             />
           </svg>
           Continue with Google
-        </button>
+        </a>
 
         <div style={styles.divider}>
           <span style={styles.dividerText}>or log in with email</span>

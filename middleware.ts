@@ -102,10 +102,10 @@ export async function middleware(req: NextRequest) {
 
     const adminEmails = (process.env.ADMIN_EMAILS || "")
       .split(",")
-      .map((email) => email.trim())
+      .map((email) => email.trim().toLowerCase())
       .filter(Boolean);
 
-    if (!adminEmails.includes(session.user.email || "")) {
+    if (!adminEmails.includes((session.user.email || "").toLowerCase())) {
       return redirect(new URL("/dashboard", req.url));
     }
   }

@@ -1,20 +1,22 @@
-﻿"use client";
+"use client";
 
 import AiDoubtBox from "@/components/lesson/AiDoubtBox";
 import PremiumGate from "@/components/lesson/PremiumGate";
 import XpCelebration from "@/components/learn/XpCelebration";
 import QuizModal from "@/components/quiz/QuizModal";
+import LessonVideoTab from "@/components/video/LessonVideoTab";
 import { supabase } from "@/lib/supabase";
 import type { Lesson, Level, Profile, Track } from "@/types/database";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { TRACK_THEMES, useTheme } from "@/components/ui/ThemeProvider";
+import { THEME_CONFIG, TRACK_THEMES, useTheme } from "@/components/ui/ThemeProvider";
 
 const ForexPaperTrader = dynamic(() => import("@/components/trading/ForexPaperTrader"), { ssr: false });
 const CryptoPaperTrader = dynamic(() => import("@/components/trading/CryptoPaperTrader"), { ssr: false });
 const LessonComments = dynamic(() => import("@/components/community/LessonComments"), { ssr: false });
+const LessonNotesTab = dynamic(() => import("@/components/notes/LessonNotesTab"), { ssr: false });
 
 type FullLesson = Lesson & {
   level: Level & { track: Track };
@@ -26,13 +28,17 @@ type Playlist = {
   id: string;
   title: string;
   channel_name: string;
+  description: string | null;
+  playlist_url: string | null;
   embed_id: string;
+  embed_type: string | null;
+  video_type: string | null;
   curator_note: string | null;
   video_count: number | null;
   duration_hrs: number | null;
 };
 
-type LessonTab = "learn" | "watch" | "practice" | "download";
+type LessonTab = "learn" | "watch" | "practice" | "notes" | "download";
 
 const TRACK_PRACTICE: Record<string, { type: "forex" | "crypto" | "simulator"; label: string; href?: string }> = {
   "trading-markets": { type: "forex", label: "Forex Practice Terminal" },
@@ -53,30 +59,32 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [activeTab, setActiveTab] = useState<LessonTab>("learn");
   const [loading, setLoading] = useState(true);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [showAI, setShowAI] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [downloadingNotes, setDownloadingNotes] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [showAiDoubt, setShowAiDoubt] = useState(false);
   const [celebration, setCelebration] = useState<{ xp: number; reason: string; badge?: string | null } | null>(null);
 
   useEffect(() => {
-    void loadLesson();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadLessonData();
   }, [lessonId]);
 
   useEffect(() => {
-    const trackSlug = lesson?.level?.track?.slug;
-    if (!trackSlug) return;
+    if (!lesson?.level?.track?.slug) {
+      resetToAuto();
+      return;
+    }
 
-    const trackTheme = TRACK_THEMES[trackSlug];
-    if (!trackTheme) return;
+    const nextTheme = TRACK_THEMES[lesson.level.track.slug] || "default";
+    setTheme(nextTheme);
 
-    setTheme(trackTheme);
-    return () => resetToAuto();
-  }, [lesson?.level?.track?.slug, resetToAuto, setTheme]);
+    return () => {
+      resetToAuto();
+    };
+  }, [lesson?.level?.track?.slug, setTheme, resetToAuto]);
 
-  const loadLesson = async () => {
+  const loadLessonData = async () => {
     setLoading(true);
     const {
       data: { user },
@@ -87,10 +95,8 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
       return;
     }
 
-    const [{ data: prof }, { data: les }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
-      supabase.from("lessons").select("*").eq("id", lessonId).single(),
-    ]);
+    const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    const { data: les } = await supabase.from("lessons").select("*").eq("id", lessonId).single();
 
     if (!les) {
       router.push("/dashboard");
@@ -114,11 +120,12 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
     if (track) {
       const { data: playlistRows } = await supabase
         .from("curated_playlists" as never)
-        .select("id, title, channel_name, embed_id, curator_note, video_count, duration_hrs")
-        .or(`lesson_id.eq.${les.id},track_id.eq.${track.id}`)
+        .select("id, title, channel_name, description, playlist_url, embed_id, embed_type, video_type, curator_note, video_count, duration_hrs")
+        .or(`lesson_id.eq.${les.id},track_id.eq.${track.id},category.eq.${track.slug}`)
         .eq("is_published", true)
         .order("is_featured", { ascending: false })
-        .limit(4);
+        .order("video_type", { ascending: false })
+        .limit(6);
       setPlaylists((playlistRows as unknown as Playlist[] | null) || []);
     } else {
       setPlaylists([]);
@@ -158,7 +165,7 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
       body: JSON.stringify({ lessonId: lesson.id, timeSpent }),
     });
 
-    const result = await response.json() as {
+    const result = (await response.json()) as {
       success?: boolean;
       reason?: string;
       xp_earned?: number;
@@ -238,11 +245,14 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
   const nextLesson =
     currentIndex >= 0 && currentIndex < lesson.siblingLessons.length - 1 ? lesson.siblingLessons[currentIndex + 1] : null;
   const trackSlug = lesson.level?.track?.slug || "";
+  const trackTheme = TRACK_THEMES[trackSlug] || "default";
+  const trackColor = THEME_CONFIG[trackTheme]?.accent || "#0E6163";
   const practiceInfo = TRACK_PRACTICE[trackSlug];
   const visibleTabs: { id: LessonTab; label: string }[] = [
     { id: "learn", label: "Learn" },
     ...(playlists.length > 0 ? [{ id: "watch" as LessonTab, label: `Watch (${playlists.length})` }] : []),
     ...(practiceInfo ? [{ id: "practice" as LessonTab, label: "Practice" }] : []),
+    { id: "notes", label: "My Notes" },
     { id: "download", label: "Download" },
   ];
 
@@ -270,14 +280,22 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
           <div style={s.sidebarTitle}>{lesson.level?.title}</div>
           <div style={s.lessonList}>
             {lesson.siblingLessons.map((sibling, index) => {
-              const isActive = sibling.id === lessonId;
-              const isLocked = !sibling.is_free && profile?.role === "free";
-
+              const active = sibling.id === lessonId;
               return (
-                <Link key={sibling.id} href={`/learn/${sibling.id}`} style={{ ...s.lessonListItem, ...(isActive ? s.lessonListActive : {}) }}>
-                  <div style={{ ...s.lessonNum, ...(isActive ? s.lessonNumActive : {}) }}>{isLocked ? "Pro" : index + 1}</div>
-                  <span style={s.lessonListTitle}>{sibling.title}</span>
-                  {isActive ? <div style={s.activeDot} /> : null}
+                <Link
+                  key={sibling.id}
+                  href={`/learn/${sibling.id}`}
+                  style={{
+                    ...s.sidebarItem,
+                    backgroundColor: active ? "var(--bg-elevated, #FFFFFF)" : "transparent",
+                    borderColor: active ? "var(--border-strong, #CBD5E1)" : "transparent",
+                    color: active ? "var(--accent-primary, #0E6163)" : "var(--text-secondary, #64748B)",
+                    fontWeight: active ? 600 : 400,
+                  }}
+                >
+                  <span style={s.itemNumber}>{index + 1}</span>
+                  <span style={s.itemTitle}>{sibling.title}</span>
+                  {!sibling.is_free ? <span style={s.proTag}>PRO</span> : null}
                 </Link>
               );
             })}
@@ -285,70 +303,101 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
         </aside>
 
         <main style={s.main}>
-          {isPremiumLocked ? (
-            <PremiumGate lessonTitle={lesson.title} />
-          ) : (
-            <>
-              <div style={s.lessonHeader}>
-                <div style={s.lessonMeta}>
-                  <span style={s.metaItem}>{lesson.duration_minutes} min read</span>
-                  {lesson.is_free ? <span style={s.freeTag}>Free</span> : <span style={s.proTag}>Pro</span>}
-                  {lesson.quiz ? <span style={s.quizTag}>Quiz included</span> : null}
-                </div>
-                <h1 style={s.lessonTitle}>{lesson.title}</h1>
-              </div>
+          <div style={s.hero}>
+            <div style={s.lessonMetaRow}>
+              <span style={{ ...s.trackPill, backgroundColor: trackColor }}>{lesson.level?.track?.title}</span>
+              <span style={s.durationPill}>{lesson.duration_minutes} min read</span>
+              {lesson.quiz ? <span style={s.quizPill}>Quiz available</span> : null}
+            </div>
+            <h1 style={s.title}>{lesson.title}</h1>
 
-              <div style={s.tabs}>
-                {visibleTabs.map((tab) => (
+            <div style={s.tabBar}>
+              {visibleTabs.map((tab) => {
+                const active = activeTab === tab.id;
+                return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    style={{ ...s.tab, ...(activeTab === tab.id ? s.tabActive : {}) }}
+                    style={{
+                      ...s.tabButton,
+                      backgroundColor: active ? "var(--accent-primary, #0E6163)" : "transparent",
+                      color: active ? "#FFFFFF" : "var(--text-secondary, #64748B)",
+                      borderColor: active ? "transparent" : "var(--border-subtle, #E2E8F0)",
+                    }}
                     type="button"
                   >
                     {tab.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+          </div>
 
+          {isPremiumLocked ? (
+            <PremiumGate lessonTitle={lesson.title} />
+          ) : (
+            <>
               {activeTab === "learn" ? (
                 <>
-                  {lesson.video_url ? (
-                    <div style={s.videoWrap}>
-                      <iframe src={lesson.video_url.replace("watch?v=", "embed/")} style={s.video} allowFullScreen title={lesson.title} />
-                    </div>
-                  ) : null}
+                  <div style={s.content}>
+                    <div style={s.prose}>{lesson.content_mdx}</div>
 
-                  <div style={s.lessonBody}>
-                    {lesson.content_mdx ? <LessonContent content={lesson.content_mdx} /> : <PlaceholderContent title={lesson.title} />}
-                  </div>
-
-                  <div style={s.takeawaysBox}>
-                    <div style={s.takeawaysTitle}>Key takeaways</div>
-                    <ul style={s.takeawaysList}>
-                      <li>Re-read this lesson if any concept feels unclear before moving on.</li>
-                      <li>Complete the quiz below to lock in your understanding and earn XP.</li>
-                      <li>Use the AI tutor if you have doubts. It knows this lesson.</li>
-                    </ul>
-                  </div>
-
-                  {lesson.level?.track?.slug === "trading-markets" || lesson.level?.track?.slug === "forex" ? (
-                    <div style={s.embeddedPractice}>
-                      <div style={s.embeddedPracticeTitle}>FX practice: apply what you just learned</div>
-                      <ForexPaperTrader embedded defaultSymbol="EURUSD" />
-                    </div>
-                  ) : null}
-
-                  <div style={s.actions}>
-                    {!completed ? (
-                      <button onClick={handleMarkComplete} disabled={markingDone} style={{ ...s.completeBtn, opacity: markingDone ? 0.7 : 1 }} type="button">
-                        {markingDone ? "Saving..." : "Mark as complete: earn 25 XP"}
-                      </button>
+                    {showAiDoubt ? (
+                      <div style={{ marginBottom: 24 }}>
+                        <AiDoubtBox
+                          lessonTitle={lesson.title}
+                          lessonContent={lesson.content_mdx || ""}
+                          userRole={(profile?.role as "free" | "pro" | "expert") || "free"}
+                          onClose={() => setShowAiDoubt(false)}
+                        />
+                      </div>
                     ) : (
-                      <div style={s.completedBanner}>
-                        Lesson complete: 25 XP earned
+                      <button
+                        type="button"
+                        onClick={() => setShowAiDoubt(true)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "10px 16px",
+                          borderRadius: 12,
+                          backgroundColor: "var(--bg-elevated, #F1F5F9)",
+                          border: "1px solid var(--border-subtle, #E2E8F0)",
+                          color: "var(--text-primary, #0F172A)",
+                          fontSize: 13,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          marginBottom: 24,
+                        }}
+                      >
+                        ✨ Ask AI Tutor about this lesson
+                      </button>
+                    )}
+
+                    {completed ? (
+                      <div style={s.completedCard}>
+                        <div>
+                          <div style={s.completedCardTitle}>Lesson completed</div>
+                          <div style={s.completedCardSub}>You have already earned XP for this lesson.</div>
+                        </div>
                         {lesson.quiz ? (
                           <button onClick={() => setShowQuiz(true)} style={s.quizBtn} type="button">
+                            Retake quiz
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div style={s.completionBox}>
+                        <button
+                          onClick={handleMarkComplete}
+                          disabled={markingDone}
+                          style={{ ...s.completeBtn, opacity: markingDone ? 0.65 : 1 }}
+                          type="button"
+                        >
+                          {markingDone ? "Saving..." : "Mark as complete (+50 XP)"}
+                        </button>
+                        {lesson.quiz ? (
+                          <button onClick={() => setShowQuiz(true)} style={s.quizBtnSecondary} type="button">
                             Take quiz
                           </button>
                         ) : null}
@@ -376,42 +425,7 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
               ) : null}
 
               {activeTab === "watch" ? (
-                <div style={s.watchPanel}>
-                  <div style={s.panelTitle}>Curated videos for this lesson</div>
-                  <p style={s.panelSub}>Hand-picked playlists to help you connect the lesson to real explanations and examples.</p>
-                  {playlists.map((playlist) => (
-                    <div key={playlist.id} style={s.playlistCard}>
-                      <div style={s.playlistHeader}>
-                        <div>
-                          <div style={s.playlistTitle}>{playlist.title}</div>
-                          <div style={s.playlistMeta}>
-                            {playlist.channel_name} - {playlist.video_count || 1} videos - {playlist.duration_hrs || 1}h
-                          </div>
-                        </div>
-                        <a
-                          href={`https://youtube.com/playlist?list=${playlist.embed_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={s.youtubeLink}
-                        >
-                          Open on YouTube
-                        </a>
-                      </div>
-                      {playlist.curator_note ? <div style={s.curatorNote}>{playlist.curator_note}</div> : null}
-                      <div style={s.embedWrap}>
-                        <iframe
-                          src={`https://www.youtube.com/embed/videoseries?list=${playlist.embed_id}&rel=0&modestbranding=1`}
-                          style={s.embed}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          loading="lazy"
-                          title={playlist.title}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <div style={s.disclaimer}>Videos are embedded from YouTube. Rights belong to the original creators.</div>
-                </div>
+                <LessonVideoTab lessonId={lesson.id} trackSlug={trackSlug} trackColor={trackColor} />
               ) : null}
 
               {activeTab === "practice" ? (
@@ -426,6 +440,15 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
                     </Link>
                   ) : null}
                 </div>
+              ) : null}
+
+              {activeTab === "notes" ? (
+                <LessonNotesTab
+                  lessonId={lesson.id}
+                  lessonTitle={lesson.title}
+                  trackSlug={trackSlug}
+                  trackIcon={lesson.level?.track?.icon || "📖"}
+                />
               ) : null}
 
               {activeTab === "download" ? (
@@ -455,175 +478,407 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
             </>
           )}
         </main>
-
-        <div style={{ ...s.aiPanel, transform: showAI ? "translateX(0)" : "translateX(100%)" }}>
-          <AiDoubtBox lessonTitle={lesson.title} lessonContent={lesson.content_mdx || ""} userRole={profile?.role || "free"} onClose={() => setShowAI(false)} />
-        </div>
       </div>
 
-      <button onClick={() => setShowAI(!showAI)} style={s.aiFloatBtn} type="button">
-        {showAI ? "Close AI" : "Ask AI"}
-      </button>
-
-      {showQuiz && lesson.quiz ? (
+      {showQuiz && lesson.quiz && profile ? (
         <QuizModal
           quizId={lesson.quiz.id}
           quizTitle={lesson.quiz.title}
           passingScore={lesson.quiz.passing_score}
-          userId={profile?.id || ""}
+          userId={profile.id}
           lessonId={lesson.id}
           lessonTitle={lesson.title}
           onClose={() => setShowQuiz(false)}
-          onPass={() => setShowQuiz(false)}
+          onPass={(score) => {
+            setCelebration({ xp: score, reason: "Quiz passed!" });
+            setShowQuiz(false);
+          }}
         />
       ) : null}
 
       {celebration ? (
         <XpCelebration
-          xp={celebration.xp}
-          reason={celebration.reason}
           badge={celebration.badge}
           onClose={() => setCelebration(null)}
+          reason={celebration.reason}
+          xp={celebration.xp}
         />
       ) : null}
     </div>
   );
 }
 
-function LessonContent({ content }: { content: string }) {
-  return (
-    <div style={{ lineHeight: 1.8, fontSize: 16, color: "#333" }}>
-      {content.split("\n").map((line, index) => {
-        if (line.startsWith("# ")) return <h1 key={index} style={s.mdH1}>{line.slice(2)}</h1>;
-        if (line.startsWith("## ")) return <h2 key={index} style={s.mdH2}>{line.slice(3)}</h2>;
-        if (line.startsWith("### ")) return <h3 key={index} style={s.mdH3}>{line.slice(4)}</h3>;
-        if (line.startsWith("- ")) return <li key={index} style={s.mdLi}>{line.slice(2)}</li>;
-        if (line.startsWith("> ")) return <blockquote key={index} style={s.mdQuote}>{line.slice(2)}</blockquote>;
-        if (line.startsWith("```")) return <div key={index} />;
-        if (line.trim() === "") return <br key={index} />;
-        return <p key={index} style={{ margin: "0 0 14px" }}>{line}</p>;
-      })}
-    </div>
-  );
-}
-
-function PlaceholderContent({ title }: { title: string }) {
-  return (
-    <div style={{ lineHeight: 1.8, color: "#333" }}>
-      <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 16px" }}>Introduction</h2>
-      <p style={{ marginBottom: 14, fontSize: 16 }}>
-        Welcome to <strong>{title}</strong>. This lesson will walk you through the core concepts in a clear, step-by-step way.
-      </p>
-      <div style={s.infoBox}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: "#0F6E56", marginBottom: 6 }}>Why this matters</div>
-        <p style={{ fontSize: 14, color: "#085041", margin: 0 }}>
-          Finance knowledge is not just for professionals. It affects every decision you make about money.
-        </p>
-      </div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, margin: "24px 0 12px" }}>Core concept</h2>
-      <p style={{ marginBottom: 14, fontSize: 16 }}>
-        Content for this lesson is being uploaded by our content team. Check back shortly, or use the AI tutor to ask about this topic now.
-      </p>
-      <blockquote style={s.mdQuote}>
-        "The stock market is a device for transferring money from the impatient to the patient." - Warren Buffett
-      </blockquote>
-    </div>
-  );
-}
+const s: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    backgroundColor: "var(--bg-base, #F8FAFC)",
+    color: "var(--text-primary, #0F172A)",
+    display: "flex",
+    flexDirection: "column",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "16px 24px",
+    backgroundColor: "var(--bg-surface, #FFFFFF)",
+    borderBottom: "1px solid var(--border-subtle, #E2E8F0)",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 16,
+  },
+  backBtn: {
+    padding: "6px 12px",
+    borderRadius: 8,
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    color: "var(--text-secondary, #64748B)",
+    fontSize: 13,
+    textDecoration: "none",
+  },
+  breadcrumb: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 13,
+  },
+  breadTrack: {
+    color: "var(--text-secondary, #64748B)",
+  },
+  breadSep: {
+    color: "var(--border-strong, #CBD5E1)",
+  },
+  breadLevel: {
+    color: "var(--text-primary, #0F172A)",
+    fontWeight: 600,
+  },
+  headerRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  completedPill: {
+    padding: "4px 10px",
+    borderRadius: 999,
+    backgroundColor: "#DCFCE7",
+    color: "#166534",
+    fontSize: 12,
+    fontWeight: 600,
+  },
+  xpPill: {
+    padding: "4px 10px",
+    borderRadius: 999,
+    backgroundColor: "var(--bg-elevated, #F1F5F9)",
+    color: "var(--text-primary, #0F172A)",
+    fontSize: 12,
+    fontWeight: 600,
+  },
+  layout: {
+    display: "flex",
+    flex: 1,
+  },
+  sidebar: {
+    width: 280,
+    backgroundColor: "var(--bg-surface, #FFFFFF)",
+    borderRight: "1px solid var(--border-subtle, #E2E8F0)",
+    padding: 20,
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+  },
+  sidebarTitle: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: "var(--text-muted, #94A3B8)",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+  },
+  lessonList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
+  sidebarItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid transparent",
+    fontSize: 13,
+    textDecoration: "none",
+    transition: "all 0.15s ease",
+  },
+  itemNumber: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  itemTitle: {
+    flex: 1,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  proTag: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: "#D97706",
+    backgroundColor: "#FEF3C7",
+    padding: "2px 6px",
+    borderRadius: 4,
+  },
+  main: {
+    flex: 1,
+    padding: "32px 40px",
+    maxWidth: 920,
+    margin: "0 auto",
+    width: "100%",
+  },
+  hero: {
+    marginBottom: 28,
+  },
+  lessonMetaRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  trackPill: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: 700,
+    padding: "3px 8px",
+    borderRadius: 6,
+  },
+  durationPill: {
+    fontSize: 12,
+    color: "var(--text-muted, #94A3B8)",
+  },
+  quizPill: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#2563EB",
+    backgroundColor: "#DBEAFE",
+    padding: "2px 8px",
+    borderRadius: 999,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 800,
+    lineHeight: 1.25,
+    marginBottom: 16,
+  },
+  tabBar: {
+    display: "flex",
+    gap: 8,
+    borderBottom: "1px solid var(--border-subtle, #E2E8F0)",
+    paddingBottom: 8,
+  },
+  tabButton: {
+    padding: "6px 14px",
+    borderRadius: 8,
+    border: "1px solid transparent",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  content: {
+    backgroundColor: "var(--bg-surface, #FFFFFF)",
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    borderRadius: 16,
+    padding: 32,
+    marginBottom: 24,
+  },
+  prose: {
+    fontSize: 15,
+    lineHeight: 1.7,
+    whiteSpace: "pre-wrap",
+    marginBottom: 32,
+  },
+  completedCard: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "#F0FDF4",
+    border: "1px solid #BBF7D0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  completedCardTitle: {
+    fontWeight: 700,
+    color: "#15803D",
+    fontSize: 14,
+  },
+  completedCardSub: {
+    color: "#166534",
+    fontSize: 12,
+  },
+  completionBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    paddingTop: 16,
+    borderTop: "1px solid var(--border-subtle, #E2E8F0)",
+  },
+  completeBtn: {
+    padding: "10px 20px",
+    borderRadius: 10,
+    backgroundColor: "var(--accent-primary, #0E6163)",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 700,
+    border: "none",
+    cursor: "pointer",
+  },
+  quizBtn: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    backgroundColor: "#2563EB",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 600,
+    border: "none",
+    cursor: "pointer",
+  },
+  quizBtnSecondary: {
+    padding: "10px 16px",
+    borderRadius: 10,
+    backgroundColor: "transparent",
+    border: "1px solid var(--border-strong, #CBD5E1)",
+    color: "var(--text-primary, #0F172A)",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  lessonNav: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 32,
+  },
+  navPrev: {
+    padding: "10px 16px",
+    borderRadius: 10,
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    color: "var(--text-secondary, #64748B)",
+    fontSize: 13,
+    textDecoration: "none",
+    maxWidth: 300,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  navNext: {
+    padding: "10px 16px",
+    borderRadius: 10,
+    backgroundColor: "var(--accent-primary, #0E6163)",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 600,
+    textDecoration: "none",
+    maxWidth: 300,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  practicePanel: {
+    backgroundColor: "var(--bg-surface, #FFFFFF)",
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    borderRadius: 16,
+    padding: 24,
+  },
+  panelTitle: {
+    fontSize: 18,
+    fontWeight: 700,
+    marginBottom: 6,
+  },
+  panelSub: {
+    fontSize: 13,
+    color: "var(--text-secondary, #64748B)",
+    marginBottom: 20,
+  },
+  openSimulatorBtn: {
+    display: "inline-block",
+    padding: "10px 18px",
+    borderRadius: 10,
+    backgroundColor: "var(--accent-primary, #0E6163)",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 600,
+    textDecoration: "none",
+  },
+  downloadPanel: {
+    backgroundColor: "var(--bg-surface, #FFFFFF)",
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    borderRadius: 16,
+    padding: 24,
+  },
+  downloadCard: {
+    display: "flex",
+    gap: 16,
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "var(--bg-elevated, #F8FAFC)",
+    border: "1px solid var(--border-subtle, #E2E8F0)",
+    marginBottom: 16,
+  },
+  downloadIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: "#EEF2FF",
+    color: "#4F46E5",
+    fontWeight: 800,
+    fontSize: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  downloadName: {
+    fontWeight: 700,
+    fontSize: 14,
+  },
+  downloadMeta: {
+    fontSize: 12,
+    color: "var(--text-muted, #94A3B8)",
+    marginTop: 2,
+    marginBottom: 6,
+  },
+  downloadFeatureList: {
+    display: "flex",
+    gap: 8,
+  },
+  downloadFeature: {
+    fontSize: 11,
+    padding: "2px 6px",
+    borderRadius: 4,
+    backgroundColor: "#E2E8F0",
+    color: "#475569",
+  },
+  largeDownloadBtn: {
+    padding: "10px 20px",
+    borderRadius: 10,
+    backgroundColor: "#4F46E5",
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: 700,
+    border: "none",
+    cursor: "pointer",
+    marginBottom: 12,
+  },
+  disclaimer: {
+    fontSize: 11,
+    color: "var(--text-muted, #94A3B8)",
+  },
+};
 
 function LessonSkeleton() {
   return (
-    <div style={{ minHeight: "100vh", background: "#fafafa", fontFamily: "system-ui" }}>
-      <div style={{ height: 56, background: "#fff", borderBottom: "0.5px solid #eee" }} />
-      <div style={{ display: "flex" }}>
-        <div style={{ width: 240, minHeight: "calc(100vh - 56px)", background: "#fff", borderRight: "0.5px solid #eee" }} />
-        <div style={{ flex: 1, padding: "40px 48px" }}>
-          {[260, 180, 400, 320, 400].map((width, index) => (
-            <div key={index} style={{ height: index === 0 ? 36 : 16, width, background: "#eee", borderRadius: 4, marginBottom: index === 0 ? 24 : 12 }} />
-          ))}
-        </div>
-      </div>
+    <div style={{ padding: 40, textAlign: "center", color: "#94A3B8" }}>
+      Loading lesson...
     </div>
   );
 }
-
-const s: Record<string, React.CSSProperties> = {
-  page: { minHeight: "100vh", background: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" },
-  header: { height: 52, background: "#fff", borderBottom: "0.5px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 50 },
-  headerLeft: { display: "flex", alignItems: "center", gap: 16 },
-  backBtn: { fontSize: 13, color: "#666", textDecoration: "none" },
-  breadcrumb: { display: "flex", alignItems: "center", gap: 6, fontSize: 13 },
-  breadTrack: { color: "#1D9E75", fontWeight: 500 },
-  breadSep: { color: "#ccc" },
-  breadLevel: { color: "#666" },
-  headerRight: { display: "flex", alignItems: "center", gap: 10 },
-  completedPill: { background: "#E1F5EE", color: "#0F6E56", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20 },
-  xpPill: { background: "#FFF8E6", border: "0.5px solid #FAC775", color: "#854F0B", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20 },
-  layout: { display: "flex", minHeight: "calc(100vh - 52px)", position: "relative" },
-  sidebar: { width: 240, background: "#fff", borderRight: "0.5px solid #e5e5e5", padding: "20px 0", flexShrink: 0, position: "sticky", top: 52, height: "calc(100vh - 52px)", overflowY: "auto" },
-  sidebarTitle: { fontSize: 11, fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: ".06em", padding: "0 16px 12px" },
-  lessonList: { display: "flex", flexDirection: "column" },
-  lessonListItem: { display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", textDecoration: "none", color: "#444", fontSize: 13, transition: "background .15s" },
-  lessonListActive: { background: "#F0FAF6", color: "#0F6E56" },
-  lessonNum: { width: 28, height: 22, borderRadius: 20, background: "#eee", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, flexShrink: 0, color: "#888" },
-  lessonNumActive: { background: "#1D9E75", color: "#fff" },
-  lessonListTitle: { flex: 1, lineHeight: 1.3 },
-  activeDot: { width: 6, height: 6, borderRadius: "50%", background: "#1D9E75", flexShrink: 0 },
-  main: { flex: 1, padding: "36px 48px 80px", maxWidth: 720 },
-  lessonHeader: { marginBottom: 28 },
-  lessonMeta: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 },
-  metaItem: { fontSize: 12, color: "#888" },
-  freeTag: { background: "#E1F5EE", color: "#0F6E56", fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 20 },
-  proTag: { background: "#EEEDFE", color: "#534AB7", fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 20 },
-  quizTag: { background: "#FFF8E6", color: "#854F0B", fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 20 },
-  downloadBtn: { padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "0.5px solid #ddd", borderRadius: 20, background: "#fff", color: "#555", cursor: "pointer", fontFamily: "system-ui" },
-  lessonTitle: { fontSize: 30, fontWeight: 700, letterSpacing: 0, color: "#0a0a0a", margin: 0, lineHeight: 1.2 },
-  tabs: { display: "flex", gap: 6, borderBottom: "0.5px solid #eee", margin: "0 0 26px", overflowX: "auto" },
-  tab: { padding: "10px 14px", border: "none", borderBottom: "2px solid transparent", background: "transparent", color: "#777", cursor: "pointer", fontSize: 13, fontWeight: 600, fontFamily: "system-ui", whiteSpace: "nowrap" },
-  tabActive: { color: "#1D9E75", borderBottomColor: "#1D9E75" },
-  videoWrap: { borderRadius: 12, overflow: "hidden", marginBottom: 32, aspectRatio: "16/9", background: "#000" },
-  video: { width: "100%", height: "100%", border: "none" },
-  lessonBody: { marginBottom: 32 },
-  takeawaysBox: { background: "#FAFAF8", border: "0.5px solid #E5E5E0", borderRadius: 10, padding: "16px 20px", marginBottom: 28 },
-  takeawaysTitle: { fontWeight: 600, fontSize: 14, marginBottom: 8, color: "#333" },
-  takeawaysList: { margin: 0, paddingLeft: 20, fontSize: 14, color: "#555", lineHeight: 1.8 },
-  embeddedPractice: { margin: "32px 0", borderTop: "0.5px solid #eee", paddingTop: 24 },
-  embeddedPracticeTitle: { fontSize: 13, fontWeight: 600, color: "#555", marginBottom: 12 },
-  actions: { marginBottom: 32 },
-  completeBtn: { width: "100%", padding: "14px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 10, background: "#1D9E75", color: "#fff", cursor: "pointer", fontFamily: "system-ui" },
-  completedBanner: { background: "#E1F5EE", border: "0.5px solid #9FE1CB", borderRadius: 10, padding: "14px 20px", fontSize: 14, fontWeight: 600, color: "#0F6E56", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  quizBtn: { padding: "8px 16px", fontSize: 13, border: "none", borderRadius: 8, background: "#1D9E75", color: "#fff", cursor: "pointer", fontWeight: 600, fontFamily: "system-ui" },
-  lessonNav: { display: "flex", justifyContent: "space-between", borderTop: "0.5px solid #eee", paddingTop: 20 },
-  navPrev: { fontSize: 13, color: "#555", textDecoration: "none", maxWidth: "45%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  navNext: { fontSize: 13, color: "#1D9E75", textDecoration: "none", fontWeight: 500, textAlign: "right", maxWidth: "45%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  watchPanel: { paddingBottom: 28 },
-  practicePanel: { paddingBottom: 28 },
-  downloadPanel: { paddingBottom: 28 },
-  panelTitle: { fontSize: 18, fontWeight: 700, color: "#0a0a0a", marginBottom: 6, letterSpacing: 0 },
-  panelSub: { fontSize: 13, color: "#777", lineHeight: 1.6, margin: "0 0 18px" },
-  playlistCard: { background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 12, padding: 16, marginBottom: 16 },
-  playlistHeader: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 10 },
-  playlistTitle: { fontSize: 15, fontWeight: 700, color: "#0a0a0a", marginBottom: 4 },
-  playlistMeta: { fontSize: 12, color: "#888" },
-  youtubeLink: { fontSize: 12, color: "#185FA5", textDecoration: "none", fontWeight: 700, flexShrink: 0 },
-  curatorNote: { fontSize: 13, lineHeight: 1.6, color: "#0F6E56", background: "#F0FAF6", borderRadius: 8, padding: "9px 11px", marginBottom: 12 },
-  embedWrap: { borderRadius: 10, overflow: "hidden", background: "#000" },
-  embed: { width: "100%", aspectRatio: "16/9", border: "none", display: "block" },
-  disclaimer: { fontSize: 11, lineHeight: 1.6, color: "#999", marginTop: 12 },
-  openSimulatorBtn: { display: "inline-block", padding: "12px 22px", borderRadius: 10, background: "#1D9E75", color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 700 },
-  downloadCard: { display: "flex", gap: 16, alignItems: "center", background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 12, padding: 18, marginBottom: 16 },
-  downloadIcon: { width: 48, height: 48, borderRadius: 12, background: "#E1F5EE", color: "#1D9E75", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, flexShrink: 0 },
-  downloadName: { fontSize: 15, fontWeight: 700, color: "#0a0a0a", marginBottom: 4 },
-  downloadMeta: { fontSize: 12, color: "#888", marginBottom: 10 },
-  downloadFeatureList: { display: "flex", flexWrap: "wrap", gap: 6 },
-  downloadFeature: { fontSize: 11, color: "#0F6E56", background: "#E1F5EE", padding: "3px 8px", borderRadius: 12 },
-  largeDownloadBtn: { width: "100%", padding: 13, border: "none", borderRadius: 10, background: "#1D9E75", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700, fontFamily: "system-ui" },
-  aiPanel: { width: 360, background: "#fff", borderLeft: "0.5px solid #e5e5e5", position: "fixed", right: 0, top: 52, height: "calc(100vh - 52px)", transition: "transform .3s ease", zIndex: 40 },
-  aiFloatBtn: { position: "fixed", bottom: 24, right: 24, padding: "12px 20px", background: "#0a0a0a", color: "#fff", border: "none", borderRadius: 24, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "system-ui", boxShadow: "0 4px 20px rgba(0,0,0,0.2)", zIndex: 60 },
-  mdH1: { fontSize: 26, fontWeight: 700, margin: "28px 0 12px", color: "#0a0a0a", letterSpacing: 0 },
-  mdH2: { fontSize: 20, fontWeight: 600, margin: "24px 0 10px", color: "#0a0a0a" },
-  mdH3: { fontSize: 17, fontWeight: 600, margin: "20px 0 8px", color: "#1a1a1a" },
-  mdLi: { marginBottom: 6, paddingLeft: 4 },
-  mdQuote: { borderLeft: "3px solid #1D9E75", paddingLeft: 16, margin: "16px 0", color: "#555", fontStyle: "italic" },
-  infoBox: { background: "#E1F5EE", border: "0.5px solid #9FE1CB", borderRadius: 10, padding: "16px 20px", marginBottom: 20 },
-};

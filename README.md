@@ -52,8 +52,9 @@ Run these in Supabase SQL Editor in this exact order for a fresh database:
 14. `sql/seeds/forex_basics.sql`
 15. `sql/seeds/technical_analysis.sql`
 16. `sql/seeds/personal_finance_intermediate.sql`
+17. `sql/phase10/complete_video_library.sql`
 
-Your current Supabase database has already shown the original 55 lessons and analytics views as OK. For a fresh deploy, run all 16 files above.
+Your current Supabase database has already shown the original 55 lessons and analytics views as OK. For a fresh deploy, run all 17 files above.
 
 ## Main App Routes
 
