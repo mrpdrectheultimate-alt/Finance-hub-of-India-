@@ -10,7 +10,7 @@ import type { Lesson, Level, Profile, Track } from "@/types/database";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { THEME_CONFIG, TRACK_THEMES, useTheme } from "@/components/ui/ThemeProvider";
 
 const ForexPaperTrader = dynamic(() => import("@/components/trading/ForexPaperTrader"), { ssr: false });
@@ -66,25 +66,7 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
   const [showAiDoubt, setShowAiDoubt] = useState(false);
   const [celebration, setCelebration] = useState<{ xp: number; reason: string; badge?: string | null } | null>(null);
 
-  useEffect(() => {
-    loadLessonData();
-  }, [lessonId]);
-
-  useEffect(() => {
-    if (!lesson?.level?.track?.slug) {
-      resetToAuto();
-      return;
-    }
-
-    const nextTheme = TRACK_THEMES[lesson.level.track.slug] || "default";
-    setTheme(nextTheme);
-
-    return () => {
-      resetToAuto();
-    };
-  }, [lesson?.level?.track?.slug, setTheme, resetToAuto]);
-
-  const loadLessonData = async () => {
+  const loadLessonData = useCallback(async () => {
     setLoading(true);
     const {
       data: { user },
@@ -140,7 +122,25 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
       siblingLessons: siblings || [],
     });
     setLoading(false);
-  };
+  }, [lessonId, router]);
+
+  useEffect(() => {
+    void loadLessonData();
+  }, [loadLessonData]);
+
+  useEffect(() => {
+    if (!lesson?.level?.track?.slug) {
+      resetToAuto();
+      return;
+    }
+
+    const nextTheme = TRACK_THEMES[lesson.level.track.slug] || "default";
+    setTheme(nextTheme);
+
+    return () => {
+      resetToAuto();
+    };
+  }, [lesson?.level?.track?.slug, setTheme, resetToAuto]);
 
   const handleMarkComplete = async () => {
     if (!lesson || !profile || completed) return;

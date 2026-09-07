@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -62,11 +62,10 @@ function getLevel(xp: number) {
   return [...XP_LEVELS].reverse().find((level) => xp >= level.min) || XP_LEVELS[0];
 }
 
-function getInitials(name: string | null | undefined, fallback: string) {
-  const source = name?.trim() || fallback || "User";
+function getInitials(name: string | null, email: string) {
+  const source = name?.trim() || email.split("@")[0] || "U";
   return source
     .split(" ")
-    .filter(Boolean)
     .map((part) => part[0])
     .join("")
     .toUpperCase()
@@ -88,11 +87,7 @@ export default function ProfilePage() {
   const [subLoading, setSubLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "badges" | "settings">("overview");
 
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -157,7 +152,11 @@ export default function ProfilePage() {
     });
 
     setLoading(false);
-  };
+  }, [router]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const saveName = async () => {
     if (!profile || !newName.trim()) return;

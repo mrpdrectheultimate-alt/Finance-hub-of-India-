@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -28,10 +28,6 @@ export default function DailyChallenges() {
   const [completing, setCompleting] = useState<string | null>(null);
   const [celebrated, setCelebrated] = useState<string | null>(null);
 
-  useEffect(() => {
-    void loadChallenges();
-  }, []);
-
   const getToken = async () => {
     const {
       data: { session },
@@ -39,7 +35,7 @@ export default function DailyChallenges() {
     return session?.access_token || null;
   };
 
-  const loadChallenges = async () => {
+  const loadChallenges = useCallback(async () => {
     setLoading(true);
     const token = await getToken();
     if (!token) {
@@ -58,7 +54,11 @@ export default function DailyChallenges() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadChallenges();
+  }, [loadChallenges]);
 
   const completeChallenge = async (challenge: Challenge) => {
     if (challenge.completed || completing) return;

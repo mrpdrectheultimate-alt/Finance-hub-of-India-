@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Position = {
@@ -98,11 +98,19 @@ export default function ForexPaperTrader({
     return () => window.clearInterval(interval);
   }, [currentPair.base, currentPair.pip, selectedPair]);
 
-  useEffect(() => {
-    void loadUser();
-  }, []);
+  const loadPortfolio = useCallback(async (id = portfolioId) => {
+    if (!id) return;
 
-  const loadUser = async () => {
+    const [{ data: port }, { data: orders }] = await Promise.all([
+      supabase.from("paper_portfolios" as never).select("*").eq("id", id).single(),
+      supabase.from("paper_orders" as never).select("*").eq("portfolio_id", id).eq("status", "open"),
+    ]);
+
+    if (port) setPortfolio(port as Portfolio);
+    if (orders) setPositions(orders as Position[]);
+  }, [portfolioId]);
+
+  const loadUser = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -123,19 +131,11 @@ export default function ForexPaperTrader({
       await loadPortfolio(id);
     }
     setLoading(false);
-  };
+  }, [loadPortfolio]);
 
-  const loadPortfolio = async (id = portfolioId) => {
-    if (!id) return;
-
-    const [{ data: port }, { data: orders }] = await Promise.all([
-      supabase.from("paper_portfolios" as never).select("*").eq("id", id).single(),
-      supabase.from("paper_orders" as never).select("*").eq("portfolio_id", id).eq("status", "open"),
-    ]);
-
-    if (port) setPortfolio(port as Portfolio);
-    if (orders) setPositions(orders as Position[]);
-  };
+  useEffect(() => {
+    void loadUser();
+  }, [loadUser]);
 
   const getPair = (symbol: string) => FOREX_PAIRS.find((pair) => pair.symbol === symbol) || currentPair;
 

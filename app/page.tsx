@@ -205,6 +205,7 @@ export default function FinanceHubLanding() {
               className={`landing-pill ${activeAudience === index ? "active" : ""}`}
               key={audience.label}
               type="button"
+              role="tab"
               aria-selected={activeAudience === index}
               onClick={() => setActiveAudience(index)}
             >

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   PencilSquareIcon, 
   XMarkIcon, 
@@ -140,7 +140,7 @@ export default function RoughBookModal({
     }
   };
 
-  const fetchSavedNotes = async () => {
+  const fetchSavedNotes = useCallback(async () => {
     try {
       const url = initialLessonId ? `/api/notes?lesson_id=${initialLessonId}` : "/api/notes";
       const res = await fetch(url);
@@ -149,13 +149,13 @@ export default function RoughBookModal({
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [initialLessonId]);
 
   useEffect(() => {
     if (isOpen) {
-      fetchSavedNotes();
+      void fetchSavedNotes();
     }
-  }, [isOpen, initialLessonId]);
+  }, [isOpen, fetchSavedNotes]);
 
   if (!isOpen) return null;
 

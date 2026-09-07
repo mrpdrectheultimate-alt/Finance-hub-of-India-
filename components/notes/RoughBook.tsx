@@ -98,17 +98,7 @@ export default function RoughBook({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => { init(); }, []);
-
-  const init = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
-    setUserId(user.id);
-    await loadNotes(user.id);
-    setLoading(false);
-  };
-
-  const loadNotes = async (uid: string) => {
+  const loadNotes = useCallback(async (uid: string) => {
     const { data } = await supabase
       .from("user_notes" as never)
       .select("*")
@@ -125,16 +115,19 @@ export default function RoughBook({
     const tags = new Set<string>();
     loadedNotes.forEach(n => n.tags?.forEach(t => tags.add(t)));
     setAllTags(Array.from(tags));
-  };
+  }, [showArchived]);
 
-  // Auto-save with 800ms debounce
-  const scheduleSave = useCallback((note: Note) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    setSaved(false);
-    saveTimer.current = setTimeout(() => saveNote(note), 800);
-  }, []);
+  const init = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    setUserId(user.id);
+    await loadNotes(user.id);
+    setLoading(false);
+  }, [loadNotes]);
 
-  const saveNote = async (note: Note) => {
+  useEffect(() => { void init(); }, [init]);
+
+  const saveNote = useCallback(async (note: Note) => {
     setSaving(true);
     const { error } = await supabase
       .from("user_notes" as never)
@@ -156,7 +149,14 @@ export default function RoughBook({
       setTimeout(() => setSaved(false), 2000);
       setNotes(prev => prev.map(n => n.id === note.id ? { ...note, updated_at: new Date().toISOString() } : n));
     }
-  };
+  }, [userId]);
+
+  // Auto-save with 800ms debounce
+  const scheduleSave = useCallback((note: Note) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaved(false);
+    saveTimer.current = setTimeout(() => void saveNote(note), 800);
+  }, [saveNote]);
 
   const updateActiveNote = (changes: Partial<Note>) => {
     if (!activeNote) return;

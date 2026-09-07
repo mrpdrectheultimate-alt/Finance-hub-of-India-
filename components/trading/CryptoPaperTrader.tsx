@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
 
 type CryptoHolding = {
@@ -100,11 +100,23 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
     return () => window.clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    void loadUser();
-  }, []);
+  const loadPortfolio = useCallback(async (id = portfolioId) => {
+    if (!id) return;
 
-  const loadUser = async () => {
+    const [{ data: port }, { data: orders }] = await Promise.all([
+      supabase.from("paper_portfolios" as never).select("*").eq("id", id).single(),
+      supabase.from("paper_orders" as never).select("*").eq("portfolio_id", id).order("opened_at", { ascending: false }).limit(50),
+    ]);
+
+    if (port) setPortfolio(port as Portfolio);
+    if (orders) {
+      const typedOrders = orders as Order[];
+      setRecentOrders(typedOrders);
+      setHoldings(calculateHoldings(typedOrders));
+    }
+  }, [portfolioId]);
+
+  const loadUser = useCallback(async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -125,23 +137,11 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
       await loadPortfolio(id);
     }
     setLoading(false);
-  };
+  }, [loadPortfolio]);
 
-  const loadPortfolio = async (id = portfolioId) => {
-    if (!id) return;
-
-    const [{ data: port }, { data: orders }] = await Promise.all([
-      supabase.from("paper_portfolios" as never).select("*").eq("id", id).single(),
-      supabase.from("paper_orders" as never).select("*").eq("portfolio_id", id).order("opened_at", { ascending: false }).limit(50),
-    ]);
-
-    if (port) setPortfolio(port as Portfolio);
-    if (orders) {
-      const typedOrders = orders as Order[];
-      setRecentOrders(typedOrders);
-      setHoldings(calculateHoldings(typedOrders));
-    }
-  };
+  useEffect(() => {
+    void loadUser();
+  }, [loadUser]);
 
   const buyAsset = async () => {
     const spendAmount = Number.parseFloat(amount);
@@ -242,7 +242,8 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
   const totalPortfolioValue = (portfolio?.cash_balance || 0) + totalCryptoValue;
   const winRate = portfolio?.trades_count ? Math.round(((portfolio.wins_count || 0) / portfolio.trades_count) * 100) : 0;
   const currentHolding = holdings.find((holding) => holding.symbol === selected);
-  const chartData = priceHistory[selected] || [];
+  const rawChartData = priceHistory[selected];
+  const chartData = useMemo(() => rawChartData || [], [rawChartData]);
   const isUp = chartData.length > 1 && chartData[chartData.length - 1] >= chartData[0];
   const chart = useMemo(() => buildChart(chartData), [chartData]);
 
