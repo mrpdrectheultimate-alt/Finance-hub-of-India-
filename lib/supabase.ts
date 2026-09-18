@@ -30,3 +30,6 @@ export const createServerClient = () => {
     auth: { persistSession: false },
   });
 };
+
+export const createServiceClient = createServerClient;
+
