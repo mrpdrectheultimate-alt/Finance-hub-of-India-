@@ -1,105 +1,129 @@
+// ============================================================
+// FinanceHub — PostHog Analytics Setup
+// lib/analytics.ts
+// ============================================================
+
 import posthog from "posthog-js";
 
-type UserProps = {
-  email?: string;
-  name?: string;
-  role?: string;
-  createdAt?: string;
-};
-
-type AnalyticsContext = Record<string, unknown>;
-
-function canTrack() {
-  return typeof window !== "undefined" && Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
-}
-
-function capture(event: string, properties?: Record<string, unknown>) {
-  if (!canTrack()) return;
-  posthog.capture(event, properties);
-}
+let isInitialised = false;
 
 export function initAnalytics() {
-  if (!canTrack()) return;
+  if (isInitialised || typeof window === "undefined") return;
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
 
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
-    capture_pageview: false,
+    capture_pageview: false, // We'll do this manually
     capture_pageleave: true,
-    autocapture: false,
-    session_recording: { maskAllInputs: true },
+    autocapture: false, // Manual event tracking for cleaner data
     persistence: "localStorage",
-    bootstrap: {
-      distinctID: undefined,
+    loaded: (ph) => {
+      if (process.env.NODE_ENV === "development") ph.debug();
     },
   });
+
+  isInitialised = true;
 }
 
-export function identifyUser(userId: string, props: UserProps) {
-  if (!canTrack()) return;
-
+export function identifyUser(
+  userId: string,
+  props?: {
+    email?: string;
+    name?: string;
+    tier?: string;
+    track?: string;
+  }
+) {
+  if (typeof window === "undefined") return;
   posthog.identify(userId, {
-    email: props.email,
-    name: props.name,
-    plan: props.role || "free",
-    created_at: props.createdAt,
+    email: props?.email,
+    name: props?.name,
+    subscription_tier: props?.tier || "free",
+    primary_track: props?.track,
   });
 }
 
+// ─── Core events to track ─────────────────────────────────────
 export const track = {
-  onboardingStarted: () => capture("onboarding_started"),
-  onboardingCompleted: (trackName: string) => capture("onboarding_completed", { track: trackName }),
+  // Page views
+  pageView: (path: string, props?: Record<string, any>) =>
+    posthog.capture("$pageview", { $current_url: path, ...props }),
 
-  lessonOpened: (lessonId: string, lessonTitle: string, trackTitle: string) =>
-    capture("lesson_opened", { lesson_id: lessonId, lesson_title: lessonTitle, track: trackTitle }),
-  lessonCompleted: (lessonId: string, lessonTitle: string, timeSpentSeconds: number) =>
-    capture("lesson_completed", { lesson_id: lessonId, lesson_title: lessonTitle, time_spent: timeSpentSeconds }),
-  lessonDropped: (lessonId: string, scrollDepthPct: number) =>
-    capture("lesson_dropped", { lesson_id: lessonId, scroll_depth: scrollDepthPct }),
+  // Lesson events
+  lessonStarted: (lessonId: string, title: string, trackName: string) =>
+    posthog.capture("lesson_started", {
+      lesson_id: lessonId,
+      lesson_title: title,
+      track: trackName,
+    }),
 
-  quizStarted: (quizId: string, lessonId: string) => capture("quiz_started", { quiz_id: quizId, lesson_id: lessonId }),
+  lessonCompleted: (lessonId: string, title: string, trackName: string, duration: number) =>
+    posthog.capture("lesson_completed", {
+      lesson_id: lessonId,
+      lesson_title: title,
+      track: trackName,
+      duration_seconds: duration,
+    }),
+
+  lessonAbandoned: (lessonId: string, scrollPercent: number) =>
+    posthog.capture("lesson_abandoned", { lesson_id: lessonId, scroll_percent: scrollPercent }),
+
+  // Quiz events
+  quizStarted: (quizId: string, lessonTitle: string) =>
+    posthog.capture("quiz_started", { quiz_id: quizId, lesson_title: lessonTitle }),
+
   quizCompleted: (quizId: string, score: number, passed: boolean) =>
-    capture("quiz_completed", { quiz_id: quizId, score, passed }),
-  quizAbandoned: (quizId: string, questionNum: number) =>
-    capture("quiz_abandoned", { quiz_id: quizId, question_num: questionNum }),
+    posthog.capture("quiz_completed", { quiz_id: quizId, score, passed }),
 
-  aiQuestionAsked: (lessonId: string | null, persona: string, questionLength: number) =>
-    capture("ai_question_asked", { lesson_id: lessonId, persona, question_length: questionLength }),
-  aiLimitReached: () => capture("ai_limit_reached"),
+  // Video events
+  videoPlayed: (videoId: string, title: string, channel: string) =>
+    posthog.capture("video_played", { video_id: videoId, video_title: title, channel }),
 
-  xpEarned: (amount: number, reason: string) => capture("xp_earned", { amount, reason }),
-  badgeUnlocked: (badgeSlug: string) => capture("badge_unlocked", { badge_slug: badgeSlug }),
-  streakUpdated: (streakDays: number) => capture("streak_updated", { streak_days: streakDays }),
+  // Notes events
+  noteCreated: (lessonId?: string) =>
+    posthog.capture("note_created", { has_lesson_context: Boolean(lessonId) }),
 
-  pricingPageViewed: () => capture("pricing_page_viewed"),
-  upgradeClicked: (plan: string, billing: string) => capture("upgrade_clicked", { plan, billing }),
-  checkoutStarted: (plan: string) => capture("checkout_started", { plan }),
-  paymentSucceeded: (plan: string) => capture("payment_succeeded", { plan }),
-  paymentFailed: (plan: string) => capture("payment_failed", { plan }),
+  // Simulator events
+  simulatorUsed: (name: string) => posthog.capture("simulator_used", { simulator_name: name }),
 
-  pageViewed: (path: string) => capture("$pageview", { $current_url: path }),
-  signedOut: () => {
-    capture("signed_out");
-    if (canTrack()) posthog.reset();
-  },
+  simulatorCompleted: (name: string, inputs: Record<string, any>) =>
+    posthog.capture("simulator_completed", { simulator_name: name, ...inputs }),
 
-  searchPerformed: (query: string, resultCount: number) =>
-    capture("search_performed", { query, result_count: resultCount }),
-  searchResultClicked: (lessonId: string, position: number) =>
-    capture("search_result_clicked", { lesson_id: lessonId, position }),
+  // AI events
+  aiQuestionAsked: (context: string) => posthog.capture("ai_question_asked", { context }),
 
-  simulatorStarted: (simName: string) => capture("simulator_started", { simulator: simName }),
-  simulatorCompleted: (simName: string, score: number) =>
-    capture("simulator_completed", { simulator: simName, score }),
+  aiRateLimitHit: () => posthog.capture("ai_rate_limit_hit", {}),
 
-  certificateGenerated: (trackSlug: string) => capture("certificate_generated", { track_slug: trackSlug }),
+  // Payment events
+  upgradeClicked: (plan: string, location: string) =>
+    posthog.capture("upgrade_clicked", { plan, location }),
+
+  paymentStarted: (plan: string, provider: string) =>
+    posthog.capture("payment_started", { plan, provider }),
+
+  paymentCompleted: (plan: string, provider: string, amount: number) =>
+    posthog.capture("payment_completed", { plan, provider, amount }),
+
+  paymentFailed: (plan: string, reason: string) =>
+    posthog.capture("payment_failed", { plan, reason }),
+
+  // Search events
+  searchPerformed: (query: string, resultsCount: number) =>
+    posthog.capture("search_performed", { query, results_count: resultsCount }),
+
+  searchResultClicked: (query: string, resultType: string, resultTitle: string) =>
+    posthog.capture("search_result_clicked", {
+      query,
+      result_type: resultType,
+      result_title: resultTitle,
+    }),
+
+  // Onboarding events
+  onboardingStarted: () => posthog.capture("onboarding_started"),
+  onboardingCompleted: (goal: string, level: string) =>
+    posthog.capture("onboarding_completed", { goal, level }),
+
+  // Certificate events
+  certificateGenerated: (trackName: string) =>
+    posthog.capture("certificate_generated", { track_name: trackName }),
 };
-
-export function captureError(error: Error, context?: AnalyticsContext) {
-  console.error("[FinanceHub Error]", error.message, context);
-  capture("error_occurred", {
-    error_message: error.message,
-    error_name: error.name,
-    ...context,
-  });
-  // Add @sentry/nextjs and call Sentry.captureException(error, { extra: context }) here when ready.
-}
