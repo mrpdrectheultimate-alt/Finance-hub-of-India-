@@ -241,11 +241,11 @@ export default function AIMentor({ lessonContext, initialQuestion, compact = fal
             }}>
               <div style={{ fontSize: 40, marginBottom: 10 }}>🎓</div>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1c2b3a", marginBottom: 6 }}>
-                Hello, {userName}! I'm your AI Finance Mentor.
+                Hello, {userName}! I&apos;m your AI Finance Mentor.
               </h2>
               <p style={{ fontSize: 13, color: "#718096", lineHeight: 1.7, maxWidth: 440, margin: "0 auto" }}>
                 Ask me anything about personal finance, investing, trading, tax, or any financial concept.
-                I'll explain with India-specific examples and cite my sources.
+                I&apos;ll explain with India-specific examples and cite my sources.
               </p>
             </div>
 
