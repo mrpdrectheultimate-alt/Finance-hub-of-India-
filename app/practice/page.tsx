@@ -22,6 +22,7 @@ const LABS = [
     color: "#1D9E75",
     bg: "#E1F5EE",
     tags: ["Personal Finance", "Investing"],
+    href: "/practice/sip",
     component: SipCalculator,
   },
   {
@@ -32,6 +33,7 @@ const LABS = [
     color: "#185FA5",
     bg: "#E6F1FB",
     tags: ["Personal Finance", "Loans"],
+    href: "/practice/emi",
     component: EmiCalculator,
   },
   {
@@ -42,6 +44,7 @@ const LABS = [
     color: "#534AB7",
     bg: "#EEEDFE",
     tags: ["Personal Finance", "Planning"],
+    href: "/practice/retirement",
     component: RetirementSimulator,
   },
   {
@@ -52,6 +55,7 @@ const LABS = [
     color: "#854F0B",
     bg: "#FAEEDA",
     tags: ["Personal Finance", "Tax"],
+    href: "/practice/tax",
     component: TaxCalculator,
   },
   {
@@ -62,6 +66,7 @@ const LABS = [
     color: "#993C1D",
     bg: "#FAECE7",
     tags: ["Corporate Finance", "Founder"],
+    href: "/practice/startup-cash-flow",
     component: StartupCashFlow,
   },
   {
@@ -72,6 +77,7 @@ const LABS = [
     color: "#1D9E75",
     bg: "#E1F5EE",
     tags: ["Personal Finance", "Budgeting"],
+    href: "/practice/budget",
     component: BudgetSimulator,
   },
   {
@@ -82,6 +88,7 @@ const LABS = [
     color: "#185FA5",
     bg: "#E6F1FB",
     tags: ["Trading", "Investing"],
+    href: "/practice/trading",
     component: PaperTradingGame,
   },
   {
@@ -92,30 +99,78 @@ const LABS = [
     color: "#F7931A",
     bg: "#FFF4E5",
     tags: ["Trading", "Crypto"],
+    href: "/practice/crypto",
     component: CryptoPaperTrader,
   },
-];
-
-const COMING_SOON = [
   {
-    icon: "PORT",
-    title: "Portfolio Simulator",
-    desc: "Allocate across equity, debt, gold, and real estate, then see 10-year projections.",
+    id: "net-worth",
+    icon: "NW",
+    title: "Net Worth Tracker",
+    desc: "Track all assets and liabilities over time, calculate liquid cushion, and debt-to-asset health ratio.",
+    color: "#059669",
+    bg: "#D1FAE5",
+    tags: ["Personal Finance", "Planning"],
+    href: "/practice/net-worth",
   },
   {
-    icon: "CRYP",
-    title: "Crypto Risk Simulator",
-    desc: "See what sharp drawdowns do to a portfolio. Risk education at its best.",
+    id: "goals",
+    icon: "GOL",
+    title: "Goal-Based Financial Planner",
+    desc: "Plan multiple life goals (Home, Education, Retirement) with inflation adjustment and exact SIP targets.",
+    color: "#0284C7",
+    bg: "#E0F2FE",
+    tags: ["Personal Finance", "Planning"],
+    href: "/practice/goals",
   },
   {
-    icon: "VAL",
-    title: "Business Valuation Game",
-    desc: "Value a fictional company using DCF and comparable multiples.",
+    id: "insurance",
+    icon: "INS",
+    title: "Insurance Needs & HLV Calculator",
+    desc: "Calculate Human Life Value (HLV), identify term life insurance gaps, and evaluate health cover.",
+    color: "#DC2626",
+    bg: "#FEE2E2",
+    tags: ["Personal Finance", "Insurance"],
+    href: "/practice/insurance",
   },
   {
-    icon: "EF",
-    title: "Emergency Fund Simulator",
-    desc: "Test how long you can survive income shocks, medical bills, and sudden repairs.",
+    id: "fire",
+    icon: "FIRE",
+    title: "FIRE Early Retirement Calculator",
+    desc: "Model Lean FIRE, Standard FIRE, and Fat FIRE targets with inflation and 4% withdrawal rate.",
+    color: "#EA580C",
+    bg: "#FFEDD5",
+    tags: ["Personal Finance", "Investing"],
+    href: "/practice/fire",
+  },
+  {
+    id: "rebalancer",
+    icon: "BAL",
+    title: "Asset Allocation Rebalancer",
+    desc: "Detect portfolio drift across equity, debt, and gold, and generate step-by-step rebalancing buy/sell plans.",
+    color: "#7C3AED",
+    bg: "#EDE9FE",
+    tags: ["Investing", "Planning"],
+    href: "/practice/rebalancer",
+  },
+  {
+    id: "compound-visualizer",
+    icon: "CMP",
+    title: "Step-Up Compounding Visualizer",
+    desc: "See how stepping up SIPs by 10% annually accelerates wealth creation and calculate the cost of delay.",
+    color: "#0D9488",
+    bg: "#CCFBF1",
+    tags: ["Investing", "Personal Finance"],
+    href: "/practice/compound-visualizer",
+  },
+  {
+    id: "stress-test",
+    icon: "STR",
+    title: "Financial Stress & Shock Tester",
+    desc: "Simulate income loss, job disruption, and emergency medical bills to test liquidity survival months.",
+    color: "#B91C1C",
+    bg: "#FEE2E2",
+    tags: ["Personal Finance", "Planning"],
+    href: "/practice/stress-test",
   },
 ];
 
@@ -131,8 +186,9 @@ export default function PracticePage() {
     "Tax",
     "Trading",
     "Crypto",
+    "Planning",
+    "Insurance",
     "Corporate Finance",
-    "Founder",
   ];
 
   const filteredLabs = LABS.filter((lab) => filter === "All" || lab.tags.includes(filter));
@@ -144,7 +200,7 @@ export default function PracticePage() {
       <div style={s.page}>
         <div style={s.activeHeader}>
           <button onClick={() => setActiveLab(null)} style={s.backBtn} type="button">
-            Back to all labs
+            ← Back to all labs
           </button>
           <div style={s.activeTitle}>
             <span style={{ ...s.titleMark, background: activeLabConfig.color }}>{activeLabConfig.icon}</span>
@@ -162,7 +218,13 @@ export default function PracticePage() {
             {LABS.filter((lab) => lab.id !== activeLab).map((lab) => (
               <button
                 key={lab.id}
-                onClick={() => setActiveLab(lab.id)}
+                onClick={() => {
+                  if (lab.href && !lab.component) {
+                    window.location.href = lab.href;
+                  } else {
+                    setActiveLab(lab.id);
+                  }
+                }}
                 style={{ ...s.otherCard, borderColor: `${lab.color}30` }}
                 type="button"
               >
@@ -180,10 +242,10 @@ export default function PracticePage() {
     <div style={s.page}>
       <div style={s.header}>
         <Link href="/dashboard" style={s.back}>
-          Back to dashboard
+          ← Back to dashboard
         </Link>
-        <h1 style={s.title}>Finance Labs</h1>
-        <p style={s.sub}>Interactive simulators to practise real financial decisions, not just read about them.</p>
+        <h1 style={s.title}>15 Finance Labs & Interactive Simulators</h1>
+        <p style={s.sub}>Interactive simulators to practise real financial decisions, model wealth growth, and stress-test your portfolio.</p>
       </div>
 
       <div style={s.filterRow}>
@@ -215,25 +277,19 @@ export default function PracticePage() {
             <div style={s.cardBody}>
               <h3 style={s.cardTitle}>{lab.title}</h3>
               <p style={s.cardDesc}>{lab.desc}</p>
-              <button onClick={() => setActiveLab(lab.id)} style={{ ...s.openBtn, background: lab.color }} type="button">
-                Open lab
-              </button>
+
+              {lab.href && !lab.component ? (
+                <Link href={lab.href} style={{ ...s.openBtnLink, background: lab.color }}>
+                  Open Lab →
+                </Link>
+              ) : (
+                <button onClick={() => setActiveLab(lab.id)} style={{ ...s.openBtn, background: lab.color }} type="button">
+                  Open Lab →
+                </button>
+              )}
             </div>
           </div>
         ))}
-      </div>
-
-      <div style={s.comingSoon}>
-        <div style={s.comingSoonTitle}>Coming soon</div>
-        <div style={s.comingSoonGrid}>
-          {COMING_SOON.map((item) => (
-            <div key={item.title} style={s.csCard}>
-              <span style={s.csIcon}>{item.icon}</span>
-              <div style={s.csTitle}>{item.title}</div>
-              <div style={s.csDesc}>{item.desc}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -264,15 +320,16 @@ const s: Record<string, CSSProperties> = {
   },
   filterBtnActive: { background: "var(--text-primary, #0a0a0a)", color: "var(--bg-card, #fff)", border: "0.5px solid var(--text-primary, #0a0a0a)" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, maxWidth: 980, margin: "0 auto 32px" },
-  card: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #e5e5e5)", borderRadius: 14, overflow: "hidden", boxShadow: "var(--shadow-card, none)" },
-  cardTop: { minHeight: 92, padding: "20px 18px 14px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" },
-  cardIcon: { fontSize: 22, fontWeight: 800, letterSpacing: 0 },
+  card: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #e5e5e5)", borderRadius: 14, overflow: "hidden", boxShadow: "var(--shadow-card, none)", display: "flex", flexDirection: "column", justifyContent: "space-between" },
+  cardTop: { minHeight: 80, padding: "18px 18px 12px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" },
+  cardIcon: { fontSize: 20, fontWeight: 800, letterSpacing: 0 },
   cardTags: { display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" },
   tag: { fontSize: 10, fontWeight: 650, padding: "2px 8px", borderRadius: 10 },
-  cardBody: { padding: "14px 18px 18px" },
+  cardBody: { padding: "14px 18px 18px", display: "flex", flexDirection: "column", justifyContent: "space-between", flexGrow: 1 },
   cardTitle: { fontSize: 15, fontWeight: 750, color: "var(--text-primary, #0a0a0a)", margin: "0 0 8px", letterSpacing: "-0.2px" },
-  cardDesc: { fontSize: 13, color: "var(--text-secondary, #666)", lineHeight: 1.6, margin: "0 0 16px" },
-  openBtn: { display: "block", width: "100%", padding: "10px", fontSize: 13, fontWeight: 650, border: "none", borderRadius: 9, color: "#fff", cursor: "pointer", fontFamily: "system-ui" },
+  cardDesc: { fontSize: 13, color: "var(--text-secondary, #666)", lineHeight: 1.5, margin: "0 0 16px" },
+  openBtn: { display: "block", width: "100%", padding: "10px", fontSize: 13, fontWeight: 650, border: "none", borderRadius: 9, color: "#fff", cursor: "pointer", fontFamily: "system-ui", textAlign: "center" },
+  openBtnLink: { display: "block", width: "100%", padding: "10px", fontSize: 13, fontWeight: 650, border: "none", borderRadius: 9, color: "#fff", cursor: "pointer", fontFamily: "system-ui", textAlign: "center", textDecoration: "none", boxSizing: "border-box" },
   activeHeader: { display: "flex", alignItems: "center", gap: 14, maxWidth: 1180, margin: "0 auto 20px", flexWrap: "wrap" },
   backBtn: { padding: "8px 14px", fontSize: 13, fontWeight: 550, border: "0.5px solid var(--border, #ddd)", borderRadius: 8, background: "var(--bg-card, #fff)", cursor: "pointer", fontFamily: "system-ui", color: "var(--text-secondary, #555)" },
   activeTitle: { display: "flex", alignItems: "center", gap: 10, fontWeight: 750, fontSize: 16, color: "var(--text-primary, #0a0a0a)" },
@@ -284,11 +341,4 @@ const s: Record<string, CSSProperties> = {
   otherCard: { display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", border: "0.5px solid", borderRadius: 9, background: "var(--bg-card, #fff)", cursor: "pointer", fontFamily: "system-ui" },
   otherIcon: { minWidth: 32, textAlign: "center", borderRadius: 7, padding: "4px 5px", fontSize: 10, fontWeight: 800 },
   otherCardTitle: { fontSize: 12, fontWeight: 550, color: "var(--text-secondary, #555)" },
-  comingSoon: { maxWidth: 980, margin: "0 auto" },
-  comingSoonTitle: { fontSize: 12, fontWeight: 700, color: "var(--text-muted, #aaa)", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 14 },
-  comingSoonGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 },
-  csCard: { background: "var(--bg-card, #fff)", border: "0.5px dashed var(--border, #ddd)", borderRadius: 12, padding: "16px 14px", opacity: 0.75 },
-  csIcon: { display: "inline-block", fontSize: 11, fontWeight: 800, color: "var(--text-muted, #888)", background: "var(--bg-surface, #f5f5f3)", borderRadius: 7, padding: "4px 7px", marginBottom: 8 },
-  csTitle: { fontWeight: 650, fontSize: 13, color: "var(--text-secondary, #555)", marginBottom: 5 },
-  csDesc: { fontSize: 12, color: "var(--text-muted, #aaa)", lineHeight: 1.5 },
 };
