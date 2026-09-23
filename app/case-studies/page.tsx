@@ -5,18 +5,19 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type CaseStudy = {
-  id:             string;
-  slug:           string;
-  title:          string;
-  subtitle:       string;
-  category:       string;
-  difficulty:     "beginner" | "intermediate" | "advanced";
-  read_time_mins: number;
-  company_name:   string;
-  summary:        string;
+  id:               string;
+  slug:             string;
+  title:            string;
+  subtitle:         string;
+  category:         string;
+  difficulty:       "beginner" | "intermediate" | "advanced";
+  duration_minutes: number;
+  protagonist:      string;
+  key_lesson:       string;
+  tags:             string[];
 };
 
-const CATEGORIES = ["All", "Valuation", "Banking", "Corporate Finance", "Taxation", "Macroeconomics"];
+const CATEGORIES = ["All", "personal-finance", "trading-markets", "corporate-finance", "taxation", "investing"];
 
 export default function CaseStudiesPage() {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
@@ -30,20 +31,21 @@ export default function CaseStudiesPage() {
       try {
         const { data: studies } = await supabase
           .from("case_studies")
-          .select("id, slug, title, subtitle, category, difficulty, read_time_mins, company_name, summary")
+          .select("id, slug, title, subtitle, category, difficulty, duration_minutes, protagonist, key_lesson, tags")
+          .eq("is_published", true)
           .order("created_at", { ascending: true });
 
         if (studies) setCaseStudies(studies as CaseStudy[]);
 
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: progress } = await (supabase
-            .from("user_case_study_progress") as any)
+          const { data: completions } = await (supabase
+            .from("user_case_study_completions") as any)
             .select("case_study_id")
             .eq("user_id", user.id);
 
-          if (progress) {
-            setCompletedIds((progress as any[]).map((p) => p.case_study_id));
+          if (completions) {
+            setCompletedIds((completions as any[]).map((c) => c.case_study_id));
           }
         }
       } catch (err) {
@@ -59,8 +61,9 @@ export default function CaseStudiesPage() {
     const matchesCategory = activeCategory === "All" || cs.category === activeCategory;
     const matchesSearch =
       cs.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cs.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cs.summary.toLowerCase().includes(searchQuery.toLowerCase());
+      (cs.protagonist && cs.protagonist.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (cs.key_lesson && cs.key_lesson.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (cs.subtitle && cs.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -86,11 +89,11 @@ export default function CaseStudiesPage() {
           </Link>
           <div style={s.badgeRow}>
             <span style={s.headerBadge}>REAL-WORLD ANALYSIS</span>
-            <span style={s.headerBadgeSub}>50 XP per case</span>
+            <span style={s.headerBadgeSub}>20 XP per case</span>
           </div>
           <h1 style={s.title}>Indian Business & Finance Case Studies</h1>
           <p style={s.sub}>
-            Analyse real corporate dilemmas, balance sheet crises, regulatory decisions, and valuation battles across Indian financial history.
+            Analyse real corporate dilemmas, balance sheet crises, regulatory decisions, and personal finance choices across Indian history.
           </p>
         </div>
 
@@ -98,7 +101,7 @@ export default function CaseStudiesPage() {
         <div style={s.filterContainer}>
           <input
             type="text"
-            placeholder="Search by company, title, or keyword..."
+            placeholder="Search by topic, keyword, or character..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={s.searchInput}
@@ -113,7 +116,7 @@ export default function CaseStudiesPage() {
                   ...(activeCategory === cat ? s.catBtnActive : {}),
                 }}
               >
-                {cat}
+                {cat === "All" ? "All Categories" : cat}
               </button>
             ))}
           </div>
@@ -143,18 +146,18 @@ export default function CaseStudiesPage() {
                     <span style={{ ...s.diffBadge, background: diffBadge.bg, color: diffBadge.color }}>
                       {diffBadge.label}
                     </span>
-                    <span style={s.readTime}>⏱️ {cs.read_time_mins} min read</span>
+                    <span style={s.readTime}>⏱️ {cs.duration_minutes || 10} min read</span>
                     {isCompleted && <span style={s.completedBadge}>✓ Solved</span>}
                   </div>
 
                   <h3 style={s.cardTitle}>{cs.title}</h3>
-                  <div style={s.companyTag}>🏢 {cs.company_name}</div>
-                  <p style={s.cardSummary}>{cs.summary}</p>
+                  {cs.protagonist && <div style={s.companyTag}>👤 {cs.protagonist}</div>}
+                  <p style={s.cardSummary}>{cs.subtitle || cs.key_lesson}</p>
 
                   <div style={s.cardFooter}>
                     <span style={s.categoryTag}>{cs.category}</span>
                     <Link href={`/case-studies/${cs.slug}`} style={s.readBtn}>
-                      Analyze Case →
+                      Read & Analyze →
                     </Link>
                   </div>
                 </div>
@@ -278,7 +281,6 @@ const s: Record<string, React.CSSProperties> = {
     height: "220px",
     background: "#E5E7EB",
     borderRadius: "14px",
-    animation: "pulse 1.5s infinite",
   },
   emptyState: {
     textAlign: "center",
