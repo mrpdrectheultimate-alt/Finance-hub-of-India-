@@ -24,6 +24,7 @@ ALTER TABLE profiles
 -- ─────────────────────────────────────────────────────────────
 -- 2. AI usage increment function (atomic, prevents race conditions)
 -- ─────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS increment_ai_usage(UUID);
 CREATE OR REPLACE FUNCTION increment_ai_usage(p_user_id UUID)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -176,6 +177,7 @@ DO $$ BEGIN
 END $$;
 
 -- Function to increment play count
+DROP FUNCTION IF EXISTS increment_video_play(UUID);
 CREATE OR REPLACE FUNCTION increment_video_play(p_video_id UUID)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN

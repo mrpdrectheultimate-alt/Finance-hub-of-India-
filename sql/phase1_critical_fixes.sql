@@ -12,6 +12,8 @@ ON user_progress(user_id, lesson_id);
 -- Fix 1: Atomic lesson completion + XP + streak + badge check
 -- Called from /api/complete-lesson instead of client JS.
 -- ============================================================
+DROP FUNCTION IF EXISTS complete_lesson(UUID, UUID, INT);
+DROP FUNCTION IF EXISTS complete_lesson(UUID, UUID);
 CREATE OR REPLACE FUNCTION complete_lesson(
   p_user_id UUID,
   p_lesson_id UUID,
@@ -169,6 +171,7 @@ $$;
 -- ============================================================
 -- Fix 2: Atomic quiz completion + score save + XP + badges
 -- ============================================================
+DROP FUNCTION IF EXISTS complete_quiz(UUID, UUID, UUID, INT, BOOL);
 CREATE OR REPLACE FUNCTION complete_quiz(
   p_user_id UUID,
   p_lesson_id UUID,
@@ -243,6 +246,7 @@ ON ai_usage_daily
 FOR SELECT
 USING (is_admin() OR auth.role() = 'service_role');
 
+DROP FUNCTION IF EXISTS increment_ai_usage(UUID);
 CREATE OR REPLACE FUNCTION increment_ai_usage(p_user_id UUID)
 RETURNS INT
 LANGUAGE plpgsql
@@ -270,6 +274,7 @@ $$;
 -- ============================================================
 -- Fix 4: Get AI usage count for today
 -- ============================================================
+DROP FUNCTION IF EXISTS get_ai_usage_today(UUID);
 CREATE OR REPLACE FUNCTION get_ai_usage_today(p_user_id UUID)
 RETURNS INT
 LANGUAGE plpgsql
@@ -289,6 +294,7 @@ $$;
 -- ============================================================
 -- Fix 5: Get next lesson in level for unlock logic
 -- ============================================================
+DROP FUNCTION IF EXISTS get_next_lesson(UUID, UUID);
 CREATE OR REPLACE FUNCTION get_next_lesson(
   p_user_id UUID,
   p_level_id UUID
@@ -319,6 +325,7 @@ $$;
 -- ============================================================
 -- Fix 6: Check if level is complete and expose next level
 -- ============================================================
+DROP FUNCTION IF EXISTS check_level_completion(UUID, UUID);
 CREATE OR REPLACE FUNCTION check_level_completion(
   p_user_id UUID,
   p_level_id UUID
@@ -365,6 +372,7 @@ $$;
 -- ============================================================
 -- Fix 7: Streak health check called on dashboard load
 -- ============================================================
+DROP FUNCTION IF EXISTS check_and_update_streak(UUID);
 CREATE OR REPLACE FUNCTION check_and_update_streak(p_user_id UUID)
 RETURNS JSONB
 LANGUAGE plpgsql

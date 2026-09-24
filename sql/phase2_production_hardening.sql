@@ -34,6 +34,7 @@ FOR ALL
 USING (auth.role() = 'service_role')
 WITH CHECK (auth.role() = 'service_role');
 
+DROP FUNCTION IF EXISTS check_rate_limit(TEXT, INT, INT);
 CREATE OR REPLACE FUNCTION check_rate_limit(
   p_key TEXT,
   p_limit INT,
@@ -111,6 +112,7 @@ FOR ALL
 USING (auth.role() = 'service_role')
 WITH CHECK (auth.role() = 'service_role');
 
+DROP FUNCTION IF EXISTS log_cron_run(TEXT, TEXT, JSONB);
 CREATE OR REPLACE FUNCTION log_cron_run(
   p_job_name TEXT,
   p_status TEXT,
@@ -158,6 +160,7 @@ FOR ALL
 USING (auth.role() = 'service_role')
 WITH CHECK (auth.role() = 'service_role');
 
+DROP FUNCTION IF EXISTS log_security_event(UUID, TEXT, TEXT, TEXT, JSONB);
 CREATE OR REPLACE FUNCTION log_security_event(
   p_user_id UUID,
   p_event TEXT,
@@ -216,6 +219,7 @@ CREATE INDEX IF NOT EXISTS idx_security_audit_logs_user_created ON security_audi
 -- 5. Cleanup helper for old operational logs
 -- Suggested cron: run monthly once traffic grows.
 -- ============================================================
+DROP FUNCTION IF EXISTS cleanup_operational_logs(INT);
 CREATE OR REPLACE FUNCTION cleanup_operational_logs(
   p_keep_days INT DEFAULT 30
 )

@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP FUNCTION IF EXISTS is_admin();
 CREATE OR REPLACE FUNCTION is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -192,6 +193,7 @@ $$;
 -- ============================================================
 -- Auto profile creation on signup
 -- ============================================================
+DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -218,6 +220,7 @@ FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 -- ============================================================
 -- Updated-at trigger
 -- ============================================================
+DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -242,6 +245,7 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 -- Client code may update profile preferences such as name, goal, onboarding,
 -- current track/level, and last_active_date. XP, streaks, and role must only
 -- be changed by service-role API routes or SECURITY DEFINER RPCs.
+DROP FUNCTION IF EXISTS protect_profile_server_fields() CASCADE;
 CREATE OR REPLACE FUNCTION protect_profile_server_fields()
 RETURNS TRIGGER
 LANGUAGE plpgsql

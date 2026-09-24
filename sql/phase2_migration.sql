@@ -92,6 +92,7 @@ CREATE POLICY "mastery_own_all" ON user_concept_mastery FOR ALL
 CREATE INDEX IF NOT EXISTS idx_mastery_review ON user_concept_mastery (user_id, next_review);
 
 -- SM-2 update function
+DROP FUNCTION IF EXISTS update_concept_mastery(UUID, UUID, INT);
 CREATE OR REPLACE FUNCTION update_concept_mastery(
   p_user_id   UUID,
   p_concept_id UUID,
@@ -194,6 +195,7 @@ CREATE INDEX IF NOT EXISTS idx_glossary_category ON glossary (category);
 CREATE INDEX IF NOT EXISTS idx_glossary_term     ON glossary USING GIN (to_tsvector('english', term));
 
 -- Increment view count function
+DROP FUNCTION IF EXISTS increment_glossary_views(TEXT);
 CREATE OR REPLACE FUNCTION increment_glossary_views(p_slug TEXT)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
