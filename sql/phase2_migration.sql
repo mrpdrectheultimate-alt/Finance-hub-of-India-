@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS concepts (
 );
 
 ALTER TABLE concepts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "concepts_public_read" ON concepts;
 CREATE POLICY "concepts_public_read" ON concepts FOR SELECT USING (is_published = TRUE);
+DROP POLICY IF EXISTS "concepts_service_all" ON concepts;
 CREATE POLICY "concepts_service_all" ON concepts FOR ALL USING (auth.role() = 'service_role');
 
 CREATE INDEX IF NOT EXISTS idx_concepts_slug    ON concepts (slug);
@@ -47,6 +49,7 @@ CREATE TABLE IF NOT EXISTS concept_prerequisites (
 );
 
 ALTER TABLE concept_prerequisites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "prereqs_public_read" ON concept_prerequisites;
 CREATE POLICY "prereqs_public_read" ON concept_prerequisites FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────────────────────────────
@@ -60,6 +63,7 @@ CREATE TABLE IF NOT EXISTS concept_lessons (
 );
 
 ALTER TABLE concept_lessons ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "concept_lessons_public" ON concept_lessons;
 CREATE POLICY "concept_lessons_public" ON concept_lessons FOR SELECT USING (TRUE);
 
 -- ─────────────────────────────────────────────────────────────
@@ -86,6 +90,7 @@ CREATE TABLE IF NOT EXISTS user_concept_mastery (
 );
 
 ALTER TABLE user_concept_mastery ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "mastery_own_all" ON user_concept_mastery;
 CREATE POLICY "mastery_own_all" ON user_concept_mastery FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -187,7 +192,9 @@ CREATE TABLE IF NOT EXISTS glossary (
 );
 
 ALTER TABLE glossary ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "glossary_public_read" ON glossary;
 CREATE POLICY "glossary_public_read" ON glossary FOR SELECT USING (is_published = TRUE);
+DROP POLICY IF EXISTS "glossary_service_all" ON glossary;
 CREATE POLICY "glossary_service_all" ON glossary FOR ALL USING (auth.role() = 'service_role');
 
 CREATE INDEX IF NOT EXISTS idx_glossary_slug     ON glossary (slug);
@@ -226,7 +233,9 @@ CREATE TABLE IF NOT EXISTS lesson_quality_scores (
 );
 
 ALTER TABLE lesson_quality_scores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "quality_service_all" ON lesson_quality_scores;
 CREATE POLICY "quality_service_all" ON lesson_quality_scores FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "quality_admin_read" ON lesson_quality_scores;
 CREATE POLICY "quality_admin_read"  ON lesson_quality_scores FOR SELECT
   USING (auth.jwt() ->> 'email' = ANY(
     string_to_array(current_setting('app.admin_emails', true), ',')
@@ -257,11 +266,14 @@ CREATE TABLE IF NOT EXISTS sources (
     'commercial','original','unknown'
   )) DEFAULT 'unknown',
   is_active       BOOLEAN DEFAULT TRUE,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT sources_title_unique UNIQUE (title)
 );
 
 ALTER TABLE sources ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sources_public_read" ON sources;
 CREATE POLICY "sources_public_read" ON sources FOR SELECT USING (is_active = TRUE);
+DROP POLICY IF EXISTS "sources_service_all" ON sources;
 CREATE POLICY "sources_service_all" ON sources FOR ALL USING (auth.role() = 'service_role');
 
 -- ─────────────────────────────────────────────────────────────
@@ -277,7 +289,9 @@ CREATE TABLE IF NOT EXISTS lesson_citations (
 );
 
 ALTER TABLE lesson_citations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "citations_public_read" ON lesson_citations;
 CREATE POLICY "citations_public_read" ON lesson_citations FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "citations_service_all" ON lesson_citations;
 CREATE POLICY "citations_service_all" ON lesson_citations FOR ALL USING (auth.role() = 'service_role');
 
 -- ─────────────────────────────────────────────────────────────
@@ -650,7 +664,8 @@ VALUES
  'FIRE is based on the 4% safe withdrawal rate: if you withdraw only 4% of your corpus annually, it should last indefinitely (historically proven in US markets; India needs slightly higher corpus given higher inflation). Target corpus = Annual expenses × 25.',
  'FIRE Corpus = Annual Expenses × 25',
  'Annual expenses: ₹12 lakh. FIRE corpus target: ₹12 lakh × 25 = ₹3 crore. At ₹50,000/month SIP and 12% returns, reach ₹3 crore in approximately 18 years from age 27 → retire at 45.',
- 'intermediate', ARRAY['personal-finance'], ARRAY['retirement','financial independence','4% rule','corpus','savings rate']);
+ 'intermediate', ARRAY['personal-finance'], ARRAY['retirement','financial independence','4% rule','corpus','savings rate'])
+ON CONFLICT (slug) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────
 -- 10. SEED CONCEPT PREREQUISITES (knowledge graph edges)
@@ -925,7 +940,8 @@ VALUES
  'The money a business needs for day-to-day operations — current assets minus current liabilities.',
  'Working capital = Current Assets − Current Liabilities. Positive working capital: company can meet short-term obligations. Negative working capital: short-term obligations exceed short-term assets (potentially dangerous unless business model justifies it, like Dmart).',
  'Company has ₹50 crore current assets (inventory + receivables + cash) and ₹30 crore current liabilities (payables + short-term loans). Working capital = ₹20 crore — healthy.',
- 'Working Capital = Current Assets − Current Liabilities', 'corporate-finance', 'intermediate', ARRAY['current-ratio','cash-flow','dso','dpo','inventory']);
+ 'Working Capital = Current Assets − Current Liabilities', 'corporate-finance', 'intermediate', ARRAY['current-ratio','cash-flow','dso','dpo','inventory'])
+ON CONFLICT (slug) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────
 -- 12. SEED: VERIFIED SOURCES REGISTRY
@@ -946,7 +962,8 @@ VALUES
 ('NCFE — National Centre for Financial Education', 'government', 'NCFE', 'https://www.ncfe.org.in', TRUE, 'freely_available', CURRENT_DATE),
 ('RBI Annual Report 2023-24', 'rbi', 'Reserve Bank of India', 'https://www.rbi.org.in/Scripts/AnnualReportPublications.aspx', TRUE, 'freely_available', CURRENT_DATE),
 ('SEBI Annual Report 2022-23', 'sebi', 'SEBI', 'https://www.sebi.gov.in/reports-and-statistics/annual-reports', TRUE, 'freely_available', CURRENT_DATE),
-('Economic Survey of India 2023-24', 'government', 'Ministry of Finance', 'https://www.indiabudget.gov.in/economicsurvey', TRUE, 'freely_available', CURRENT_DATE);
+('Economic Survey of India 2023-24', 'government', 'Ministry of Finance', 'https://www.indiabudget.gov.in/economicsurvey', TRUE, 'freely_available', CURRENT_DATE)
+ON CONFLICT (title) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────
 -- 13. VERIFY MIGRATION

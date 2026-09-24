@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS net_worth_snapshots (
 );
 
 ALTER TABLE net_worth_snapshots ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "networth_own" ON net_worth_snapshots;
 CREATE POLICY "networth_own" ON net_worth_snapshots FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS user_financial_goals (
 );
 
 ALTER TABLE user_financial_goals ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "goals_own" ON user_financial_goals;
 CREATE POLICY "goals_own" ON user_financial_goals FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -71,8 +73,10 @@ CREATE TABLE IF NOT EXISTS ai_question_logs (
 );
 
 ALTER TABLE ai_question_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "ai_logs_service" ON ai_question_logs;
 CREATE POLICY "ai_logs_service" ON ai_question_logs FOR ALL
   USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "ai_logs_own_read" ON ai_question_logs;
 CREATE POLICY "ai_logs_own_read" ON ai_question_logs FOR SELECT
   USING (auth.uid() = user_id);
 
@@ -106,7 +110,9 @@ CREATE TABLE IF NOT EXISTS case_studies (
 );
 
 ALTER TABLE case_studies ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "cases_public_read" ON case_studies;
 CREATE POLICY "cases_public_read" ON case_studies FOR SELECT USING (is_published = TRUE);
+DROP POLICY IF EXISTS "cases_service_all" ON case_studies;
 CREATE POLICY "cases_service_all" ON case_studies FOR ALL USING (auth.role() = 'service_role');
 
 CREATE INDEX IF NOT EXISTS idx_cases_slug     ON case_studies (slug);
@@ -125,6 +131,7 @@ CREATE TABLE IF NOT EXISTS user_case_study_completions (
 );
 
 ALTER TABLE user_case_study_completions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "case_completions_own" ON user_case_study_completions;
 CREATE POLICY "case_completions_own" ON user_case_study_completions FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
@@ -511,7 +518,8 @@ Total damage: ₹14.2 lakh (exercise price + taxes) + interest on personal loan.
 'ESOP paper wealth is not real wealth — tax liability at exercise can exceed your liquid savings',
 ARRAY['esop','startup','equity','tax','perquisite','corporate-finance','advanced'],
 15, TRUE, FALSE
-);
+)
+ON CONFLICT (slug) DO NOTHING;
 
 -- ─────────────────────────────────────────────────────────────
 -- 7. SIMULATOR TRACKING TABLE
@@ -528,8 +536,10 @@ CREATE TABLE IF NOT EXISTS simulator_sessions (
 );
 
 ALTER TABLE simulator_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sim_own_all" ON simulator_sessions;
 CREATE POLICY "sim_own_all" ON simulator_sessions FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "sim_service" ON simulator_sessions;
 CREATE POLICY "sim_service"  ON simulator_sessions FOR ALL
   USING (auth.role() = 'service_role');
 

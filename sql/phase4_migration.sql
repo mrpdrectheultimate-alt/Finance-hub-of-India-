@@ -24,8 +24,10 @@ CREATE TABLE IF NOT EXISTS content_review_schedule (
 );
 
 ALTER TABLE content_review_schedule ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "review_service" ON content_review_schedule;
 CREATE POLICY "review_service" ON content_review_schedule FOR ALL
   USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "review_admin_read" ON content_review_schedule;
 CREATE POLICY "review_admin_read" ON content_review_schedule FOR SELECT
   USING (auth.jwt() ->> 'email' = ANY(
     string_to_array(current_setting('app.admin_emails', true), ',')
@@ -52,6 +54,7 @@ CREATE TABLE IF NOT EXISTS content_change_log (
 );
 
 ALTER TABLE content_change_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "changelog_service" ON content_change_log;
 CREATE POLICY "changelog_service" ON content_change_log FOR ALL USING (auth.role() = 'service_role');
 
 CREATE INDEX IF NOT EXISTS idx_changelog_content ON content_change_log (content_id, created_at DESC);
@@ -77,10 +80,13 @@ CREATE TABLE IF NOT EXISTS content_reports (
 );
 
 ALTER TABLE content_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "reports_own_insert" ON content_reports;
 CREATE POLICY "reports_own_insert" ON content_reports FOR INSERT
   WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "reports_own_read" ON content_reports;
 CREATE POLICY "reports_own_read" ON content_reports FOR SELECT
   USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "reports_service_all" ON content_reports;
 CREATE POLICY "reports_service_all" ON content_reports FOR ALL
   USING (auth.role() = 'service_role');
 
@@ -526,6 +532,7 @@ CREATE TABLE IF NOT EXISTS legal_page_visits (
 );
 
 ALTER TABLE legal_page_visits ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "legal_visits_service" ON legal_page_visits;
 CREATE POLICY "legal_visits_service" ON legal_page_visits FOR ALL USING (auth.role() = 'service_role');
 
 -- Consent tracking (DPDP Act requirement)
@@ -545,6 +552,7 @@ CREATE TABLE IF NOT EXISTS user_consents (
 );
 
 ALTER TABLE user_consents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "consents_own" ON user_consents;
 CREATE POLICY "consents_own" ON user_consents FOR ALL
   USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
