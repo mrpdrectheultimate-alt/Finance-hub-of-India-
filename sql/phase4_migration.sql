@@ -492,7 +492,7 @@ LIMIT 100;
 CREATE OR REPLACE VIEW content_health_dashboard AS
 WITH lesson_stats AS (
   SELECT
-    t.name AS track,
+    t.title AS track,
     COUNT(l.id) AS total_lessons,
     COUNT(lq.lesson_id) AS reviewed_lessons,
     COUNT(CASE WHEN lq.next_review < CURRENT_DATE THEN 1 END) AS overdue_reviews,
@@ -504,7 +504,7 @@ WITH lesson_stats AS (
   JOIN tracks t  ON lv.track_id = t.id
   LEFT JOIN lesson_quality_scores lq ON lq.lesson_id = l.id
   WHERE l.is_published = TRUE
-  GROUP BY t.name
+  GROUP BY t.title
 )
 SELECT
   track,

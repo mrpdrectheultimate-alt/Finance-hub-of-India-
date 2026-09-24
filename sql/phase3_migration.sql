@@ -567,7 +567,7 @@ SELECT
     ELSE                                       '🟢 Current'
   END AS freshness_status,
   lq.overall  AS quality_score,
-  t.name      AS track
+  t.title     AS track
 FROM lessons l
 LEFT JOIN levels lv  ON l.level_id  = lv.id
 LEFT JOIN tracks t   ON lv.track_id = t.id
