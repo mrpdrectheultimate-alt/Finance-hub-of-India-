@@ -168,6 +168,21 @@ CREATE TABLE IF NOT EXISTS ai_conversations (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS user_notes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT DEFAULT 'Untitled note',
+  content TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS curated_playlists (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  is_published BOOLEAN DEFAULT TRUE,
+  play_count INT DEFAULT 0
+);
+
 -- Admin allowlist for Supabase RLS.
 -- After running this file, add your admin email in Supabase SQL Editor:
 -- INSERT INTO admin_users (email) VALUES ('you@example.com') ON CONFLICT DO NOTHING;

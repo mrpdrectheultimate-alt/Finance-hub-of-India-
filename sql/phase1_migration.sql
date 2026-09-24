@@ -163,28 +163,41 @@ ALTER TABLE lessons
   ADD COLUMN IF NOT EXISTS has_calculator   BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS has_case_study   BOOLEAN DEFAULT FALSE;
 
+-- Ensure tables referenced in admin_dashboard_metrics view exist
+CREATE TABLE IF NOT EXISTS curated_playlists (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  is_published  BOOLEAN DEFAULT TRUE,
+  play_count    INT DEFAULT 0,
+  last_verified DATE,
+  is_broken     BOOLEAN DEFAULT FALSE,
+  broken_since  DATE
+);
+
+CREATE TABLE IF NOT EXISTS user_notes (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  title      TEXT DEFAULT 'Untitled note',
+  content    TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ─────────────────────────────────────────────────────────────
 -- 8. Video embed health tracking
 -- ─────────────────────────────────────────────────────────────
-DO $$ BEGIN
-  IF to_regclass('public.curated_playlists') IS NOT NULL THEN
-    ALTER TABLE curated_playlists
-      ADD COLUMN IF NOT EXISTS last_verified  DATE,
-      ADD COLUMN IF NOT EXISTS is_broken      BOOLEAN DEFAULT FALSE,
-      ADD COLUMN IF NOT EXISTS broken_since   DATE,
-      ADD COLUMN IF NOT EXISTS play_count     INT DEFAULT 0;
-  END IF;
-END $$;
+ALTER TABLE curated_playlists
+  ADD COLUMN IF NOT EXISTS last_verified  DATE,
+  ADD COLUMN IF NOT EXISTS is_broken      BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS broken_since   DATE,
+  ADD COLUMN IF NOT EXISTS play_count     INT DEFAULT 0;
 
 -- Function to increment play count
 DROP FUNCTION IF EXISTS increment_video_play(UUID);
 CREATE OR REPLACE FUNCTION increment_video_play(p_video_id UUID)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  IF to_regclass('public.curated_playlists') IS NOT NULL THEN
-    UPDATE curated_playlists SET play_count = COALESCE(play_count,0) + 1
-    WHERE id = p_video_id;
-  END IF;
+  UPDATE curated_playlists SET play_count = COALESCE(play_count,0) + 1
+  WHERE id = p_video_id;
 END; $$;
 
 -- ─────────────────────────────────────────────────────────────
