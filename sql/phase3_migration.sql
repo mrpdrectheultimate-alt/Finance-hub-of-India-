@@ -115,6 +115,7 @@ CREATE POLICY "cases_public_read" ON case_studies FOR SELECT USING (is_published
 DROP POLICY IF EXISTS "cases_service_all" ON case_studies;
 CREATE POLICY "cases_service_all" ON case_studies FOR ALL USING (auth.role() = 'service_role');
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cases_slug_unique ON case_studies (slug);
 CREATE INDEX IF NOT EXISTS idx_cases_slug     ON case_studies (slug);
 CREATE INDEX IF NOT EXISTS idx_cases_category ON case_studies (category);
 

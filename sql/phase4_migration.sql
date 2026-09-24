@@ -484,8 +484,7 @@ WHERE l.is_published = TRUE
     SELECT 1 FROM content_review_schedule crs
     WHERE crs.content_id = l.id AND crs.status IN ('pending','in_review')
   )
-LIMIT 100
-ON CONFLICT DO NOTHING;
+LIMIT 100;
 
 -- ─────────────────────────────────────────────────────────────
 -- 7. CONTENT HEALTH DASHBOARD VIEW

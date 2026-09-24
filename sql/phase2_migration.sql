@@ -34,6 +34,7 @@ CREATE POLICY "concepts_public_read" ON concepts FOR SELECT USING (is_published 
 DROP POLICY IF EXISTS "concepts_service_all" ON concepts;
 CREATE POLICY "concepts_service_all" ON concepts FOR ALL USING (auth.role() = 'service_role');
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_concepts_slug_unique ON concepts (slug);
 CREATE INDEX IF NOT EXISTS idx_concepts_slug    ON concepts (slug);
 CREATE INDEX IF NOT EXISTS idx_concepts_tracks  ON concepts USING GIN (track_slugs);
 CREATE INDEX IF NOT EXISTS idx_concepts_diff    ON concepts (difficulty);
@@ -197,6 +198,7 @@ CREATE POLICY "glossary_public_read" ON glossary FOR SELECT USING (is_published 
 DROP POLICY IF EXISTS "glossary_service_all" ON glossary;
 CREATE POLICY "glossary_service_all" ON glossary FOR ALL USING (auth.role() = 'service_role');
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_glossary_slug_unique ON glossary (slug);
 CREATE INDEX IF NOT EXISTS idx_glossary_slug     ON glossary (slug);
 CREATE INDEX IF NOT EXISTS idx_glossary_category ON glossary (category);
 CREATE INDEX IF NOT EXISTS idx_glossary_term     ON glossary USING GIN (to_tsvector('english', term));
@@ -269,6 +271,8 @@ CREATE TABLE IF NOT EXISTS sources (
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT sources_title_unique UNIQUE (title)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sources_title_unique ON sources (title);
 
 ALTER TABLE sources ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "sources_public_read" ON sources;
