@@ -427,6 +427,14 @@ WITH CHECK (auth.uid() = user_id OR auth.role() = 'service_role');
 -- These permissive service-role policies keep public client access locked to
 -- published/read-only data and each user's own rows.
 
+-- Ensure unique indexes exist on tracks, levels, badges for ON CONFLICT resolution
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tracks_slug_unique ON tracks(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_levels_track_slug_unique ON levels(track_id, slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_lessons_level_slug_unique ON lessons(level_id, slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_badges_slug_unique ON badges(slug);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_badges_user_badge_unique ON user_badges(user_id, badge_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_progress_user_lesson_unique ON user_progress(user_id, lesson_id);
+
 -- ============================================================
 -- Seed tracks, levels, badges
 -- ============================================================
