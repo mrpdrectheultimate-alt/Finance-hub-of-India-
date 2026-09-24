@@ -550,12 +550,14 @@ CREATE INDEX IF NOT EXISTS idx_sim_name ON simulator_sessions (simulator_name);
 -- ─────────────────────────────────────────────────────────────
 -- 8. ADMIN CONTENT FRESHNESS VIEW (updated for Phase 3)
 -- ─────────────────────────────────────────────────────────────
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 CREATE OR REPLACE VIEW content_freshness_report AS
 SELECT
   'lesson'     AS content_type,
   l.title      AS name,
   l.slug,
-  l.updated_at AS last_updated,
+  COALESCE(l.updated_at, l.created_at) AS last_updated,
   lq.last_reviewed,
   lq.next_review,
   CASE
@@ -578,7 +580,7 @@ SELECT
   'case_study',
   cs.title,
   cs.slug,
-  cs.updated_at,
+  COALESCE(cs.updated_at, cs.created_at) AS last_updated,
   cs.last_reviewed,
   cs.next_review,
   CASE
