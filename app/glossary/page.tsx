@@ -60,7 +60,7 @@ export default function GlossaryPage() {
         .select("*")
         .eq("is_published", true)
         .order("term");
-      if (data) { setTerms(data); setFiltered(data); }
+      if (data) { const termsData = data as unknown as GlossaryTerm[]; setTerms(termsData); setFiltered(termsData); }
       setLoading(false);
     })();
   }, []);
