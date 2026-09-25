@@ -256,6 +256,146 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["ai_conversations"]["Insert"]>;
         Relationships: [];
       };
+      quizzes: {
+        Row: {
+          id: string;
+          lesson_id: string;
+          title: string;
+          passing_score: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lesson_id: string;
+          title: string;
+          passing_score?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["quizzes"]["Insert"]>;
+        Relationships: [];
+      };
+      quiz_questions: {
+        Row: {
+          id: string;
+          quiz_id: string;
+          question_text: string;
+          options: Json;
+          correct_index: number;
+          explanation: string;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          quiz_id: string;
+          question_text: string;
+          options: Json;
+          correct_index: number;
+          explanation?: string;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["quiz_questions"]["Insert"]>;
+        Relationships: [];
+      };
+      case_studies: {
+        Row: {
+          id: string;
+          title: string;
+          slug: string;
+          subtitle: string | null;
+          category: string;
+          difficulty: string;
+          content_mdx: string;
+          protagonist: string | null;
+          key_lesson: string | null;
+          tags: string[];
+          related_lessons: string[];
+          duration_minutes: number;
+          is_published: boolean;
+          is_free: boolean;
+          view_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["case_studies"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["case_studies"]["Row"]>;
+        Relationships: [];
+      };
+      user_case_study_completions: {
+        Row: {
+          user_id: string;
+          case_study_id: string;
+          completed_at: string;
+          decisions: Json;
+          xp_earned: number;
+        };
+        Insert: Partial<Database["public"]["Tables"]["user_case_study_completions"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["user_case_study_completions"]["Row"]>;
+        Relationships: [];
+      };
+      glossary: {
+        Row: {
+          id: string;
+          term: string;
+          slug: string;
+          simple_def: string;
+          technical_def: string;
+          example: string;
+          category: string;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["glossary"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["glossary"]["Row"]>;
+        Relationships: [];
+      };
+      concepts: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          simple_def: string;
+          technical_def: string;
+          category: string;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["concepts"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["concepts"]["Row"]>;
+        Relationships: [];
+      };
+      sources: {
+        Row: {
+          id: string;
+          title: string;
+          author: string;
+          publisher: string;
+          url: string;
+          is_verified: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["sources"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["sources"]["Row"]>;
+        Relationships: [];
+      };
+      user_concept_mastery: {
+        Row: {
+          user_id: string;
+          concept_id: string;
+          mastery_score: number;
+          quiz_score: number | null;
+          exposure_count: number;
+          next_review: string | null;
+          repetitions: number;
+          last_reviewed: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["user_concept_mastery"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["user_concept_mastery"]["Row"]>;
+        Relationships: [];
+      };
       [key: string]: any;
     };
     Views: Record<string, any>;

@@ -47,8 +47,8 @@ export default function AdminQuizBuilderPage() {
         supabase.from("quiz_questions").select("*").eq("quiz_id", quizId).order("order_index"),
       ]);
 
-      if (quizData) setQuiz(quizData as Quiz);
-      if (qData) setQuestions((qData as Question[]).map((question) => ({ ...question, options: question.options || ["", "", "", ""] })));
+      if (quizData) setQuiz(quizData as unknown as Quiz);
+      if (qData) setQuestions(((qData as unknown) as Question[]).map((question) => ({ ...question, options: question.options || ["", "", "", ""] })));
     }
   };
 

@@ -125,7 +125,7 @@ export default function ProfilePage() {
       supabase.from("paper_portfolios").select("id").eq("user_id", user.id),
     ]);
 
-    const portfolioIds = (portfoliosRes.data || []).map((item: { id: string }) => item.id);
+    const portfolioIds = ((portfoliosRes.data as any[]) || []).map((item: any) => item.id);
     const tradesRes = portfolioIds.length
       ? await supabase.from("paper_orders").select("id", { count: "exact", head: true }).in("portfolio_id", portfolioIds)
       : { count: 0 };
@@ -144,7 +144,7 @@ export default function ProfilePage() {
       lessonsCompleted: progress.length,
       quizzesPassed: quizScores.filter((score) => score >= 70).length,
       avgQuizScore: quizScores.length ? Math.round(quizScores.reduce((total, score) => total + score, 0) / quizScores.length) : 0,
-      aiQuestions: (aiUsageRes.data || []).reduce((total: number, row: { count: number | null }) => total + (row.count || 0), 0),
+      aiQuestions: ((aiUsageRes.data as any[]) || []).reduce((total: number, row: any) => total + (row.count || 0), 0),
       tradesPlaced: tradesRes.count || 0,
       booksMarked: bookReadsRes.count || 0,
       downloadsCount: downloadsRes.count || 0,

@@ -85,25 +85,27 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
       return;
     }
 
+    const lessonObj = les as any;
     const [{ data: level }, { data: quiz }, { data: siblings }, { data: progress }] = await Promise.all([
-      supabase.from("levels").select("*").eq("id", les.level_id).single(),
-      supabase.from("quizzes").select("id, title, passing_score").eq("lesson_id", les.id).single(),
+      supabase.from("levels").select("*").eq("id", lessonObj.level_id).single(),
+      supabase.from("quizzes").select("id, title, passing_score").eq("lesson_id", lessonObj.id).single(),
       supabase
         .from("lessons")
         .select("id, title, order_index, is_free")
-        .eq("level_id", les.level_id)
+        .eq("level_id", lessonObj.level_id)
         .eq("is_published", true)
         .order("order_index"),
-      supabase.from("user_progress").select("id").eq("user_id", user.id).eq("lesson_id", les.id).single(),
+      supabase.from("user_progress").select("id").eq("user_id", user.id).eq("lesson_id", lessonObj.id).single(),
     ]);
 
-    const { data: track } = level ? await supabase.from("tracks").select("*").eq("id", level.track_id).single() : { data: null };
-
-    if (track) {
+    const levelObj = level as any;
+    const { data: trackData } = levelObj ? await supabase.from("tracks").select("*").eq("id", levelObj.track_id).single() : { data: null };
+    const trackObj = trackData as any;
+    if (trackObj) {
       const { data: playlistRows } = await supabase
         .from("curated_playlists" as never)
         .select("id, title, channel_name, description, playlist_url, embed_id, embed_type, video_type, curator_note, video_count, duration_hrs")
-        .or(`lesson_id.eq.${les.id},track_id.eq.${track.id},category.eq.${track.slug}`)
+        .or(`lesson_id.eq.${lessonObj.id},track_id.eq.${trackObj.id},category.eq.${trackObj.slug}`)
         .eq("is_published", true)
         .order("is_featured", { ascending: false })
         .order("video_type", { ascending: false })
@@ -113,11 +115,11 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
       setPlaylists([]);
     }
 
-    setProfile(prof);
+    setProfile(prof as any);
     setCompleted(Boolean(progress));
     setLesson({
       ...(les as Lesson),
-      level: { ...(level as Level), track: track as Track },
+      level: { ...(level as Level), track: trackObj as Track },
       quiz: quiz || null,
       siblingLessons: siblings || [],
     });

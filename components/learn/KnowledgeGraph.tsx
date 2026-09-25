@@ -194,11 +194,11 @@ export default function KnowledgeGraph({
           : { data: [] },
       ]);
 
-      const concepts = (conceptsData || []) as RawConcept[];
-      const prereqs  = (prereqData  || []) as RawPrereq[];
+      const concepts = (conceptsData as unknown) as RawConcept[];
+      const prereqs  = (prereqData  as unknown) as RawPrereq[];
 
       const masteryMap = new Map(
-        ((masteryData || []) as RawMastery[]).map(m => [m.concept_id, m.mastery_score])
+        ((masteryData as unknown) as RawMastery[]).map(m => [m.concept_id, m.mastery_score])
       );
 
       const conceptIds = new Set(concepts.map(c => c.id));

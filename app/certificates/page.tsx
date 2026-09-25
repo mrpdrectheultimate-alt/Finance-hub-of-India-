@@ -38,21 +38,21 @@ export default function CertificatesPage() {
       supabase.from("user_progress").select("lesson_id").eq("user_id", user.id),
     ]);
 
-    setProfile(prof);
+    setProfile(prof as any);
     const completedIds = new Set(progress?.map((item) => item.lesson_id) || []);
 
     if (allTracks) {
       const tracksWithProgress = await Promise.all(
-        allTracks.map(async (track) => {
+        (allTracks as any[]).map(async (track: any) => {
           const { data: levels } = await supabase.from("levels").select("id").eq("track_id", track.id);
-          const levelIds = levels?.map((level) => level.id) || [];
+          const levelIds = (levels as any[])?.map((level: any) => level.id) || [];
 
           const { data: lessons } = levelIds.length
             ? await supabase.from("lessons").select("id").in("level_id", levelIds).eq("is_published", true)
             : { data: [] };
 
-          const total = lessons?.length || 0;
-          const completed = lessons?.filter((lesson) => completedIds.has(lesson.id)).length || 0;
+          const total = (lessons as any[])?.length || 0;
+          const completed = (lessons as any[])?.filter((lesson: any) => completedIds.has(lesson.id)).length || 0;
 
           return {
             ...track,

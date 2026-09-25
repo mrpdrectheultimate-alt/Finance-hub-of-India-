@@ -39,7 +39,7 @@ export default function CaseStudyDetailPage() {
           .single();
 
         if (data) {
-          setStudy(data as CaseStudyDetail);
+          setStudy(data as unknown as CaseStudyDetail);
 
           // Check user completion
           const { data: { user } } = await supabase.auth.getUser();

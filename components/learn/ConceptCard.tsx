@@ -89,7 +89,7 @@ export function ConceptCard({ concept, showMastery = true, compact = false, onRe
         .eq("user_id", user.id)
         .eq("concept_id", concept.id)
         .single();
-      if (data) setMastery(data);
+      if (data) setMastery(data as unknown as MasteryData);
     })();
   }, [concept.id, showMastery]);
 
@@ -114,7 +114,7 @@ export function ConceptCard({ concept, showMastery = true, compact = false, onRe
       .eq("user_id", user.id)
       .eq("concept_id", concept.id)
       .single();
-    if (updated) setMastery(updated);
+    if (updated) setMastery(updated as unknown as MasteryData);
     onReview?.(concept);
   };
 
