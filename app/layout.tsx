@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Inter, Source_Serif_4 } from "next/font/google";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import PWAContainer from "@/components/pwa/PWAContainer";
 import "./globals.css";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
@@ -136,6 +137,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
 
         <ThemeProvider>
           <div id="main-content">{children}</div>
+          <PWAContainer />
         </ThemeProvider>
 
         <div id="modal-root" />
