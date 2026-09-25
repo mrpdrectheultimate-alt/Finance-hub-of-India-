@@ -17,6 +17,7 @@ const ForexPaperTrader = dynamic(() => import("@/components/trading/ForexPaperTr
 const CryptoPaperTrader = dynamic(() => import("@/components/trading/CryptoPaperTrader"), { ssr: false });
 const LessonComments = dynamic(() => import("@/components/community/LessonComments"), { ssr: false });
 const LessonNotesTab = dynamic(() => import("@/components/notes/LessonNotesTab"), { ssr: false });
+const LessonQA = dynamic(() => import("@/components/community/LessonQA"), { ssr: false });
 
 type FullLesson = Lesson & {
   level: Level & { track: Track };
@@ -38,7 +39,7 @@ type Playlist = {
   duration_hrs: number | null;
 };
 
-type LessonTab = "learn" | "watch" | "practice" | "notes" | "download";
+type LessonTab = "learn" | "watch" | "practice" | "notes" | "community" | "download";
 
 const TRACK_PRACTICE: Record<string, { type: "forex" | "crypto" | "simulator"; label: string; href?: string }> = {
   "trading-markets": { type: "forex", label: "Forex Practice Terminal" },
@@ -255,6 +256,7 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
     ...(playlists.length > 0 ? [{ id: "watch" as LessonTab, label: `Watch (${playlists.length})` }] : []),
     ...(practiceInfo ? [{ id: "practice" as LessonTab, label: "Practice" }] : []),
     { id: "notes", label: "My Notes" },
+    { id: "community", label: "💬 Q&A" },
     { id: "download", label: "Download" },
   ];
 
@@ -451,6 +453,12 @@ export default function LessonPlayer({ lessonId }: { lessonId: string }) {
                   trackSlug={trackSlug}
                   trackIcon={lesson.level?.track?.icon || "📖"}
                 />
+              ) : null}
+
+              {activeTab === "community" ? (
+                <div style={{ marginTop: 24 }}>
+                  <LessonQA lessonId={lesson.id} lessonTitle={lesson.title} />
+                </div>
               ) : null}
 
               {activeTab === "download" ? (
