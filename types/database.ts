@@ -68,7 +68,9 @@ export interface Database {
           order_index: number;
           is_published: boolean;
           is_free: boolean;
+          language?: string;
           created_at: string;
+          updated_at?: string;
         };
         Insert: Omit<Database["public"]["Tables"]["lessons"]["Row"], "created_at">;
         Update: Partial<Database["public"]["Tables"]["lessons"]["Insert"]>;
@@ -89,14 +91,117 @@ export interface Database {
       };
       user_xp_log: {
         Row: {
-          id: string;
+          id?: string;
           user_id: string;
-          xp_amount: number;
-          reason: string;
+          xp_earned?: number;
+          xp_amount?: number;
+          reason?: string;
+          activity_type?: string;
+          description?: string;
+          created_at?: string;
+        };
+        Insert: Database["public"]["Tables"]["user_xp_log"]["Row"];
+        Update: Partial<Database["public"]["Tables"]["user_xp_log"]["Insert"]>;
+        Relationships: [];
+      };
+      lesson_questions: {
+        Row: {
+          id: string;
+          lesson_id: string;
+          user_id: string;
+          question: string;
+          is_answered: boolean;
+          is_pinned: boolean;
+          is_flagged: boolean;
+          upvote_count: number;
+          answer_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          lesson_id: string;
+          user_id: string;
+          question: string;
+          is_answered?: boolean;
+          is_pinned?: boolean;
+          is_flagged?: boolean;
+          upvote_count?: number;
+          answer_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["lesson_questions"]["Insert"]>;
+        Relationships: [];
+      };
+      question_answers: {
+        Row: {
+          id: string;
+          question_id: string;
+          user_id: string;
+          answer: string;
+          is_accepted: boolean;
+          is_staff: boolean;
+          is_ai: boolean;
+          is_flagged: boolean;
+          upvote_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          question_id: string;
+          user_id: string;
+          answer: string;
+          is_accepted?: boolean;
+          is_staff?: boolean;
+          is_ai?: boolean;
+          is_flagged?: boolean;
+          upvote_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["question_answers"]["Insert"]>;
+        Relationships: [];
+      };
+      community_upvotes: {
+        Row: {
+          user_id: string;
+          target_type: string;
+          target_id: string;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["user_xp_log"]["Row"], "id" | "created_at">;
-        Update: Partial<Database["public"]["Tables"]["user_xp_log"]["Insert"]>;
+        Insert: {
+          user_id: string;
+          target_type: string;
+          target_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["community_upvotes"]["Insert"]>;
+        Relationships: [];
+      };
+      community_flags: {
+        Row: {
+          id: string;
+          user_id: string;
+          target_type: string;
+          target_id: string;
+          reason: string;
+          description?: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          target_type: string;
+          target_id: string;
+          reason: string;
+          description?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["community_flags"]["Insert"]>;
         Relationships: [];
       };
       badges: {
@@ -151,11 +256,12 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["ai_conversations"]["Insert"]>;
         Relationships: [];
       };
+      [key: string]: any;
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+    Views: Record<string, any>;
+    Functions: Record<string, any>;
+    Enums: Record<string, any>;
+    CompositeTypes: Record<string, any>;
   };
 }
 
@@ -166,3 +272,5 @@ export type Lesson = Database["public"]["Tables"]["lessons"]["Row"];
 export type Badge = Database["public"]["Tables"]["badges"]["Row"];
 export type UserBadge = Database["public"]["Tables"]["user_badges"]["Row"];
 export type UserProgress = Database["public"]["Tables"]["user_progress"]["Row"];
+export type LessonQuestion = Database["public"]["Tables"]["lesson_questions"]["Row"];
+export type QuestionAnswer = Database["public"]["Tables"]["question_answers"]["Row"];
