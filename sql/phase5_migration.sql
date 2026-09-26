@@ -194,7 +194,7 @@ CREATE INDEX IF NOT EXISTS idx_progress_user_completed
 CREATE INDEX IF NOT EXISTS idx_progress_lesson_user
   ON user_progress (lesson_id, user_id);
 
--- Quiz attempts
+-- Quiz attempts — ensure table & columns exist
 CREATE TABLE IF NOT EXISTS user_quiz_attempts (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -203,6 +203,8 @@ CREATE TABLE IF NOT EXISTS user_quiz_attempts (
   passed      BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE user_quiz_attempts ADD COLUMN IF NOT EXISTS passed BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_quiz_attempts ADD COLUMN IF NOT EXISTS score INT DEFAULT 0;
 ALTER TABLE user_quiz_attempts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "quiz_attempts_own" ON user_quiz_attempts;
 CREATE POLICY "quiz_attempts_own" ON user_quiz_attempts FOR ALL USING (auth.uid() = user_id);
@@ -216,17 +218,20 @@ CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz
 CREATE INDEX IF NOT EXISTS idx_xp_log_user_date
   ON user_xp_log (user_id, created_at DESC);
 
--- Notes — user's notes search
+-- Notes — ensure table & columns exist before indexing
 CREATE TABLE IF NOT EXISTS user_notes (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   lesson_id   UUID REFERENCES lessons(id) ON DELETE CASCADE,
-  content     TEXT NOT NULL,
+  content     TEXT NOT NULL DEFAULT '',
   is_pinned   BOOLEAN DEFAULT FALSE,
   is_archived BOOLEAN DEFAULT FALSE,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE user_notes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "notes_own_all" ON user_notes;
 CREATE POLICY "notes_own_all" ON user_notes FOR ALL USING (auth.uid() = user_id);
@@ -236,11 +241,23 @@ CREATE INDEX IF NOT EXISTS idx_notes_user_pinned
 CREATE INDEX IF NOT EXISTS idx_notes_lesson
   ON user_notes (lesson_id) WHERE lesson_id IS NOT NULL;
 
--- Glossary full-text search (only if table exists)
+-- Glossary — ensure table exists before FTS index
+CREATE TABLE IF NOT EXISTS glossary (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  term        TEXT NOT NULL UNIQUE,
+  simple_def  TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
 CREATE INDEX IF NOT EXISTS idx_glossary_fts
   ON glossary USING GIN (to_tsvector('english', term || ' ' || COALESCE(simple_def,'')));
 
--- Concepts full-text search (only if table exists)
+-- Concepts — ensure table exists before FTS index
+CREATE TABLE IF NOT EXISTS concepts (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name        TEXT NOT NULL UNIQUE,
+  simple_def  TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
 CREATE INDEX IF NOT EXISTS idx_concepts_fts
   ON concepts USING GIN (to_tsvector('english', name || ' ' || COALESCE(simple_def,'')));
 
