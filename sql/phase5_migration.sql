@@ -172,7 +172,14 @@ CREATE POLICY "flags_service_all" ON community_flags
 -- 5. PERFORMANCE INDEXES (for scale)
 -- ─────────────────────────────────────────────────────────────
 
--- Lessons — most-queried columns
+-- Lessons — ensure all columns exist before indexing
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS is_free BOOLEAN DEFAULT FALSE;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS order_index INT DEFAULT 1;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS slug TEXT;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS content_mdx TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_lessons_published_free
   ON lessons (is_published, is_free, order_index);
 CREATE INDEX IF NOT EXISTS idx_lessons_level_published
@@ -229,6 +236,8 @@ CREATE TABLE IF NOT EXISTS user_notes (
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE;
+ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS content TEXT DEFAULT '';
 ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
 ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
 ALTER TABLE user_notes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
