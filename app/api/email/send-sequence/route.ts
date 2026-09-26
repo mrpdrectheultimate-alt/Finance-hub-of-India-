@@ -345,20 +345,22 @@ export async function POST(req: NextRequest) {
   let   errors   = 0;
 
   // Get all due emails
-  const { data: dueEmails } = await supabase
+  const { data: rawEmails } = await supabase
     .from("user_email_sequence_state")
     .select(`
       user_id, sequence_id, current_step,
-      profiles!inner(email, full_name, subscription_tier,
+      profiles(email, full_name, subscription_tier,
         xp_total, current_streak, onboarding_goal, primary_track,
         email_streak_reminder, email_weekly_digest, email_marketing),
-      email_sequences!inner(name),
-      email_sequence_steps!inner(subject, template_key, delay_hours)
+      email_sequences(name),
+      email_sequence_steps(subject, template_key, delay_hours)
     `)
     .lte("next_send_at", now)
     .eq("completed",    false)
     .eq("unsubscribed", false)
     .limit(50);
+
+  const dueEmails = (rawEmails || []) as any[];
 
   for (const item of (dueEmails || [])) {
     const profile = (item as any).profiles;
@@ -421,8 +423,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ sent, errors, timestamp: now });
 }
 
-// ─── Enroll user in welcome sequence (call after signup) ──────
-export async function enrollWelcomeSequence(userId: string) {
+// ─── Enroll user in welcome sequence ─────────────────────────
+async function enrollWelcomeSequence(userId: string) {
   const supabase = createServiceClient();
   const seqId    = "11111111-0001-0001-0001-000000000001";
 
