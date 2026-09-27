@@ -24,8 +24,8 @@ const phase6Files = [
 
 // Files for Phase 7 Pack
 const phase7Files = [
-  'phase7_migration.sql',
-  'admin_dashboard_page.tsx'
+  'phase7_lessons.sql',
+  'AdminDashboard.tsx'
 ];
 
 // Files for All Phases Complete Master Pack
@@ -68,8 +68,8 @@ const allPhasesFiles = [
   'email_sequence_route.ts',
   'leaderboard_page.tsx',
   'certificates_page.tsx',
-  'phase7_migration.sql',
-  'admin_dashboard_page.tsx',
+  'phase7_lessons.sql',
+  'AdminDashboard.tsx',
   'DEPLOYMENT_WALKTHROUGH.md'
 ];
 

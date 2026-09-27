@@ -36,7 +36,9 @@ const fileMappings = [
   { src: 'app/leaderboard/page.tsx', dest: 'leaderboard_page.tsx' },
   { src: 'app/certificates/page.tsx', dest: 'certificates_page.tsx' },
   { src: 'sql/phase7_migration.sql', dest: 'phase7_migration.sql' },
-  { src: 'app/admin/dashboard/page.tsx', dest: 'admin_dashboard_page.tsx' }
+  { src: 'sql/phase7_migration.sql', dest: 'phase7_lessons.sql' },
+  { src: 'app/admin/dashboard/page.tsx', dest: 'admin_dashboard_page.tsx' },
+  { src: 'app/admin/dashboard/page.tsx', dest: 'AdminDashboard.tsx' }
 ];
 
 console.log("Copying files to outputs/...");
