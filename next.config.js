@@ -1,51 +1,65 @@
-/** @type {import("next").NextConfig} */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Strict React mode
+  reactStrictMode: true,
+
+  // Image optimization
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "**.supabase.co" },
-      { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      { protocol: "https", hostname: "img.youtube.com" },
-    ],
     formats: ["image/avif", "image/webp"],
+    deviceSizes: [390, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: "https", hostname: "img.youtube.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    ],
   },
 
+  // Compression
+  compress: true,
+
+  // Headers for security and caching
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: "/sw.js",
         headers: [
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
         ],
       },
       {
-        source: "/(.*)\\.(ico|png|jpg|jpeg|svg|webp|avif|woff2|woff)",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+        source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
       },
     ];
   },
 
+  // Redirects for legacy URLs
   async redirects() {
     return [
-      { source: "/login", destination: "/auth/login", permanent: true },
-      { source: "/signup", destination: "/auth/signup", permanent: true },
       { source: "/home", destination: "/", permanent: true },
+      { source: "/courses", destination: "/explore", permanent: true },
+      { source: "/calculator", destination: "/practice/sip", permanent: false },
     ];
   },
 
+  // Experimental features
   experimental: {
-    optimizePackageImports: ["@supabase/supabase-js"],
+    // optimizePackageImports improves tree-shaking
+    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
   },
 
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  // Suppress specific warnings in development
+  typescript: {
+    ignoreBuildErrors: false,
   },
-
-  env: {
-    NEXT_PUBLIC_APP_NAME: "FinanceHub",
-    NEXT_PUBLIC_APP_TAGLINE: "World-class finance education for everyone",
+  eslint: {
+    ignoreDuringBuilds: false,
   },
 };
 

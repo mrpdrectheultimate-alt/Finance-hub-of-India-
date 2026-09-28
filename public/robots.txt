@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+# Block admin pages from indexing
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /certificates
+Disallow: /review
+Disallow: /leaderboard
+
+# Allow important public pages
+Allow: /explore
+Allow: /learn/
+Allow: /glossary/
+Allow: /case-studies/
+Allow: /tracks/
+Allow: /practice/sip
+Allow: /practice/emi
+Allow: /practice/tax
+Allow: /legal/
+
+# Sitemap location
+Sitemap: https://financehub.in/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 2

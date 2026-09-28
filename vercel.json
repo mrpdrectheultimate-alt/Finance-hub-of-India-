@@ -6,34 +6,57 @@
   "regions": ["bom1"],
   "crons": [
     {
+      "path": "/api/email/send-sequence",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/daily-snapshot",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/reset-ai-limits",
+      "schedule": "30 18 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-league",
+      "schedule": "0 1 * * 1"
+    },
+    {
       "path": "/api/cron/streak-check",
       "schedule": "30 14 * * *"
     }
   ],
-  "functions": {
-    "app/api/ai-tutor/route.ts": { "maxDuration": 30 },
-    "app/api/stripe-webhook/route.ts": { "maxDuration": 10 },
-    "app/api/generate-certificate/route.ts": { "maxDuration": 15 },
-    "app/api/send-email/route.ts": { "maxDuration": 10 },
-    "app/api/cron/streak-check/route.ts": { "maxDuration": 300 }
-  },
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "https://financehub.in" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
-      ]
-    },
     {
       "source": "/(.*)",
       "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
+  ],
+  "redirects": [
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/courses", "destination": "/explore", "permanent": true },
+    { "source": "/lessons", "destination": "/explore", "permanent": true },
+    { "source": "/blog", "destination": "/explore", "permanent": true },
+    { "source": "/calculator", "destination": "/practice/sip", "permanent": false },
+    { "source": "/sip", "destination": "/practice/sip", "permanent": false },
+    { "source": "/emi", "destination": "/practice/emi", "permanent": false }
   ]
 }
