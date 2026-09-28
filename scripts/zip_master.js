@@ -28,6 +28,11 @@ const phase7Files = [
   'AdminDashboard.tsx'
 ];
 
+// Files for Phase 8 Pack
+const phase8Files = [
+  'phase8_lessons.sql'
+];
+
 // Files for All Phases Complete Master Pack
 const allPhasesFiles = [
   'phase0_reality_audit.sql',
@@ -70,6 +75,7 @@ const allPhasesFiles = [
   'certificates_page.tsx',
   'phase7_lessons.sql',
   'AdminDashboard.tsx',
+  'phase8_lessons.sql',
   'DEPLOYMENT_WALKTHROUGH.md'
 ];
 
@@ -100,6 +106,14 @@ if (phase7FilesPS) {
   execSync(`powershell -Command "Compress-Archive -Path ${phase7FilesPS} -DestinationPath '${phase7Zip}' -Force"`);
 }
 
+// Phase 8 Pack
+const phase8FilesPS = phase8Files.filter(f => fs.existsSync(path.join(outputsDir, f))).map(f => `'${path.join(outputsDir, f)}'`).join(',');
+const phase8Zip = path.join(outputsDir, 'FinanceHub_Phase8_Pack.zip');
+if (fs.existsSync(phase8Zip)) fs.unlinkSync(phase8Zip);
+if (phase8FilesPS) {
+  execSync(`powershell -Command "Compress-Archive -Path ${phase8FilesPS} -DestinationPath '${phase8Zip}' -Force"`);
+}
+
 // All Phases Pack
 const allPhasesFilesPS = allPhasesFiles
   .filter(f => fs.existsSync(path.join(outputsDir, f)))
@@ -122,6 +136,10 @@ if (fs.existsSync(phase6Zip)) {
 if (fs.existsSync(phase7Zip)) {
   const p7Stat = fs.statSync(phase7Zip);
   console.log(`FinanceHub_Phase7_Pack.zip: ${(p7Stat.size / 1024).toFixed(1)} KB`);
+}
+if (fs.existsSync(phase8Zip)) {
+  const p8Stat = fs.statSync(phase8Zip);
+  console.log(`FinanceHub_Phase8_Pack.zip: ${(p8Stat.size / 1024).toFixed(1)} KB`);
 }
 if (fs.existsSync(allPhasesZip)) {
   const masterStat = fs.statSync(allPhasesZip);
