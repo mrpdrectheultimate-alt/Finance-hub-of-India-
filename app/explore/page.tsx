@@ -1,276 +1,470 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-type TrackWithLevels = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string | null;
-  icon: string | null;
-  color_hex: string;
-  levels: {
-    id: string;
-    title: string;
-    slug: string;
-    description: string | null;
-    is_free: boolean;
-    xp_reward: number;
-    order_index: number;
-    lessonCount: number;
-    completedCount: number;
-  }[];
+// ============================================================
+// FinanceHub — Explore Page
+// app/explore/page.tsx
+// Browse all tracks, levels, lessons with progress indicators
+// ============================================================
+
+type Track = {
+  id:          string;
+  name:        string;
+  title?:      string;
+  slug:        string;
+  description: string;
+  color_hex:   string;
+  icon_emoji:  string;
+  icon?:       string;
+  is_featured: boolean;
+  levels:      Level[];
 };
 
-type RawTrack = Omit<TrackWithLevels, "levels"> & {
-  levels?: Array<Omit<TrackWithLevels["levels"][number], "lessonCount" | "completedCount">>;
+type Level = {
+  id:          string;
+  name:        string;
+  title?:      string;
+  slug:        string;
+  order_index: number;
+  lessons:     LessonCard[];
+};
+
+type LessonCard = {
+  id:               string;
+  title:            string;
+  slug:             string;
+  duration_minutes: number;
+  is_free:          boolean;
+  language:         string;
+  difficulty_score: number;
+  completed?:       boolean;
+};
+
+const LANG_LABELS: Record<string, string> = {
+  en: "🇬🇧 English",
+  hi: "🇮🇳 हिंदी",
+};
+
+const DIFFICULTY_COLORS: Record<number, string> = {
+  1: "#1D9E75", 2: "#1D9E75", 3: "#38A169",
+  4: "#38A169", 5: "#D4A017", 6: "#D4A017",
+  7: "#E53E3E", 8: "#E53E3E", 9: "#B91C1C", 10: "#B91C1C",
 };
 
 export default function ExplorePage() {
-  const [tracks, setTracks] = useState<TrackWithLevels[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string>("free");
-  const [activeTrack, setActiveTrack] = useState<string | null>(null);
+  const [tracks,       setTracks]       = useState<Track[]>([]);
+  const [search,       setSearch]       = useState("");
+  const [langFilter,   setLangFilter]   = useState<"all" | "en" | "hi">("all");
+  const [tierFilter,   setTierFilter]   = useState<"all" | "free" | "paid">("all");
+  const [expanded,     setExpanded]     = useState<string[]>([]);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [loading,      setLoading]      = useState(true);
+  const [totalLessons, setTotalLessons] = useState(0);
+  const [user,         setUser]         = useState<any>(null);
 
   useEffect(() => {
-    void load();
+    (async () => {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      setUser(u);
+
+      // Fetch all tracks with levels and lessons (resilient schema mapping)
+      const { data: tracksData, error } = await supabase
+        .from("tracks")
+        .select(`
+          *,
+          levels (
+            *,
+            lessons (*)
+          )
+        `)
+        .order("order_index");
+
+      if (error) {
+        console.error("Error fetching explore tracks:", error);
+      }
+
+      if (tracksData) {
+        const mapped: Track[] = tracksData.map((t: any) => ({
+          ...t,
+          name:        t.name || t.title || "Track",
+          icon_emoji:  t.icon_emoji || t.icon || "📚",
+          is_featured: t.is_featured || false,
+          levels: (t.levels || [])
+            .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+            .map((lv: any) => ({
+              ...lv,
+              name: lv.name || lv.title || "Level",
+              lessons: (lv.lessons || [])
+                .filter((l: any) => l !== null && (l.is_published === undefined || l.is_published === true))
+                .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
+            })),
+        }));
+
+        setTracks(mapped);
+        // Expand first track by default
+        if (mapped.length > 0) setExpanded([mapped[0].id]);
+
+        setTotalLessons(mapped.reduce((s: number, t: Track) =>
+          s + t.levels.reduce((ls, lv) => ls + lv.lessons.length, 0), 0
+        ));
+      }
+
+      // Load completed lessons for logged-in user
+      if (u) {
+        const { data: prog } = await supabase
+          .from("user_progress")
+          .select("lesson_id")
+          .eq("user_id", u.id)
+          .or("completed.eq.true,quiz_score.gt.0");
+        setCompletedIds(new Set((prog || []).map((p: any) => p.lesson_id)));
+      }
+
+      setLoading(false);
+    })();
   }, []);
 
-  const load = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const [{ data: profile }, { data: allTracks }] = await Promise.all([
-      user ? supabase.from("profiles").select("role").eq("id", user.id).single() : Promise.resolve({ data: null }),
-      supabase.from("tracks").select("*, levels(*)").eq("is_active", true).order("order_index"),
-    ]);
-
-    setUserRole(profile?.role || "free");
-
-    if (!allTracks) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: progress } = user
-      ? await supabase.from("user_progress").select("lesson_id").eq("user_id", user.id)
-      : { data: [] };
-    const completedIds = new Set(progress?.map((item) => item.lesson_id) || []);
-
-    const enriched = await Promise.all(
-      (allTracks as RawTrack[]).map(async (track) => {
-        const levels = await Promise.all(
-          (track.levels || [])
-            .sort((a, b) => a.order_index - b.order_index)
-            .map(async (level) => {
-              const { data: lessons } = await supabase
-                .from("lessons")
-                .select("id")
-                .eq("level_id", level.id)
-                .eq("is_published", true);
-              const lessonCount = lessons?.length || 0;
-              const completedCount = lessons?.filter((lesson) => completedIds.has(lesson.id)).length || 0;
-
-              return { ...level, lessonCount, completedCount };
-            }),
-        );
-
-        return { ...track, levels };
+  // Filter lessons based on search, language, tier
+  const filteredTracks = tracks.map(track => ({
+    ...track,
+    levels: track.levels.map(level => ({
+      ...level,
+      lessons: level.lessons.filter(lesson => {
+        const matchSearch = !search || lesson.title.toLowerCase().includes(search.toLowerCase());
+        const matchLang   = langFilter === "all" || lesson.language === langFilter;
+        const matchTier   = tierFilter === "all" ||
+          (tierFilter === "free" && lesson.is_free) ||
+          (tierFilter === "paid" && !lesson.is_free);
+        return matchSearch && matchLang && matchTier;
       }),
-    );
+    })).filter(lv => lv.lessons.length > 0),
+  })).filter(t => t.levels.length > 0);
 
-    setTracks(enriched);
-    setActiveTrack(enriched[0]?.slug || null);
-    setLoading(false);
+  const toggleTrack = (trackId: string) => {
+    setExpanded(prev =>
+      prev.includes(trackId) ? prev.filter(id => id !== trackId) : [...prev, trackId]
+    );
   };
 
-  const activeTrackData = tracks.find((track) => track.slug === activeTrack);
+  const expandAll = () => setExpanded(tracks.map(t => t.id));
+
+  // Progress per track
+  const trackProgress = (track: Track) => {
+    const total = track.levels.reduce((s, lv) => s + lv.lessons.length, 0);
+    const done  = track.levels.reduce((s, lv) =>
+      s + lv.lessons.filter(l => completedIds.has(l.id)).length, 0);
+    return { total, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
+  };
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <Link href="/dashboard" style={s.back}>
-          Dashboard
-        </Link>
-        <h1 style={s.title}>Explore tracks</h1>
-        <p style={s.sub}>Four complete learning tracks, from absolute beginner to expert.</p>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 80px", fontFamily: "var(--font-ui,system-ui)" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: "#1c2b3a", margin: "0 0 8px", letterSpacing: "-0.4px" }}>
+          Explore Courses
+        </h1>
+        <p style={{ fontSize: 14, color: "#718096", margin: 0 }}>
+          {totalLessons}+ lessons across {tracks.length} tracks · Free to start · Hindi + English
+        </p>
+      </div>
+
+      {/* Search + filters */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        {/* Search */}
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search lessons…"
+            style={{
+              width: "100%", padding: "9px 12px 9px 36px",
+              border: "1px solid #e2e8f0", borderRadius: 9,
+              fontSize: 14, fontFamily: "var(--font-ui,system-ui)",
+              outline: "none", boxSizing: "border-box",
+            }}
+          />
+        </div>
+
+        {/* Language filter */}
+        {(["all", "en", "hi"] as const).map(lang => (
+          <button key={lang} onClick={() => setLangFilter(lang)}
+            style={{
+              padding: "9px 14px", fontSize: 13,
+              fontWeight: langFilter === lang ? 700 : 400,
+              background: langFilter === lang ? "#1c2b3a" : "#fff",
+              color: langFilter === lang ? "#fff" : "#718096",
+              border: `1px solid ${langFilter === lang ? "#1c2b3a" : "#e2e8f0"}`,
+              borderRadius: 9, cursor: "pointer",
+              fontFamily: "var(--font-ui,system-ui)",
+            }}>
+            {lang === "all" ? "🌐 All" : LANG_LABELS[lang]}
+          </button>
+        ))}
+
+        {/* Tier filter */}
+        {(["all", "free", "paid"] as const).map(tier => (
+          <button key={tier} onClick={() => setTierFilter(tier)}
+            style={{
+              padding: "9px 14px", fontSize: 13,
+              fontWeight: tierFilter === tier ? 700 : 400,
+              background: tierFilter === tier ? "#1D9E75" : "#fff",
+              color: tierFilter === tier ? "#fff" : "#718096",
+              border: `1px solid ${tierFilter === tier ? "#1D9E75" : "#e2e8f0"}`,
+              borderRadius: 9, cursor: "pointer",
+              fontFamily: "var(--font-ui,system-ui)",
+            }}>
+            {tier === "all" ? "All" : tier === "free" ? "🆓 Free" : "💎 Pro"}
+          </button>
+        ))}
+
+        <button onClick={expandAll}
+          style={{
+            padding: "9px 14px", fontSize: 13, color: "#0E6163",
+            background: "#f0f9f9", border: "1px solid #0E616330",
+            borderRadius: 9, cursor: "pointer",
+            fontFamily: "var(--font-ui,system-ui)", fontWeight: 600,
+          }}>
+          Expand All
+        </button>
       </div>
 
       {loading ? (
-        <div style={s.loadingWrap}>
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} style={s.skeleton} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{
+              height: 80, borderRadius: 14,
+              background: "linear-gradient(90deg,#f5f5f5 25%,#ebebeb 50%,#f5f5f5 75%)",
+              backgroundSize: "200% 100%", animation: "shimmer 1.5s infinite",
+            }} />
           ))}
         </div>
+      ) : filteredTracks.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 20px" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1c2b3a", marginBottom: 8 }}>No lessons found</h3>
+          <button onClick={() => { setSearch(""); setLangFilter("all"); setTierFilter("all"); }}
+            style={{ color: "#0E6163", background: "none", border: "none", cursor: "pointer", fontSize: 14, fontFamily: "var(--font-ui,system-ui)" }}>
+            Clear filters
+          </button>
+        </div>
       ) : (
-        <div style={s.layout}>
-          <div style={s.trackSelector}>
-            {tracks.map((track) => {
-              const totalLessons = track.levels.reduce((sum, level) => sum + level.lessonCount, 0);
-              const completedLessons = track.levels.reduce((sum, level) => sum + level.completedCount, 0);
-              const pct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-              const isActive = activeTrack === track.slug;
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {filteredTracks.map(track => {
+            const isOpen = expanded.includes(track.id);
+            const prog   = trackProgress(track);
+            const color  = track.color_hex || "#0E6163";
+            const totalInTrack = track.levels.reduce((s, lv) => s + lv.lessons.length, 0);
 
-              return (
+            return (
+              <div key={track.id} style={{
+                background:   "#fff",
+                border:       `1px solid ${isOpen ? color : "#e2e8f0"}`,
+                borderRadius: 16,
+                overflow:     "hidden",
+                transition:   "all 0.2s",
+                boxShadow:    isOpen ? `0 4px 20px ${color}20` : "none",
+              }}>
+                {/* Track header */}
                 <button
-                  key={track.id}
-                  onClick={() => setActiveTrack(track.slug)}
+                  onClick={() => toggleTrack(track.id)}
                   style={{
-                    ...s.trackCard,
-                    ...(isActive ? { ...s.trackCardActive, borderColor: track.color_hex } : {}),
-                  }}
-                  type="button"
-                >
-                  <div style={s.trackCardTop}>
-                    <div style={{ ...s.trackIcon, background: `${track.color_hex}22` }}>{track.icon || "FH"}</div>
-                    <div style={s.trackMeta}>
-                      <div style={s.trackName}>{track.title}</div>
-                      <div style={s.trackStats}>
-                        {completedLessons}/{totalLessons} lessons
-                      </div>
-                    </div>
-                    <div style={{ ...s.trackPct, color: track.color_hex }}>{pct}%</div>
+                    width:     "100%",
+                    padding:   "18px 20px",
+                    background: isOpen ? `${color}08` : "transparent",
+                    border:    "none",
+                    cursor:    "pointer",
+                    textAlign: "left",
+                    fontFamily:"var(--font-ui,system-ui)",
+                    display:   "flex",
+                    gap:       14,
+                    alignItems:"center",
+                  }}>
+                  {/* Icon */}
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+                    background: `${color}15`,
+                    border: `2px solid ${color}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 24,
+                  }}>
+                    {track.icon_emoji || track.icon || "📚"}
                   </div>
-                  <div style={s.progressBg}>
-                    <div style={{ ...s.progressFill, width: `${pct}%`, background: track.color_hex }} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
 
-          {activeTrackData ? (
-            <div style={s.levelsPanel}>
-              <div style={s.panelHeader}>
-                <div style={s.panelIcon}>{activeTrackData.icon || "FH"}</div>
-                <div>
-                  <div style={s.panelTitle}>{activeTrackData.title}</div>
-                  <div style={s.panelDesc}>{activeTrackData.description}</div>
-                </div>
-              </div>
-
-              <div style={s.levelsList}>
-                {activeTrackData.levels.map((level, index) => {
-                  const pct = level.lessonCount > 0 ? Math.round((level.completedCount / level.lessonCount) * 100) : 0;
-                  const isLocked = !level.is_free && userRole === "free";
-                  const isComplete = pct === 100;
-
-                  return (
-                    <div key={level.id} style={{ ...s.levelCard, opacity: isLocked ? 0.75 : 1 }}>
-                      <div style={s.levelTop}>
-                        <div
-                          style={{
-                            ...s.levelNum,
-                            background: isComplete ? "#1D9E75" : isLocked ? "#eee" : `${activeTrackData.color_hex}22`,
-                            color: isComplete ? "#fff" : isLocked ? "#aaa" : activeTrackData.color_hex,
-                          }}
-                        >
-                          {isComplete ? "Done" : isLocked ? "Pro" : index + 1}
-                        </div>
-                        <div style={s.levelInfo}>
-                          <div style={s.levelTitle}>
-                            {level.title}
-                            {level.is_free ? <span style={s.freeTag}>Free</span> : <span style={s.proTag}>Pro</span>}
-                          </div>
-                          <div style={s.levelDesc}>{level.description}</div>
-                        </div>
-                        <div style={s.levelReward}>+{level.xp_reward} XP</div>
-                      </div>
-
-                      <div style={s.levelProgress}>
-                        <div style={s.levelProgressBg}>
-                          <div
-                            style={{
-                              ...s.levelProgressFill,
-                              width: `${pct}%`,
-                              background: activeTrackData.color_hex,
-                            }}
-                          />
-                        </div>
-                        <span style={s.levelPct}>
-                          {level.completedCount}/{level.lessonCount}
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                      <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1c2b3a", margin: 0 }}>
+                        {track.name || track.title}
+                      </h2>
+                      {track.is_featured && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#D4A017", background: "#FFFFF0", padding: "1px 7px", borderRadius: 10, border: "1px solid #FBD38D" }}>
+                          ⭐ Featured
                         </span>
-                      </div>
-
-                      {isLocked ? (
-                        <Link
-                          href="/pricing"
-                          style={{
-                            ...s.levelBtn,
-                            background: "#fafafa",
-                            color: "#aaa",
-                            border: "0.5px solid #eee",
-                          }}
-                        >
-                          Upgrade to unlock
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/track/${activeTrackData.slug}/${level.slug}`}
-                          style={{
-                            ...s.levelBtn,
-                            background: `${activeTrackData.color_hex}18`,
-                            color: activeTrackData.color_hex,
-                            border: `0.5px solid ${activeTrackData.color_hex}40`,
-                          }}
-                        >
-                          {isComplete ? "Review lessons" : pct > 0 ? "Continue" : "Start level"}
-                        </Link>
                       )}
                     </div>
-                  );
-                })}
+                    <div style={{ fontSize: 12, color: "#718096", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {track.description}
+                    </div>
+
+                    {/* Progress bar */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ flex: 1, height: 5, background: "#EDF2F7", borderRadius: 999 }}>
+                        <div style={{
+                          height: "100%", width: `${prog.pct}%`,
+                          background: color, borderRadius: 999,
+                          transition: "width 0.8s ease",
+                        }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "#718096", flexShrink: 0 }}>
+                        {user ? `${prog.done}/${totalInTrack}` : `${totalInTrack} lessons`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Chevron */}
+                  <div style={{
+                    color: "#a0aec0", fontSize: 18, flexShrink: 0,
+                    transition: "transform 0.2s",
+                    transform: isOpen ? "rotate(180deg)" : "none",
+                  }}>
+                    ↓
+                  </div>
+                </button>
+
+                {/* Expanded levels + lessons */}
+                {isOpen && (
+                  <div style={{ borderTop: `1px solid ${color}20` }}>
+                    {track.levels.map((level, li) => (
+                      <div key={level.id} style={{ borderBottom: li < track.levels.length - 1 ? `1px solid #f0f0f0` : "none" }}>
+                        {/* Level header */}
+                        <div style={{
+                          padding: "10px 20px",
+                          background: "#fafafa",
+                          display: "flex", justifyContent: "space-between",
+                          alignItems: "center",
+                        }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: "#718096", textTransform: "uppercase", letterSpacing: ".07em" }}>
+                            {level.name || level.title}
+                          </span>
+                          <span style={{ fontSize: 11, color: "#a0aec0" }}>
+                            {level.lessons.length} lesson{level.lessons.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+
+                        {/* Lessons */}
+                        {level.lessons.map((lesson, i) => {
+                          const done = completedIds.has(lesson.id);
+                          return (
+                            <a key={lesson.id} href={`/learn/${lesson.slug}`}
+                              style={{
+                                display:      "flex",
+                                alignItems:   "center",
+                                gap:          12,
+                                padding:      "11px 20px",
+                                textDecoration: "none",
+                                background:   done ? "#f0fff4" : "transparent",
+                                borderBottom: i < level.lessons.length - 1 ? "1px solid #f5f5f5" : "none",
+                                transition:   "background 0.15s",
+                              }}>
+                              {/* Status dot */}
+                              <div style={{
+                                width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                                background: done ? "#1D9E75" : "#EDF2F7",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 11,
+                              }}>
+                                {done ? "✓" : <span style={{ color: "#CBD5E0", fontSize: 10 }}>○</span>}
+                              </div>
+
+                              {/* Title */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 14, fontWeight: done ? 500 : 600, color: done ? "#2d7738" : "#1c2b3a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {lesson.title}
+                                </div>
+                              </div>
+
+                              {/* Meta */}
+                              <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                                {lesson.language === "hi" && (
+                                  <span style={{ fontSize: 10, color: "#B91C1C", fontWeight: 700 }}>हि</span>
+                                )}
+                                {lesson.is_free ? (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: "#1D9E75", background: "#F0FFF4", padding: "1px 6px", borderRadius: 8 }}>Free</span>
+                                ) : (
+                                  <span style={{ fontSize: 10, fontWeight: 700, color: "#718096", background: "#F7FAFC", padding: "1px 6px", borderRadius: 8 }}>Pro</span>
+                                )}
+                                <span style={{ fontSize: 11, color: "#a0aec0" }}>
+                                  {lesson.duration_minutes}m
+                                </span>
+                                {lesson.difficulty_score && (
+                                  <div style={{
+                                    width: 6, height: 6, borderRadius: "50%",
+                                    background: DIFFICULTY_COLORS[lesson.difficulty_score] || "#CBD5E0",
+                                    flexShrink: 0,
+                                  }} />
+                                )}
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    ))}
+
+                    {/* Track CTA */}
+                    <div style={{ padding: "14px 20px", background: `${color}06`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 13, color: "#718096" }}>
+                        {prog.pct === 100 ? "🏆 Track complete!" : `${prog.pct}% complete`}
+                      </span>
+                      <a href={`/tracks/${track.slug}`}
+                        style={{
+                          padding: "7px 14px", background: color, color: "#fff",
+                          borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: "none",
+                        }}>
+                        {prog.done === 0 ? "Start Track →" : "Continue →"}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ) : null}
+            );
+          })}
+        </div>
+      )}
+
+      {/* Bottom CTA for non-logged in users */}
+      {!user && !loading && (
+        <div style={{
+          marginTop: 32, background: "linear-gradient(135deg,#1c2b3a 0%,#0E6163 100%)",
+          borderRadius: 16, padding: "24px", textAlign: "center",
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
+            Track your progress across all lessons
+          </h3>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", margin: "0 0 16px" }}>
+            Sign up free to save progress, earn XP, and get a personalised learning path.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <a href="/signup" style={{
+              padding: "10px 22px", background: "#1D9E75", color: "#fff",
+              borderRadius: 9, fontSize: 14, fontWeight: 700, textDecoration: "none",
+            }}>
+              Sign Up Free →
+            </a>
+            <a href="/login" style={{
+              padding: "10px 22px", background: "rgba(255,255,255,0.1)",
+              color: "#fff", borderRadius: 9, fontSize: 14, fontWeight: 600, textDecoration: "none",
+            }}>
+              Log In
+            </a>
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-const s: Record<string, CSSProperties> = {
-  page: { minHeight: "100vh", background: "#fafafa", fontFamily: "system-ui,-apple-system,sans-serif", padding: "28px 24px 60px", maxWidth: 960, margin: "0 auto" },
-  header: { marginBottom: 28 },
-  back: { fontSize: 13, color: "#888", textDecoration: "none", display: "block", marginBottom: 12 },
-  title: { fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px", color: "#0a0a0a" },
-  sub: { fontSize: 14, color: "#666", margin: 0 },
-  loadingWrap: { display: "flex", flexDirection: "column", gap: 12 },
-  skeleton: { height: 80, background: "#eee", borderRadius: 12 },
-  layout: { display: "grid", gridTemplateColumns: "320px 1fr", gap: 20, alignItems: "start" },
-  trackSelector: { display: "flex", flexDirection: "column", gap: 8, position: "sticky", top: 20 },
-  trackCard: { width: "100%", textAlign: "left", background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 12, padding: "14px 16px", cursor: "pointer", transition: "border-color .15s", fontFamily: "system-ui,-apple-system,sans-serif" },
-  trackCardActive: { border: "1.5px solid", background: "#fff" },
-  trackCardTop: { display: "flex", alignItems: "center", gap: 12, marginBottom: 10 },
-  trackIcon: { width: 36, height: 36, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 },
-  trackMeta: { flex: 1 },
-  trackName: { fontWeight: 600, fontSize: 14, color: "#0a0a0a" },
-  trackStats: { fontSize: 11, color: "#aaa", marginTop: 2 },
-  trackPct: { fontWeight: 700, fontSize: 15 },
-  progressBg: { height: 4, background: "#eee", borderRadius: 2, overflow: "hidden" },
-  progressFill: { height: "100%", borderRadius: 2, transition: "width .4s" },
-  levelsPanel: { background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 14, overflow: "hidden" },
-  panelHeader: { display: "flex", alignItems: "center", gap: 14, padding: "20px 22px", borderBottom: "0.5px solid #eee" },
-  panelIcon: { fontSize: 20, fontWeight: 700 },
-  panelTitle: { fontWeight: 700, fontSize: 18, color: "#0a0a0a", letterSpacing: "-0.3px" },
-  panelDesc: { fontSize: 13, color: "#888", marginTop: 3 },
-  levelsList: { display: "flex", flexDirection: "column" },
-  levelCard: { padding: "18px 22px", borderBottom: "0.5px solid #f5f5f5" },
-  levelTop: { display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 12 },
-  levelNum: { minWidth: 32, height: 32, padding: "0 8px", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0, marginTop: 2 },
-  levelInfo: { flex: 1 },
-  levelTitle: { fontWeight: 600, fontSize: 15, color: "#0a0a0a", display: "flex", alignItems: "center", gap: 8, marginBottom: 3 },
-  freeTag: { fontSize: 10, fontWeight: 700, background: "#E1F5EE", color: "#0F6E56", padding: "2px 7px", borderRadius: 10 },
-  proTag: { fontSize: 10, fontWeight: 700, background: "#EEEDFE", color: "#534AB7", padding: "2px 7px", borderRadius: 10 },
-  levelDesc: { fontSize: 13, color: "#888", lineHeight: 1.5 },
-  levelReward: { fontSize: 12, color: "#aaa", fontWeight: 500, flexShrink: 0 },
-  levelProgress: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 },
-  levelProgressBg: { flex: 1, height: 5, background: "#eee", borderRadius: 3, overflow: "hidden" },
-  levelProgressFill: { height: "100%", borderRadius: 3, transition: "width .4s" },
-  levelPct: { fontSize: 11, color: "#aaa", minWidth: 36, textAlign: "right" },
-  levelBtn: { display: "inline-block", padding: "8px 16px", fontSize: 12, fontWeight: 600, borderRadius: 8, textDecoration: "none", fontFamily: "system-ui" },
-};

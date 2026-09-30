@@ -1,395 +1,511 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import AppLayout from "@/components/layout/AppLayout";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-const DailyChallenges = dynamic(() => import("@/components/gamification/DailyChallenges"), { ssr: false });
-const WeeklyMissions = dynamic(() => import("@/components/gamification/WeeklyMissions"), { ssr: false });
-const SeasonProgress = dynamic(() => import("@/components/gamification/SeasonProgress"), { ssr: false });
-const MasteryDashboard = dynamic(() => import("@/components/adaptive/MasteryDashboard"), { ssr: false });
+// ============================================================
+// FinanceHub — User Dashboard
+// app/dashboard/page.tsx
+// Streak · XP · Progress · Today's lessons · Review due
+// ============================================================
 
 type Profile = {
-  id: string;
-  full_name: string | null;
-  role: "free" | "pro" | "expert";
-  xp_total: number;
-  streak_current: number;
-  streak_longest: number;
-  last_active_date: string | null;
-  onboarding_done: boolean;
+  id:                 string;
+  full_name:          string;
+  subscription_tier:  string;
+  xp_total:           number;
+  current_streak:     number;
+  longest_streak:     number;
+  primary_track:      string;
+  onboarding_goal:    string;
+  ai_questions_today: number;
+  theme:              string;
 };
 
-type DashboardData = {
-  xp_total?: number;
-  streak_current?: number;
-  streak_at_risk?: boolean;
-  lessons_completed?: number;
-  lessons_total?: number;
-  progress_pct?: number;
-  weak_topics?: number;
-  due_reviews?: number;
-  next_lesson_id?: string | null;
-  next_lesson_title?: string | null;
-  next_lesson_reason?: string | null;
-  role?: string;
+type RecentLesson = {
+  lesson_id:    string;
+  completed:    boolean;
+  completed_at: string;
+  lesson:       { title: string; slug: string; duration_minutes: number; level: { track: { name: string; color_hex: string } } };
 };
 
-type TrackProgress = {
-  id: string;
-  slug: string;
-  title: string;
-  icon: string | null;
-  color_hex: string;
-  completedLessons: number;
-  totalLessons: number;
+type NextLesson = {
+  id:               string;
+  title:            string;
+  slug:             string;
+  duration_minutes: number;
+  level:            { name: string; track: { name: string; color_hex: string; slug: string } };
 };
 
-const XP_LEVELS = [
-  { level: 1, name: "Beginner", min: 0, max: 499 },
-  { level: 2, name: "Learner", min: 500, max: 1499 },
-  { level: 3, name: "Intermediate", min: 1500, max: 3499 },
-  { level: 4, name: "Advanced", min: 3500, max: 6999 },
-  { level: 5, name: "Expert", min: 7000, max: 14999 },
-  { level: 6, name: "Master", min: 15000, max: 99999 },
-];
+type WeekDay = { label: string; done: boolean; date: string };
 
-type ActiveTab = "home" | "mastery" | "leaderboard";
+const LEAGUE_INFO = (xp: number) => {
+  if (xp >= 10000) return { name: "Master",  emoji: "🏆", color: "#7C3AED", next: null,   nextXP: null };
+  if (xp >= 5000)  return { name: "Diamond", emoji: "💎", color: "#185FA5", next: "Master",  nextXP: 10000 };
+  if (xp >= 2000)  return { name: "Gold",    emoji: "🥇", color: "#D4A017", next: "Diamond", nextXP: 5000  };
+  if (xp >= 500)   return { name: "Silver",  emoji: "🥈", color: "#718096", next: "Gold",    nextXP: 2000  };
+  return             { name: "Bronze",  emoji: "🥉", color: "#854F0B", next: "Silver",  nextXP: 500   };
+};
 
-function getXpLevel(xp: number) {
-  return XP_LEVELS.find((level) => xp >= level.min && xp <= level.max) || XP_LEVELS[0];
+const TIER_LIMITS: Record<string, number> = { free: 5, pro: 50, expert: 200 };
+
+function StatCard({ icon, value, label, color = "#0E6163", sub }: { icon: string; value: string | number; label: string; color?: string; sub?: string }) {
+  return (
+    <div style={{
+      background: "#fff", border: "1px solid #e2e8f0",
+      borderRadius: 14, padding: "16px 18px",
+      borderTop: `3px solid ${color}`,
+    }}>
+      <div style={{ fontSize: 24, marginBottom: 6 }}>{icon}</div>
+      <div style={{ fontSize: 24, fontWeight: 900, color, letterSpacing: "-0.3px", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#718096", marginTop: 4 }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color: "#a0aec0", marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [dashData, setDashData] = useState<DashboardData | null>(null);
-  const [tracks, setTracks] = useState<TrackProgress[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("home");
-  const [greeting, setGreeting] = useState("Good morning");
+  const [profile,      setProfile]      = useState<Profile | null>(null);
+  const [recent,       setRecent]       = useState<RecentLesson[]>([]);
+  const [nextLesson,   setNextLesson]   = useState<NextLesson | null>(null);
+  const [weekActivity, setWeekActivity] = useState<WeekDay[]>([]);
+  const [reviewCount,  setReviewCount]  = useState(0);
+  const [totalDone,    setTotalDone]    = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [greeting,     setGreeting]     = useState("Good day");
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
-    void loadDashboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
+    loadDashboard();
   }, []);
 
   const loadDashboard = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      router.push("/auth/login");
-      return;
-    }
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, full_name, role, xp_total, streak_current, streak_longest, last_active_date, onboarding_done")
-      .eq("id", session.user.id)
-      .single();
-
-    if (!profileData) {
-      setLoading(false);
-      return;
-    }
-
-    const userProfile = profileData as Profile;
-    setProfile(userProfile);
-
-    if (!userProfile.onboarding_done) {
-      router.push("/onboarding");
-      return;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.href = "/login"; return; }
 
     try {
-      const response = await fetch("/api/recommendations", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const result = (await response.json()) as { dashboard?: DashboardData };
-      if (response.ok && result.dashboard) setDashData(result.dashboard);
-    } catch (error) {
-      console.error("Failed to load dashboard recommendations:", error);
-    }
+      const [profileRes, progressRes] = await Promise.all([
+        supabase.from("profiles")
+          .select("*")
+          .eq("id", user.id).single(),
 
-    await loadTrackProgress(session.user.id);
-    setLoading(false);
-  };
+        supabase.from("user_progress")
+          .select(`
+            lesson_id, completed, completed_at,
+            lessons (
+              title, slug, duration_minutes,
+              levels (
+                name, title,
+                tracks (name, title, color_hex, slug)
+              )
+            )
+          `)
+          .eq("user_id", user.id)
+          .order("completed_at", { ascending: false })
+          .limit(20)
+      ]);
 
-  const loadTrackProgress = async (userId: string) => {
-    const [{ data: allTracks }, { data: progress }] = await Promise.all([
-      supabase.from("tracks").select("id, slug, title, icon, color_hex").eq("is_active", true).order("order_index"),
-      supabase.from("user_progress").select("lesson_id").eq("user_id", userId),
-    ]);
+      let reviewsCount = 0;
+      try {
+        const reviewRes = await supabase.from("user_mastery")
+          .select("next_review")
+          .eq("user_id", user.id)
+          .lte("next_review", new Date().toISOString().split("T")[0]);
+        reviewsCount = reviewRes.data?.length || 0;
+      } catch (e) {
+        // Fallback check on review_queue
+        const rqRes = await supabase.from("review_queue").select("id").eq("user_id", user.id);
+        reviewsCount = rqRes.data?.length || 0;
+      }
+      setReviewCount(reviewsCount);
 
-    const completedIds = new Set(progress?.map((item) => item.lesson_id) || []);
-
-    if (!allTracks?.length) {
-      setTracks([]);
-      return;
-    }
-
-    const enriched = await Promise.all(
-      allTracks.map(async (track) => {
-        const { data: levels } = await supabase.from("levels").select("id").eq("track_id", track.id);
-        const levelIds = levels?.map((level) => level.id) || [];
-
-        let lessons: { id: string }[] = [];
-        if (levelIds.length) {
-          const { data } = await supabase
-            .from("lessons")
-            .select("id")
-            .in("level_id", levelIds)
-            .eq("is_published", true);
-          lessons = data || [];
-        }
-
-        return {
-          id: track.id,
-          slug: track.slug,
-          title: track.title,
-          icon: track.icon,
-          color_hex: track.color_hex,
-          totalLessons: lessons.length,
-          completedLessons: lessons.filter((lesson) => completedIds.has(lesson.id)).length,
+      const rawProf = profileRes.data;
+      if (rawProf) {
+        const normProf: Profile = {
+          id:                 rawProf.id,
+          full_name:          rawProf.full_name || rawProf.name || "Learner",
+          subscription_tier:  rawProf.subscription_tier || rawProf.role || "free",
+          xp_total:           rawProf.xp_total || 0,
+          current_streak:     rawProf.current_streak ?? rawProf.streak_current ?? 0,
+          longest_streak:     rawProf.longest_streak ?? rawProf.streak_longest ?? 0,
+          primary_track:      rawProf.primary_track || "personal-finance",
+          onboarding_goal:    rawProf.onboarding_goal || rawProf.goal || "",
+          ai_questions_today: rawProf.ai_questions_today || 0,
+          theme:              rawProf.theme || "light",
         };
-      }),
-    );
+        setProfile(normProf);
+      }
 
-    setTracks(enriched);
+      const prog = progressRes.data || [];
+      const done = prog.filter((p: any) => p.completed || p.completed_at);
+      setTotalDone(done.length);
+
+      const recentMapped: RecentLesson[] = done.slice(0, 5).map((p: any) => {
+        const l = p.lessons || {};
+        const lv = l.levels || {};
+        const tr = lv.tracks || {};
+        return {
+          lesson_id:    p.lesson_id,
+          completed:    p.completed || true,
+          completed_at: p.completed_at || new Date().toISOString(),
+          lesson: {
+            title:            l.title || "Lesson",
+            slug:             l.slug || "",
+            duration_minutes: l.duration_minutes || 5,
+            level: {
+              track: {
+                name:      tr.name || tr.title || "Finance",
+                color_hex: tr.color_hex || "#0E6163"
+              }
+            }
+          }
+        };
+      });
+      setRecent(recentMapped);
+
+      // Build 7-day activity grid
+      const days: WeekDay[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        const label   = i === 0 ? "Today" : i === 1 ? "Yesterday" : d.toLocaleDateString("en-IN", { weekday: "short" });
+        const hasDone = done.some((p: any) => p.completed_at?.startsWith(dateStr));
+        days.push({ label, date: dateStr, done: hasDone });
+      }
+      setWeekActivity(days);
+
+      // Find next lesson to take
+      const trackSlug = rawProf?.primary_track || "personal-finance";
+      const completedIds = new Set(done.map((p: any) => p.lesson_id));
+
+      const { data: trackLessons } = await supabase
+        .from("lessons")
+        .select(`
+          id, title, slug, duration_minutes, order_index,
+          levels!inner(name, title, tracks!inner(name, title, color_hex, slug))
+        `)
+        .order("order_index")
+        .limit(30);
+
+      if (trackLessons) {
+        const next = trackLessons.find((l: any) => !completedIds.has(l.id));
+        if (next) {
+          const lv = (next as any).levels || {};
+          const tr = lv.tracks || {};
+          setNextLesson({
+            id:               next.id,
+            title:            next.title,
+            slug:             next.slug,
+            duration_minutes: next.duration_minutes || 5,
+            level: {
+              name: lv.name || lv.title || "Level 1",
+              track: {
+                name:      tr.name || tr.title || "Finance Track",
+                color_hex: tr.color_hex || "#0E6163",
+                slug:      tr.slug || "personal-finance"
+              }
+            }
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error("Dashboard error loading data:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) return <DashboardSkeleton />;
+  if (loading) return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px", fontFamily: "var(--font-ui,system-ui)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
+        {[1,2,3,4].map(i => (
+          <div key={i} style={{ height: 100, background: "linear-gradient(90deg,#f5f5f5 25%,#ebebeb 50%,#f5f5f5 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.5s infinite", borderRadius:14 }} />
+        ))}
+      </div>
+    </div>
+  );
+
   if (!profile) return null;
 
-  const xpLevel = getXpLevel(profile.xp_total);
-  const nextLevel = XP_LEVELS[xpLevel.level] || null;
-  const xpInLevel = profile.xp_total - xpLevel.min;
-  const xpNeeded = nextLevel ? nextLevel.min - xpLevel.min : Math.max(1, xpLevel.max - xpLevel.min);
-  const xpPct = Math.min(100, Math.round((xpInLevel / xpNeeded) * 100));
+  const league = LEAGUE_INFO(profile.xp_total || 0);
+  const leagueMin = league.name === "Bronze" ? 0 : league.name === "Silver" ? 500 : league.name === "Gold" ? 2000 : league.name === "Diamond" ? 5000 : 10000;
+  const leaguePct = league.nextXP ? Math.min(100, Math.max(0, Math.round(((profile.xp_total - leagueMin) / (league.nextXP - leagueMin)) * 100))) : 100;
+  const aiLimit   = TIER_LIMITS[profile.subscription_tier] || 5;
+  const aiUsed    = profile.ai_questions_today || 0;
   const firstName = profile.full_name?.split(" ")[0] || "there";
-  const lessonsCompleted = dashData?.lessons_completed || tracks.reduce((sum, track) => sum + track.completedLessons, 0);
-  const lessonsTotal = dashData?.lessons_total || tracks.reduce((sum, track) => sum + track.totalLessons, 0);
-  const progressPct = dashData?.progress_pct ?? (lessonsTotal ? Math.round((lessonsCompleted / lessonsTotal) * 100) : 0);
 
   return (
-    <AppLayout userRole={profile.role}>
-      <div style={s.page}>
-        <div style={s.header}>
-          <div style={s.headerLeft}>
-            <div style={s.greetingRow}>
-              <div style={s.avatar}>{(profile.full_name || "?")[0].toUpperCase()}</div>
-              <div>
-                <div style={s.greeting}>{greeting}, {firstName}</div>
-                <div style={s.subGreeting}>
-                  {dashData?.streak_at_risk
-                    ? "Your streak is at risk. Complete one activity now."
-                    : profile.streak_current > 0
-                      ? `${profile.streak_current}-day streak. Keep it going.`
-                      : "Start your first lesson to begin your streak."}
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 80px", fontFamily: "var(--font-ui,system-ui)" }}>
+
+      {/* Greeting */}
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1c2b3a", margin: "0 0 4px", letterSpacing: "-0.3px" }}>
+          {greeting}, {firstName}! 👋
+        </h1>
+        <p style={{ fontSize: 14, color: "#718096", margin: 0 }}>
+          {profile.current_streak > 0
+            ? `🔥 ${profile.current_streak}-day streak — keep it going!`
+            : "Start a lesson today to begin your streak."}
+        </p>
+      </div>
+
+      {/* Stat cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 22 }}>
+        <StatCard icon="🔥" value={profile.current_streak} label="Day streak"
+          color="#D4A017" sub={`Best: ${profile.longest_streak} days`} />
+        <StatCard icon="⭐" value={(profile.xp_total || 0).toLocaleString("en-IN")} label="Total XP"
+          color="#185FA5" sub={`${league.emoji} ${league.name} League`} />
+        <StatCard icon="✅" value={totalDone} label="Lessons done"
+          color="#1D9E75" sub="keep learning!" />
+        <StatCard icon="🤖" value={`${aiUsed}/${aiLimit}`} label="AI questions today"
+          color="#0E6163" sub={profile.subscription_tier === "free" ? "Upgrade for 50/day" : ""} />
+      </div>
+
+      {/* 7-day activity + league row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 22 }}>
+
+        {/* 7-day activity */}
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "16px 18px" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1c2b3a", marginBottom: 14 }}>This Week</div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+            {weekActivity.map(day => (
+              <div key={day.date} style={{ flex: 1, textAlign: "center" }}>
+                <div style={{
+                  width: "100%", aspectRatio: "1",
+                  background: day.done ? "#1D9E75" : "#EDF2F7",
+                  borderRadius: 8, marginBottom: 5,
+                  border: day.label === "Today" ? "2px solid #0E6163" : "2px solid transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14,
+                }}>
+                  {day.done ? "✓" : ""}
+                </div>
+                <div style={{ fontSize: 9, color: day.label === "Today" ? "#0E6163" : "#a0aec0", fontWeight: day.label === "Today" ? 700 : 400 }}>
+                  {day.label.slice(0, 3)}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* League progress */}
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "16px 18px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1c2b3a" }}>Your League</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: league.color, marginTop: 2 }}>
+                {league.emoji} {league.name}
+              </div>
             </div>
+            <a href="/leaderboard" style={{
+              fontSize: 12, color: "#0E6163", textDecoration: "none", fontWeight: 600,
+              padding: "5px 10px", background: "#f0f9f9", borderRadius: 8,
+            }}>
+              Leaderboard →
+            </a>
           </div>
-          <div style={s.headerRight}>
-            {profile.role === "free" ? <Link href="/pricing" style={s.upgradeBtn}>Upgrade to Pro</Link> : null}
-            <Link href="/profile" style={s.profileBtn}>
-              {profile.role !== "free" ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : "Settings"}
-            </Link>
-          </div>
-        </div>
-
-        <div style={s.xpBar}>
-          <div style={s.xpBarLeft}>
-            <span style={s.levelBadge}>Lv.{xpLevel.level}</span>
-            <span style={s.levelName}>{xpLevel.name}</span>
-          </div>
-          <div style={s.xpBarMiddle}>
-            <div style={s.xpProgressBg}>
-              <div style={{ ...s.xpProgressFill, width: `${xpPct}%` }} />
+          {league.nextXP && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#a0aec0", marginBottom: 5 }}>
+                <span>{(profile.xp_total || 0).toLocaleString("en-IN")} XP</span>
+                <span>{league.nextXP.toLocaleString("en-IN")} XP for {league.next}</span>
+              </div>
+              <div style={{ height: 7, background: "#EDF2F7", borderRadius: 999 }}>
+                <div style={{ height: "100%", width: `${leaguePct}%`, background: league.color, borderRadius: 999, transition: "width 0.8s ease" }} />
+              </div>
+              <div style={{ fontSize: 11, color: "#a0aec0", marginTop: 5 }}>
+                {((league.nextXP || 0) - (profile.xp_total || 0)).toLocaleString("en-IN")} XP to {league.next}
+              </div>
+            </>
+          )}
+          {!league.nextXP && (
+            <div style={{ fontSize: 13, color: "#7C3AED", fontWeight: 600, marginTop: 6 }}>
+              🏆 Maximum league achieved!
             </div>
-          </div>
-          <div style={s.xpBarRight}>
-            <span style={s.xpCount}>{profile.xp_total.toLocaleString()} XP</span>
-            {nextLevel ? <span style={s.xpNext}>to {nextLevel.name}: {nextLevel.min.toLocaleString()}</span> : null}
-          </div>
+          )}
         </div>
+      </div>
 
-        <div style={s.tabs}>
-          {(["home", "mastery", "leaderboard"] as ActiveTab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{ ...s.tab, ...(activeTab === tab ? s.tabActive : {}) }}
-              type="button"
-            >
-              {tab === "home" ? "Home" : tab === "mastery" ? "Mastery" : "Leaderboard"}
-            </button>
-          ))}
-        </div>
+      {/* Main content grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+        <div>
+          {/* Continue learning card */}
+          {nextLesson && (
+            <div style={{
+              background: "linear-gradient(135deg,#1c2b3a 0%,#0E6163 100%)",
+              borderRadius: 16, padding: "20px 22px", marginBottom: 16,
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 8 }}>
+                Continue Learning
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: "0 0 6px", lineHeight: 1.3 }}>
+                {nextLesson.title}
+              </h3>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 16 }}>
+                {nextLesson.level.track.name} · {nextLesson.level.name} · {nextLesson.duration_minutes} min
+              </div>
+              <a href={`/learn/${nextLesson.slug}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "10px 20px", background: "#1D9E75", color: "#fff",
+                  borderRadius: 9, fontSize: 14, fontWeight: 700, textDecoration: "none",
+                }}>
+                Start Lesson →
+              </a>
+            </div>
+          )}
 
-        {activeTab === "home" ? (
-          <div style={s.content}>
-            <div style={s.statsRow}>
-              {[
-                { label: "Lessons done", val: lessonsCompleted, color: "#185FA5", bg: "#E6F1FB" },
-                { label: "Day streak", val: profile.streak_current, color: "#854F0B", bg: "#FAEEDA" },
-                { label: "XP total", val: profile.xp_total.toLocaleString(), color: "#534AB7", bg: "#EEEDFE" },
-                { label: "Progress", val: `${progressPct}%`, color: "#1D9E75", bg: "#E1F5EE" },
-              ].map((stat) => (
-                <div key={stat.label} style={{ ...s.statCard, background: stat.bg }}>
-                  <div style={{ ...s.statVal, color: stat.color }}>{stat.val}</div>
-                  <div style={s.statLabel}>{stat.label}</div>
+          {/* Review due banner */}
+          {reviewCount > 0 && (
+            <div style={{
+              background: "#FFF5F5", border: "1px solid #FEB2B2",
+              borderRadius: 14, padding: "14px 18px", marginBottom: 16,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#C53030" }}>
+                  📅 {reviewCount} concept{reviewCount !== 1 ? "s" : ""} due for review
                 </div>
+                <div style={{ fontSize: 12, color: "#718096", marginTop: 3 }}>
+                  Keep your mastery high — review takes just a few minutes
+                </div>
+              </div>
+              <a href="/review" style={{
+                padding: "8px 16px", background: "#E53E3E", color: "#fff",
+                borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none", flexShrink: 0,
+              }}>
+                Review Now →
+              </a>
+            </div>
+          )}
+
+          {/* Recent lessons */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#1c2b3a" }}>Recently Completed</div>
+              <a href="/explore" style={{ fontSize: 12, color: "#0E6163", textDecoration: "none", fontWeight: 600 }}>
+                Browse all →
+              </a>
+            </div>
+            {recent.length === 0 ? (
+              <div style={{ padding: "32px 18px", textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📚</div>
+                <div style={{ fontSize: 14, color: "#718096", marginBottom: 12 }}>No lessons completed yet</div>
+                <a href="/explore" style={{
+                  display: "inline-block", padding: "9px 20px",
+                  background: "#0E6163", color: "#fff",
+                  borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none",
+                }}>
+                  Start Learning →
+                </a>
+              </div>
+            ) : recent.map((item, i) => {
+              const trackColor = item.lesson?.level?.track?.color_hex || "#0E6163";
+              return (
+                <a key={item.lesson_id} href={`/learn/${item.lesson?.slug}`}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 18px",
+                    borderBottom: i < recent.length - 1 ? "1px solid #f5f5f5" : "none",
+                    textDecoration: "none",
+                    background: "transparent",
+                  }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+                    background: `${trackColor}15`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 16,
+                  }}>
+                    ✅
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1c2b3a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {item.lesson?.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#a0aec0" }}>
+                      {item.lesson?.level?.track?.name} ·{" "}
+                      {item.completed_at ? new Date(item.completed_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#a0aec0", flexShrink: 0 }}>→</div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Quick links */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "16px 18px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#1c2b3a", marginBottom: 12 }}>Quick Access</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "📖 Explore All Lessons", href: "/explore" },
+                { label: "🤖 Ask AI Mentor",       href: "/ai-tutor" },
+                { label: "📊 SIP Calculator",      href: "/practice/sip" },
+                { label: "💎 Net Worth Tracker",   href: "/practice/net-worth" },
+                { label: "🎯 Goal Planner",        href: "/practice/goals" },
+                { label: "📚 Glossary",            href: "/glossary" },
+                { label: "🗺️ Knowledge Map",       href: "/knowledge-map" },
+                { label: "🔄 Daily Review",        href: "/review" },
+                { label: "📋 Case Studies",        href: "/case-studies" },
+                { label: "🏆 Leaderboard",         href: "/leaderboard" },
+              ].map(link => (
+                <a key={link.href} href={link.href}
+                  style={{
+                    display: "block", padding: "8px 12px",
+                    background: "#f8f9fa", border: "1px solid #e2e8f0",
+                    borderRadius: 8, fontSize: 13, color: "#1c2b3a",
+                    textDecoration: "none", fontWeight: 500,
+                  }}>
+                  {link.label}
+                </a>
               ))}
             </div>
+          </div>
 
-            {dashData?.next_lesson_id && dashData.next_lesson_title ? (
-              <Link href={`/learn/${dashData.next_lesson_id}`} style={s.continueCta}>
-                <div style={s.continueLeft}>
-                  <div style={s.continueLabel}>{dashData.due_reviews ? "Review due" : "Continue learning"}</div>
-                  <div style={s.continueTitle}>{dashData.next_lesson_title}</div>
-                  {dashData.next_lesson_reason ? <div style={s.continueReason}>{dashData.next_lesson_reason}</div> : null}
-                </div>
-                <div style={s.continueArrow}>Go</div>
-              </Link>
-            ) : null}
-
-            {(dashData?.weak_topics || 0) > 0 ? (
-              <button style={s.alertBox} onClick={() => setActiveTab("mastery")} type="button">
-                <span>{dashData?.weak_topics} topics need attention. Open your mastery map.</span>
-                <span style={s.alertArrow}>Go</span>
-              </button>
-            ) : null}
-
-            <div style={s.twoCol}>
-              <DailyChallenges />
-              <TrackProgressCard tracks={tracks} />
+          {/* Upgrade prompt for free users */}
+          {profile.subscription_tier === "free" && (
+            <div style={{
+              background: "linear-gradient(135deg,#553C9A,#7C3AED)",
+              borderRadius: 14, padding: "18px",
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                💎 Upgrade to Pro
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6, marginBottom: 14 }}>
+                Unlock 200+ lessons, 50 AI questions/day, certificates, and priority support.
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#fff", marginBottom: 12 }}>
+                ₹299<span style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.6)" }}>/month</span>
+              </div>
+              <a href="/pricing" style={{
+                display: "block", textAlign: "center", padding: "9px",
+                background: "#fff", color: "#553C9A",
+                borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: "none",
+              }}>
+                Upgrade Now →
+              </a>
             </div>
+          )}
 
-            <WeeklyMissions />
+          {/* Certificates */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "16px 18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1c2b3a" }}>🏆 Certificates</div>
+              <a href="/certificates" style={{ fontSize: 12, color: "#0E6163", textDecoration: "none", fontWeight: 600 }}>View all →</a>
+            </div>
+            <div style={{ fontSize: 12, color: "#718096", lineHeight: 1.6 }}>
+              Complete all lessons in a track to earn a verified certificate — shareable on LinkedIn.
+            </div>
           </div>
-        ) : null}
-
-        {activeTab === "mastery" ? (
-          <div style={s.content}>
-            <MasteryDashboard />
-          </div>
-        ) : null}
-
-        {activeTab === "leaderboard" ? (
-          <div style={s.content}>
-            <SeasonProgress />
-          </div>
-        ) : null}
+        </div>
       </div>
-    </AppLayout>
-  );
-}
-
-function TrackProgressCard({ tracks }: { tracks: TrackProgress[] }) {
-  return (
-    <div style={s.tracksCard}>
-      <div style={s.tracksHeader}>
-        <span style={s.tracksTitle}>Learning tracks</span>
-        <Link href="/explore" style={s.tracksLink}>Explore all</Link>
-      </div>
-      {tracks.length ? (
-        tracks.map((track) => {
-          const pct = track.totalLessons > 0 ? Math.round((track.completedLessons / track.totalLessons) * 100) : 0;
-          return (
-            <Link key={track.id} href={`/track/${track.slug}`} style={s.trackRow}>
-              <div style={{ ...s.trackIcon, background: `${track.color_hex}22`, color: track.color_hex }}>
-                {(track.icon || track.title.slice(0, 2)).slice(0, 2)}
-              </div>
-              <div style={s.trackInfo}>
-                <div style={s.trackName}>{track.title}</div>
-                <div style={s.trackProgress}>
-                  <div style={s.trackProgressBg}>
-                    <div style={{ ...s.trackProgressFill, width: `${pct}%`, background: track.color_hex }} />
-                  </div>
-                  <span style={s.trackPct}>{pct}%</span>
-                </div>
-              </div>
-              <div style={{ ...s.trackCompletedCount, color: track.color_hex }}>
-                {track.completedLessons}/{track.totalLessons}
-              </div>
-            </Link>
-          );
-        })
-      ) : (
-        <div style={s.emptyTrackState}>No tracks found yet.</div>
-      )}
     </div>
   );
 }
-
-function DashboardSkeleton() {
-  return (
-    <div style={{ minHeight: "100vh", background: "#fafafa", padding: 24, fontFamily: "system-ui" }}>
-      {[80, 40, 200, 200].map((height, index) => (
-        <div key={index} style={{ height, background: "#eee", borderRadius: 12, marginBottom: 16 }} />
-      ))}
-    </div>
-  );
-}
-
-const s: Record<string, React.CSSProperties> = {
-  page: { minHeight: "100%", background: "var(--bg-page, #fafafa)", fontFamily: "system-ui,-apple-system,sans-serif", paddingBottom: 60 },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 14px", background: "var(--bg-card, #fff)", borderBottom: "0.5px solid var(--border, #eee)", gap: 16 },
-  headerLeft: { minWidth: 0 },
-  greetingRow: { display: "flex", alignItems: "center", gap: 12 },
-  avatar: { width: 40, height: 40, borderRadius: "50%", background: "#1D9E75", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 },
-  greeting: { fontWeight: 700, fontSize: 16, color: "var(--text-primary, #0a0a0a)", marginBottom: 2, letterSpacing: "-0.2px" },
-  subGreeting: { fontSize: 12, color: "var(--text-muted, #888)" },
-  headerRight: { display: "flex", gap: 8, alignItems: "center", flexShrink: 0 },
-  upgradeBtn: { padding: "7px 14px", background: "#1D9E75", color: "#fff", borderRadius: 9, textDecoration: "none", fontSize: 12, fontWeight: 600 },
-  profileBtn: { padding: "7px 12px", border: "0.5px solid var(--border, #ddd)", borderRadius: 9, textDecoration: "none", fontSize: 12, color: "var(--text-secondary, #555)" },
-  xpBar: { display: "flex", alignItems: "center", gap: 12, padding: "10px 24px", background: "var(--bg-card, #fff)", borderBottom: "0.5px solid var(--border, #eee)" },
-  xpBarLeft: { display: "flex", alignItems: "center", gap: 6, flexShrink: 0 },
-  levelBadge: { background: "#0a0a0a", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 8 },
-  levelName: { fontSize: 12, color: "var(--text-secondary, #555)", fontWeight: 500 },
-  xpBarMiddle: { flex: 1 },
-  xpProgressBg: { height: 6, background: "var(--bg-surface, #eee)", borderRadius: 3, overflow: "hidden" },
-  xpProgressFill: { height: "100%", background: "#1D9E75", borderRadius: 3, transition: "width .5s ease" },
-  xpBarRight: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 },
-  xpCount: { fontSize: 12, fontWeight: 700, color: "var(--text-primary, #0a0a0a)" },
-  xpNext: { fontSize: 10, color: "var(--text-muted, #aaa)" },
-  tabs: { display: "flex", gap: 4, padding: "12px 24px 0", background: "var(--bg-card, #fff)", borderBottom: "0.5px solid var(--border, #eee)" },
-  tab: { padding: "8px 16px", fontSize: 13, fontWeight: 500, border: "none", borderBottom: "2px solid transparent", background: "transparent", color: "var(--text-muted, #888)", cursor: "pointer", fontFamily: "system-ui", marginBottom: -1 },
-  tabActive: { color: "#1D9E75", borderBottomColor: "#1D9E75", fontWeight: 600 },
-  content: { padding: "20px 24px", maxWidth: 980, margin: "0 auto" },
-  statsRow: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 },
-  statCard: { borderRadius: 12, padding: "14px 12px" },
-  statVal: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.3px", marginBottom: 2 },
-  statLabel: { fontSize: 11, color: "#666" },
-  continueCta: { display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0a0a0a", borderRadius: 12, padding: "16px 20px", marginBottom: 12, textDecoration: "none" },
-  continueLeft: { minWidth: 0 },
-  continueLabel: { fontSize: 10, fontWeight: 700, color: "#1D9E75", textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 4 },
-  continueTitle: { fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 3, letterSpacing: "-0.2px" },
-  continueReason: { fontSize: 11, color: "#aaa" },
-  continueArrow: { fontSize: 12, color: "#fff", background: "#1D9E75", borderRadius: 8, padding: "6px 10px", fontWeight: 700, flexShrink: 0 },
-  alertBox: { width: "100%", display: "flex", alignItems: "center", gap: 10, background: "#FAEEDA", border: "0.5px solid #FAC775", borderRadius: 10, padding: "10px 14px", marginBottom: 16, cursor: "pointer", fontSize: 13, color: "#854F0B", fontFamily: "system-ui", textAlign: "left" },
-  alertArrow: { marginLeft: "auto", fontWeight: 700 },
-  twoCol: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 },
-  tracksCard: { background: "var(--bg-card, #fff)", border: "0.5px solid var(--border, #e5e5e5)", borderRadius: 14, padding: "16px 18px" },
-  tracksHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  tracksTitle: { fontSize: 14, fontWeight: 600, color: "var(--text-primary, #0a0a0a)" },
-  tracksLink: { fontSize: 12, color: "#1D9E75", textDecoration: "none" },
-  trackRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12, textDecoration: "none" },
-  trackIcon: { width: 32, height: 32, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 },
-  trackInfo: { flex: 1, minWidth: 0 },
-  trackName: { fontSize: 12, fontWeight: 600, color: "var(--text-primary, #0a0a0a)", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-  trackProgress: { display: "flex", alignItems: "center", gap: 6 },
-  trackProgressBg: { flex: 1, height: 4, background: "var(--bg-surface, #eee)", borderRadius: 2, overflow: "hidden" },
-  trackProgressFill: { height: "100%", borderRadius: 2, transition: "width .4s" },
-  trackPct: { fontSize: 10, color: "var(--text-muted, #aaa)", minWidth: 28, textAlign: "right" },
-  trackCompletedCount: { fontSize: 11, fontWeight: 700, flexShrink: 0 },
-  emptyTrackState: { fontSize: 13, color: "var(--text-muted, #888)", padding: "12px 0" },
-};
