@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       .gt("streak_current", 0);
 
     if (brokenStreaks && brokenStreaks.length > 0) {
-      const ids = brokenStreaks.map((user) => user.id);
+      const ids = brokenStreaks.map((user: any) => user.id);
       await supabase
         .from("profiles")
         .update({ streak_current: 0 })

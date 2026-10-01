@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       .map((topic) => topic.topic_title)
       .filter(Boolean)
       .join(", ");
-    const trackList = (tracks || []).map((track) => `${track.title} (${track.slug})`).join(", ");
+    const trackList = (tracks || []).map((track: any) => `${track.title} (${track.slug})`).join(", ");
     const parsedDays = Number.parseInt(timeframe, 10);
     const days = Number.isFinite(parsedDays) ? Math.min(Math.max(parsedDays, 7), 180) : 30;
     const totalHours = days * hoursPerDay;

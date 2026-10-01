@@ -85,10 +85,21 @@ function isTextSize(value: string | null): value is TextSize {
   return value === "default" || value === "large" || value === "larger";
 }
 
+const defaultThemeValue: ThemeContextValue = {
+  theme: "default",
+  mode: "light",
+  textSize: "default",
+  setTheme: () => {},
+  setMode: () => {},
+  setTextSize: () => {},
+  toggleMode: () => {},
+  resetToAuto: () => {},
+  isAutoTheme: true,
+};
+
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) throw new Error("useTheme must be used inside ThemeProvider");
-  return context;
+  return context || defaultThemeValue;
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

@@ -6,7 +6,6 @@
 
 import { createBrowserClient, createServerClient as createAuthServerClient } from "@supabase/auth-helpers-nextjs";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
@@ -42,6 +41,7 @@ export function createServerClient() {
     return getBrowserClient();
   }
   try {
+    const { cookies } = require("next/headers");
     const cookieStore = cookies();
     return createAuthServerClient<Database>(SUPABASE_URL, SUPABASE_ANON, { cookies: () => cookieStore } as any);
   } catch {
