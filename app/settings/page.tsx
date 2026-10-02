@@ -1,237 +1,379 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useTheme } from "@/components/ui/ThemeProvider";
+import Logo from "@/components/ui/Logo";
+import Link from "next/link";
 
 export default function SettingsPage() {
-  const { mode, textSize, setMode, setTextSize } = useTheme();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
-  const [fullName, setFullName] = useState("");
-  const [primaryTrack, setPrimaryTrack] = useState("Personal Finance");
-  const [emailStreak, setEmailStreak] = useState(true);
-  const [emailDigest, setEmailDigest] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+
+  const [saving,  setSaving]  = useState(false);
+
+  const [saved,   setSaved]   = useState(false);
+
+  const [tab,     setTab]     = useState<"account"|"notifications"|"privacy"|"danger">("account");
+
+
 
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
 
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
-        setPrimaryTrack(data.primary_track || "Personal Finance");
-        setEmailStreak(data.email_streak_reminder ?? true);
-        setEmailDigest(data.email_weekly_digest ?? true);
-        setPushNotifs(data.notification_push ?? false);
-      }
-      setLoading(false);
+    (async () => {
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) { window.location.href="/login"; return; }
+
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+
+      setProfile({ ...data, email: user.email });
+
     })();
+
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+
+
+  const save = async () => {
+
+    if (!profile) return;
+
     setSaving(true);
-    setMessage("");
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    await supabase.from("profiles").update({
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName,
-        primary_track: primaryTrack,
-        email_streak_reminder: emailStreak,
-        email_weekly_digest: emailDigest,
-        notification_push: pushNotifs,
-        theme: mode,
-      })
-      .eq("id", user.id);
+      full_name:             profile.full_name,
 
-    setSaving(false);
-    if (error) {
-      setMessage("❌ Failed to save settings: " + error.message);
-    } else {
-      setMessage("✅ Settings saved successfully!");
-    }
+      theme:                 profile.theme,
+
+      font_size:             profile.font_size,
+
+      language_pref:         profile.language_pref,
+
+      email_streak_reminder: profile.email_streak_reminder,
+
+      email_weekly_digest:   profile.email_weekly_digest,
+
+      email_marketing:       profile.email_marketing,
+
+      notification_push:     profile.notification_push,
+
+    }).eq("id", profile.id);
+
+    setSaving(false); setSaved(true);
+
+    setTimeout(() => setSaved(false), 2500);
+
   };
 
-  if (loading) {
-    return (
-      <div style={{ maxWidth: 760, margin: "60px auto", padding: "0 20px", textAlign: "center", fontFamily: "var(--font-ui, system-ui)" }}>
-        <div style={{ width: 32, height: 32, border: "3px solid #e2e8f0", borderTopColor: "#0E6163", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-      </div>
-    );
-  }
+
+
+  const deleteAccount = async () => {
+
+    if (!confirm("Are you absolutely sure? This cannot be undone. All your progress, notes and certificates will be deleted permanently.")) return;
+
+    await supabase.auth.signOut();
+
+    window.location.href = "/";
+
+  };
+
+
+
+  const TABS = [
+
+    { id:"account",       label:"Account" },
+
+    { id:"notifications", label:"Notifications" },
+
+    { id:"privacy",       label:"Privacy" },
+
+    { id:"danger",        label:"Danger Zone" },
+
+  ] as const;
+
+
+
+  if (!profile) return <div style={{ padding:40, textAlign:"center", color:"#718096" }}>Loading…</div>;
+
+
 
   return (
-    <div style={{ maxWidth: 760, margin: "40px auto", padding: "0 20px", fontFamily: "var(--font-ui, system-ui)", color: "#0B1A2B" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Account & Preferences</h1>
-      <p style={{ fontSize: 14, color: "#526173", marginBottom: 32 }}>Manage your profile, theme settings, notifications, and subscription.</p>
 
-      {message && (
-        <div style={{
-          padding: "12px 16px", borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 24,
-          background: message.startsWith("✅") ? "#F0F9F7" : "#FEF2F2",
-          color: message.startsWith("✅") ? "#0E6163" : "#B91C1C",
-          border: `1px solid ${message.startsWith("✅") ? "#B7E4D8" : "#FCA5A5"}`,
-        }}>
-          {message}
+    <div style={{ maxWidth:720, margin:"0 auto", padding:"32px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+
+      <h1 style={{ fontSize:24, fontWeight:800, color:"#1c2b3a", margin:"0 0 28px" }}>⚙️ Settings</h1>
+
+
+
+      {/* Tabs */}
+
+      <div style={{ display:"flex", gap:4, borderBottom:"2px solid #e2e8f0", marginBottom:28 }}>
+
+        {TABS.map(t => (
+
+          <button key={t.id} onClick={() => setTab(t.id)}
+
+            style={{ padding:"9px 16px", fontSize:13, fontWeight:tab===t.id?700:400, color:tab===t.id?"#0E6163":"#718096", background:"none", border:"none", borderBottom:tab===t.id?"2px solid #0E6163":"2px solid transparent", marginBottom:-2, cursor:"pointer", fontFamily:"inherit" }}>
+
+            {t.label}
+
+          </button>
+
+        ))}
+
+      </div>
+
+
+
+      {/* ACCOUNT TAB */}
+
+      {tab === "account" && (
+
+        <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+
+          {[
+
+            { label:"Full Name", key:"full_name", type:"text", placeholder:"Your full name" },
+
+            { label:"Email",     key:"email",     type:"email", placeholder:"", disabled:true },
+
+          ].map(f => (
+
+            <div key={f.key}>
+
+              <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>{f.label}</label>
+
+              <input type={f.type} value={profile[f.key] || ""} placeholder={f.placeholder}
+
+                disabled={f.disabled}
+
+                onChange={e => !f.disabled && setProfile((p: any) => ({ ...p, [f.key]: e.target.value }))}
+
+                style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none", boxSizing:"border-box" as any, background:f.disabled?"#f7fafc":"#fff", color:f.disabled?"#a0aec0":"#1c2b3a" }} />
+
+            </div>
+
+          ))}
+
+
+
+          <div>
+
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Theme</label>
+
+            <select value={profile.theme||"light"} onChange={e=>setProfile((p:any)=>({...p,theme:e.target.value}))}
+
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+
+              <option value="light">☀️ Light</option>
+
+              <option value="dark">🌙 Dark</option>
+
+              <option value="sepia">📜 Sepia</option>
+
+            </select>
+
+          </div>
+
+
+
+          <div>
+
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Reading Font Size</label>
+
+            <select value={profile.font_size||"medium"} onChange={e=>setProfile((p:any)=>({...p,font_size:e.target.value}))}
+
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+
+              {["small","medium","large","xl"].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+
+            </select>
+
+          </div>
+
+
+
+          <div>
+
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Language Preference</label>
+
+            <select value={profile.language_pref||"en"} onChange={e=>setProfile((p:any)=>({...p,language_pref:e.target.value}))}
+
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+
+              <option value="en">🇬🇧 English</option>
+
+              <option value="hi">🇮🇳 Hindi</option>
+
+            </select>
+
+          </div>
+
         </div>
+
       )}
 
-      <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-        {/* Profile Section */}
-        <section style={{ background: "#ffffff", border: "1px solid #e5eaf0", borderRadius: 16, padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Profile Information</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#526173", marginBottom: 6 }}>Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #d1dbe6", fontSize: 14 }}
-              />
-            </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#526173", marginBottom: 6 }}>Primary Learning Track</label>
-              <select
-                value={primaryTrack}
-                onChange={e => setPrimaryTrack(e.target.value)}
-                style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #d1dbe6", fontSize: 14, background: "#fff" }}
-              >
-                {["Personal Finance", "Trading & Markets", "Corporate Finance", "Crypto & DeFi", "Behavioral Finance", "Technical Analysis", "Forex & Currencies", "हिंदी Finance"].map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
 
-        {/* Theme Preferences */}
-        <section style={{ background: "#ffffff", border: "1px solid #e5eaf0", borderRadius: 16, padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Appearance & Theme</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#526173", marginBottom: 8 }}>Theme Mode</label>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {[
-                  { id: "light" as const, label: "☀️ Light" },
-                  { id: "sepia" as const, label: "📖 Reading" },
-                  { id: "dark" as const, label: "🌙 Dark" },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setMode(item.id)}
-                    style={{
-                      padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                      border: mode === item.id ? "1.5px solid #0E6163" : "1px solid #d1dbe6",
-                      background: mode === item.id ? "#F0F9F7" : "#fff",
-                      color: mode === item.id ? "#0E6163" : "#526173",
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* NOTIFICATIONS TAB */}
 
-            <div>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#526173", marginBottom: 8 }}>Text Size</label>
-              <div style={{ display: "flex", gap: 10 }}>
-                {[
-                  { id: "default" as const, label: "Normal (100%)" },
-                  { id: "large" as const, label: "Large (110%)" },
-                  { id: "larger" as const, label: "Extra Large (120%)" },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setTextSize(item.id)}
-                    style={{
-                      padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                      border: textSize === item.id ? "1.5px solid #0E6163" : "1px solid #d1dbe6",
-                      background: textSize === item.id ? "#F0F9F7" : "#fff",
-                      color: textSize === item.id ? "#0E6163" : "#526173",
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
+      {tab === "notifications" && (
 
-        {/* Notifications Section */}
-        <section style={{ background: "#ffffff", border: "1px solid #e5eaf0", borderRadius: 16, padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Notifications & Reminders</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", fontSize: 14, color: "#0B1A2B" }}>
-              <input type="checkbox" checked={emailStreak} onChange={e => setEmailStreak(e.target.checked)} style={{ width: 18, height: 18, accentColor: "#0E6163" }} />
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+
+          {[
+
+            { key:"email_streak_reminder", label:"Daily streak reminder", desc:"Email when your streak is about to break" },
+
+            { key:"email_weekly_digest",   label:"Weekly digest",         desc:"Summary of your progress every Sunday" },
+
+            { key:"email_marketing",       label:"Product updates",       desc:"New features, tracks and content announcements" },
+
+            { key:"notification_push",     label:"Push notifications",    desc:"Browser notifications for reminders (requires PWA)" },
+
+          ].map(n => (
+
+            <div key={n.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:"#f8f9fa", border:"1px solid #e2e8f0", borderRadius:10 }}>
+
               <div>
-                <strong>Daily Streak Reminder</strong>
-                <div style={{ fontSize: 12, color: "#718096" }}>Get a gentle email reminder when your streak is about to break</div>
-              </div>
-            </label>
 
-            <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", fontSize: 14, color: "#0B1A2B" }}>
-              <input type="checkbox" checked={emailDigest} onChange={e => setEmailDigest(e.target.checked)} style={{ width: 18, height: 18, accentColor: "#0E6163" }} />
-              <div>
-                <strong>Weekly Progress Digest</strong>
-                <div style={{ fontSize: 12, color: "#718096" }}>Receive a summary of your weekly XP, league ranking, and completed lessons</div>
-              </div>
-            </label>
-          </div>
-        </section>
+                <div style={{ fontSize:14, fontWeight:600, color:"#1c2b3a" }}>{n.label}</div>
 
-        {/* Subscription */}
-        <section style={{ background: "#ffffff", border: "1px solid #e5eaf0", borderRadius: 16, padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Subscription Plan</h2>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div>
-              <span style={{ display: "inline-block", background: "#F0F9F7", border: "1px solid #B7E4D8", color: "#0E6163", fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 12, textTransform: "uppercase", marginBottom: 6 }}>
-                {profile?.subscription_tier || "Free"} Plan
-              </span>
-              <p style={{ fontSize: 13, color: "#718096", margin: 0 }}>Access core content, AI tutor daily free limits, and calculators.</p>
+                <div style={{ fontSize:12, color:"#718096", marginTop:2 }}>{n.desc}</div>
+
+              </div>
+
+              <button onClick={() => setProfile((p:any) => ({ ...p, [n.key]: !p[n.key] }))}
+
+                style={{ width:44, height:24, borderRadius:12, border:"none", cursor:"pointer", background:profile[n.key]?"#1D9E75":"#CBD5E0", position:"relative", transition:"background 0.2s", flexShrink:0 }}>
+
+                <div style={{ width:18, height:18, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left:profile[n.key]?23:3, transition:"left 0.2s" }}/>
+
+              </button>
+
             </div>
-            <a href="/pricing" style={{ padding: "8px 18px", background: "#0E6163", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
-              Upgrade to Pro →
-            </a>
-          </div>
-        </section>
 
-        {/* Save button */}
-        <div style={{ textAlign: "right" }}>
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              padding: "12px 32px", fontSize: 15, fontWeight: 700,
-              background: "#0E6163", color: "#fff", borderRadius: 10, border: "none",
-              cursor: "pointer", opacity: saving ? 0.7 : 1,
-            }}
-          >
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
+          ))}
+
         </div>
-      </form>
+
+      )}
+
+
+
+      {/* PRIVACY TAB */}
+
+      {tab === "privacy" && (
+
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+
+          <div style={{ background:"#EBF8FF", border:"1px solid #BEE3F8", borderRadius:12, padding:"16px 18px" }}>
+
+            <div style={{ fontSize:14, fontWeight:700, color:"#2C5282", marginBottom:6 }}>Your rights under DPDP Act 2023</div>
+
+            <div style={{ fontSize:13, color:"#2C5282", lineHeight:1.7 }}>You have the right to access, correct, and erase your personal data. Contact us at privacy@financehub.in to exercise your rights.</div>
+
+          </div>
+
+          {[
+
+            { label:"Download my data", desc:"Get a copy of all your data — progress, notes, quiz scores", action:"Request export", href:"mailto:privacy@financehub.in?subject=Data Export Request" },
+
+            { label:"Erase my data",    desc:"Delete all your personal data except legally required records", action:"Request erasure", href:"mailto:privacy@financehub.in?subject=Data Erasure Request" },
+
+          ].map(item => (
+
+            <div key={item.label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", background:"#fff", border:"1px solid #e2e8f0", borderRadius:12 }}>
+
+              <div>
+
+                <div style={{ fontSize:14, fontWeight:600, color:"#1c2b3a" }}>{item.label}</div>
+
+                <div style={{ fontSize:12, color:"#718096", marginTop:2 }}>{item.desc}</div>
+
+              </div>
+
+              <a href={item.href} style={{ padding:"7px 14px", background:"#f7fafc", border:"1px solid #e2e8f0", borderRadius:8, fontSize:12, fontWeight:600, color:"#0E6163", textDecoration:"none", flexShrink:0, marginLeft:12 }}>{item.action}</a>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      )}
+
+
+
+      {/* DANGER ZONE */}
+
+      {tab === "danger" && (
+
+        <div>
+
+          <div style={{ background:"#FFF5F5", border:"1px solid #FC8181", borderRadius:12, padding:"20px" }}>
+
+            <h3 style={{ fontSize:16, fontWeight:700, color:"#C53030", margin:"0 0 8px" }}>⚠️ Delete Account</h3>
+
+            <p style={{ fontSize:14, color:"#742A2A", lineHeight:1.7, margin:"0 0 16px" }}>
+
+              This permanently deletes your account, all progress, notes, quiz scores and certificates. This cannot be undone.
+
+            </p>
+
+            <button onClick={deleteAccount}
+
+              style={{ padding:"10px 20px", background:"#E53E3E", color:"#fff", border:"none", borderRadius:9, fontSize:14, fontWeight:600, cursor:"pointer" }}>
+
+              Delete my account permanently
+
+            </button>
+
+          </div>
+
+
+
+          <div style={{ marginTop:16, padding:"14px 18px", background:"#f7fafc", border:"1px solid #e2e8f0", borderRadius:10 }}>
+
+            <div style={{ fontSize:13, fontWeight:600, color:"#1c2b3a", marginBottom:4 }}>Cancel subscription</div>
+
+            <div style={{ fontSize:12, color:"#718096", marginBottom:10 }}>You can cancel anytime. Your access continues until the end of the billing period.</div>
+
+            <a href="mailto:support@financehub.in?subject=Cancel Subscription" style={{ fontSize:13, color:"#0E6163", fontWeight:600 }}>Contact support to cancel →</a>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+
+      {/* Save button */}
+
+      {tab !== "danger" && (
+
+        <div style={{ marginTop:28 }}>
+
+          <button onClick={save} disabled={saving}
+
+            style={{ padding:"11px 28px", background:saved?"#1D9E75":"#0E6163", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer", transition:"background 0.3s" }}>
+
+            {saving ? "Saving…" : saved ? "✅ Saved!" : "Save changes"}
+
+          </button>
+
+        </div>
+
+      )}
+
     </div>
+
   );
+
 }
+
+
+
+// ─────────────────────────────────────────────────────────────

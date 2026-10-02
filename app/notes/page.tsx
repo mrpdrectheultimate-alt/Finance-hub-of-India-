@@ -1,29 +1,57 @@
 "use client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import Logo from "@/components/ui/Logo";
+import Link from "next/link";
 
-import React from "react";
-import AppLayout from "@/components/layout/AppLayout";
-import RoughBook from "@/components/notes/RoughBook";
+export default function NotesPage() {
 
-export default function DigitalNotesPage() {
+  const [RB, setRB] = useState<any>(null);
+
+  useEffect(() => {
+
+    import("@/components/notes/RoughBook").then(m => setRB(() => m.default)).catch(() => {});
+
+  }, []);
+
+
+
   return (
-    <AppLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-              <span>📕</span> Digital Rough Book
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Take study notes, organize by lesson, tag key formulas, and download for offline review.
-            </p>
-          </div>
+
+    <div style={{ maxWidth:900, margin:"0 auto", padding:"24px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+
+      <div style={{ marginBottom:24 }}>
+
+        <h1 style={{ fontSize:26, fontWeight:800, color:"#1c2b3a", margin:"0 0 6px", letterSpacing:"-0.4px" }}>
+
+          📝 Digital Rough Book
+
+        </h1>
+
+        <p style={{ fontSize:14, color:"#718096", margin:0 }}>
+
+          Your personal finance notes — organised by lesson, tagged and cloud-synced.
+
+        </p>
+
+      </div>
+
+      {RB ? <RB /> : (
+
+        <div style={{ padding:40, textAlign:"center", color:"#718096", background:"#f8f9fa", borderRadius:14, border:"1px solid #e2e8f0" }}>
+
+          Loading your notes…
+
         </div>
 
-        {/* Embedded Full Feature Rough Book Studio */}
-        <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800">
-          <RoughBook mode="page" />
-        </div>
-      </div>
-    </AppLayout>
+      )}
+
+    </div>
+
   );
+
 }
+
+
+
+// ─────────────────────────────────────────────────────────────

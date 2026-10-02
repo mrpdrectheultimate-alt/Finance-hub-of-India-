@@ -1,0 +1,574 @@
+<USER_REQUEST>
+// ============================================================
+// FinanceHub — Miscellaneous Pages (all in one file for delivery)
+// Split into separate files when deploying:
+//
+// ForgotPasswordPage  → app/forgot-password/page.tsx
+// SettingsPage        → app/settings/page.tsx
+// KnowledgeMapPage    → app/knowledge-map/page.tsx
+// NotesPage           → app/notes/page.tsx
+// AITutorPage         → app/ai-tutor/page.tsx
+// CaseStudiesPage     → app/case-studies/page.tsx
+// CaseStudyPage       → app/case-studies/[slug]/page.tsx
+// VerifyPage          → app/verify/[id]/page.tsx
+// TrackPage           → app/tracks/[slug]/page.tsx
+// ============================================================
+
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import Logo         from "@/components/ui/Logo";
+
+// ─────────────────────────────────────────────────────────────
+// 1. FORGOT PASSWORD
+// app/forgot-password/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function ForgotPasswordPage() {
+  const [email,   setEmail]   = useState("");
+  const [sent,    setSent]    = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) { setError("Please enter your email."); return; }
+    setLoading(true); setError("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) { setError(error.message); setLoading(false); }
+    else setSent(true);
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#f3f4f6", display:"flex", alignItems:"center", justifyContent:"center", padding:20, fontFamily:"var(--font-ui,system-ui)" }}>
+      <div style={{ background:"#fff", borderRadius:16, padding:"36px 40px", width:"100%", maxWidth:420, boxShadow:"0 4px 24px rgba(0,0,0,0.07)" }}>
+        <div style={{ marginBottom:28 }}><Logo size="md" href="/" /></div>
+
+        {sent ? (
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>📧</div>
+            <h2 style={{ fontSize:20, fontWeight:700, color:"#111827", marginBottom:8 }}>Check your email</h2>
+            <p style={{ fontSize:14, color:"#6b7280", lineHeight:1.6 }}>
+              We sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the link.
+            </p>
+            <a href="/login" style={{ display:"inline-block", marginTop:20, fontSize:14, color:"#0E6163", fontWeight:600 }}>Back to login</a>
+          </div>
+        ) : (
+          <>
+            <h1 style={{ fontSize:22, fontWeight:700, color:"#111827", margin:"0 0 6px" }}>Reset your password</h1>
+            <p style={{ fontSize:14, color:"#6b7280", margin:"0 0 24px" }}>Enter your email and we'll send a reset link.</p>
+            <form onSubmit={handleSubmit}>
+              <label style={{ display:"block", fontSize:13, fontWeight:500, color:"#374151", marginBottom:6 }}>Email address</label>
+              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="rahul@example.com"
+                style={{ width:"100%", padding:"10px 14px", border:"1px solid #d1d5db", borderRadius:9, fontSize:14, outline:"none", marginBottom:16, boxSizing:"border-box" as any }}
+                onFocus={e=>(e.target.style.borderColor="#0E6163")} onBlur={e=>(e.target.style.borderColor="#d1d5db")} />
+              {error && <div style={{ fontSize:13, color:"#dc2626", background:"#fef2f2", borderRadius:8, padding:"8px 12px", marginBottom:14 }}>{error}</div>}
+              <button type="submit" disabled={loading}
+                style={{ width:"100%", padding:12, background:"#0E6163", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:600, cursor:"pointer" }}>
+                {loading ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+            <p style={{ textAlign:"center", fontSize:14, color:"#6b7280", marginTop:16 }}>
+              <a href="/login" style={{ color:"#0E6163", fontWeight:600 }}>Back to login</a>
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 2. SETTINGS PAGE
+// app/settings/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function SettingsPage() {
+  const [profile, setProfile] = useState<any>(null);
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [tab,     setTab]     = useState<"account"|"notifications"|"privacy"|"danger">("account");
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { window.location.href="/login"; return; }
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile({ ...data, email: user.email });
+    })();
+  }, []);
+
+  const save = async () => {
+    if (!profile) return;
+    setSaving(true);
+    await supabase.from("profiles").update({
+      full_name:             profile.full_name,
+      theme:                 profile.theme,
+      font_size:             profile.font_size,
+      language_pref:         profile.language_pref,
+      email_streak_reminder: profile.email_streak_reminder,
+      email_weekly_digest:   profile.email_weekly_digest,
+      email_marketing:       profile.email_marketing,
+      notification_push:     profile.notification_push,
+    }).eq("id", profile.id);
+    setSaving(false); setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const deleteAccount = async () => {
+    if (!confirm("Are you absolutely sure? This cannot be undone. All your progress, notes and certificates will be deleted permanently.")) return;
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
+  const TABS = [
+    { id:"account",       label:"Account" },
+    { id:"notifications", label:"Notifications" },
+    { id:"privacy",       label:"Privacy" },
+    { id:"danger",        label:"Danger Zone" },
+  ] as const;
+
+  if (!profile) return <div style={{ padding:40, textAlign:"center", color:"#718096" }}>Loading…</div>;
+
+  return (
+    <div style={{ maxWidth:720, margin:"0 auto", padding:"32px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+      <h1 style={{ fontSize:24, fontWeight:800, color:"#1c2b3a", margin:"0 0 28px" }}>⚙️ Settings</h1>
+
+      {/* Tabs */}
+      <div style={{ display:"flex", gap:4, borderBottom:"2px solid #e2e8f0", marginBottom:28 }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{ padding:"9px 16px", fontSize:13, fontWeight:tab===t.id?700:400, color:tab===t.id?"#0E6163":"#718096", background:"none", border:"none", borderBottom:tab===t.id?"2px solid #0E6163":"2px solid transparent", marginBottom:-2, cursor:"pointer", fontFamily:"inherit" }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ACCOUNT TAB */}
+      {tab === "account" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+          {[
+            { label:"Full Name", key:"full_name", type:"text", placeholder:"Your full name" },
+            { label:"Email",     key:"email",     type:"email", placeholder:"", disabled:true },
+          ].map(f => (
+            <div key={f.key}>
+              <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>{f.label}</label>
+              <input type={f.type} value={profile[f.key] || ""} placeholder={f.placeholder}
+                disabled={f.disabled}
+                onChange={e => !f.disabled && setProfile((p: any) => ({ ...p, [f.key]: e.target.value }))}
+                style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none", boxSizing:"border-box" as any, background:f.disabled?"#f7fafc":"#fff", color:f.disabled?"#a0aec0":"#1c2b3a" }} />
+            </div>
+          ))}
+
+          <div>
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Theme</label>
+            <select value={profile.theme||"light"} onChange={e=>setProfile((p:any)=>({...p,theme:e.target.value}))}
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+              <option value="light">☀️ Light</option>
+              <option value="dark">🌙 Dark</option>
+              <option value="sepia">📜 Sepia</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Reading Font Size</label>
+            <select value={profile.font_size||"medium"} onChange={e=>setProfile((p:any)=>({...p,font_size:e.target.value}))}
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+              {["small","medium","large","xl"].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Language Preference</label>
+            <select value={profile.language_pref||"en"} onChange={e=>setProfile((p:any)=>({...p,language_pref:e.target.value}))}
+              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
+              <option value="en">🇬🇧 English</option>
+              <option value="hi">🇮🇳 Hindi</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* NOTIFICATIONS TAB */}
+      {tab === "notifications" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {[
+            { key:"email_streak_reminder", label:"Daily streak reminder", desc:"Email when your streak is about to break" },
+            { key:"email_weekly_digest",   label:"Weekly digest",         desc:"Summary of your progress every Sunday" },
+            { key:"email_marketing",       label:"Product updates",       desc:"New features, tracks and content announcements" },
+            { key:"notification_push",     label:"Push notifications",    desc:"Browser notifications for reminders (requires PWA)" },
+          ].map(n => (
+            <div key={n.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:"#f8f9fa", border:"1px solid #e2e8f0", borderRadius:10 }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:600, color:"#1c2b3a" }}>{n.label}</div>
+                <div style={{ fontSize:12, color:"#718096", marginTop:2 }}>{n.desc}</div>
+              </div>
+              <button onClick={() => setProfile((p:any) => ({ ...p, [n.key]: !p[n.key] }))}
+                style={{ width:44, height:24, borderRadius:12, border:"none", cursor:"pointer", background:profile[n.key]?"#1D9E75":"#CBD5E0", position:"relative", transition:"background 0.2s", flexShrink:0 }}>
+                <div style={{ width:18, height:18, borderRadius:"50%", background:"#fff", position:"absolute", top:3, left:profile[n.key]?23:3, transition:"left 0.2s" }}/>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* PRIVACY TAB */}
+      {tab === "privacy" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          <div style={{ background:"#EBF8FF", border:"1px solid #BEE3F8", borderRadius:12, padding:"16px 18px" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#2C5282", marginBottom:6 }}>Your rights under DPDP Act 2023</div>
+            <div style={{ fontSize:13, color:"#2C5282", lineHeight:1.7 }}>You have the right to access, correct, and erase your personal data. Contact us at privacy@financehub.in to exercise your rights.</div>
+          </div>
+          {[
+            { label:"Download my data", desc:"Get a copy of all your data — progress, notes, quiz scores", action:"Request export", href:"mailto:privacy@financehub.in?subject=Data Export Request" },
+            { label:"Erase my data",    desc:"Delete all your personal data except legally required records", action:"Request erasure", href:"mailto:privacy@financehub.in?subject=Data Erasure Request" },
+          ].map(item => (
+            <div key={item.label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", background:"#fff", border:"1px solid #e2e8f0", borderRadius:12 }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:600, color:"#1c2b3a" }}>{item.label}</div>
+                <div style={{ fontSize:12, color:"#718096", marginTop:2 }}>{item.desc}</div>
+              </div>
+              <a href={item.href} style={{ padding:"7px 14px", background:"#f7fafc", border:"1px solid #e2e8f0", borderRadius:8, fontSize:12, fontWeight:600, color:"#0E6163", textDecoration:"none", flexShrink:0, marginLeft:12 }}>{item.action}</a>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* DANGER ZONE */}
+      {tab === "danger" && (
+        <div>
+          <div style={{ background:"#FFF5F5", border:"1px solid #FC8181", borderRadius:12, padding:"20px" }}>
+            <h3 style={{ fontSize:16, fontWeight:700, color:"#C53030", margin:"0 0 8px" }}>⚠️ Delete Account</h3>
+            <p style={{ fontSize:14, color:"#742A2A", lineHeight:1.7, margin:"0 0 16px" }}>
+              This permanently deletes your account, all progress, notes, quiz scores and certificates. This cannot be undone.
+            </p>
+            <button onClick={deleteAccount}
+              style={{ padding:"10px 20px", background:"#E53E3E", color:"#fff", border:"none", borderRadius:9, fontSize:14, fontWeight:600, cursor:"pointer" }}>
+              Delete my account permanently
+            </button>
+          </div>
+
+          <div style={{ marginTop:16, padding:"14px 18px", background:"#f7fafc", border:"1px solid #e2e8f0", borderRadius:10 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:"#1c2b3a", marginBottom:4 }}>Cancel subscription</div>
+            <div style={{ fontSize:12, color:"#718096", marginBottom:10 }}>You can cancel anytime. Your access continues until the end of the billing period.</div>
+            <a href="mailto:support@financehub.in?subject=Cancel Subscription" style={{ fontSize:13, color:"#0E6163", fontWeight:600 }}>Contact support to cancel →</a>
+          </div>
+        </div>
+      )}
+
+      {/* Save button */}
+      {tab !== "danger" && (
+        <div style={{ marginTop:28 }}>
+          <button onClick={save} disabled={saving}
+            style={{ padding:"11px 28px", background:saved?"#1D9E75":"#0E6163", color:"#fff", border:"none", borderRadius:10, fontSize:14, fontWeight:600, cursor:"pointer", transition:"background 0.3s" }}>
+            {saving ? "Saving…" : saved ? "✅ Saved!" : "Save changes"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 3. KNOWLEDGE MAP PAGE
+// app/knowledge-map/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function KnowledgeMapPage() {
+  // Dynamically import to avoid SSR issues with SVG
+  const [KG, setKG] = useState<any>(null);
+  useEffect(() => {
+    import("@/components/learn/KnowledgeGraph").then(m => setKG(() => m.default));
+  }, []);
+
+  return (
+    <div style={{ maxWidth:1100, margin:"0 auto", padding:"24px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+      <div style={{ marginBottom:24 }}>
+        <h1 style={{ fontSize:26, fontWeight:800, color:"#1c2b3a", margin:"0 0 6px", letterSpacing:"-0.4px" }}>
+          🗺️ Finance Knowledge Map
+        </h1>
+        <p style={{ fontSize:14, color:"#718096", margin:0 }}>
+          See how every finance concept connects. Click a node to explore. Drag to pan, scroll to zoom.
+        </p>
+      </div>
+      {KG ? <KG height={620} showLegend /> : (
+        <div style={{ height:620, background:"#f8f9fa", borderRadius:14, border:"1px solid #e2e8f0", display:"flex", alignItems:"center", justifyContent:"center", color:"#718096" }}>
+          Loading knowledge graph…
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 4. NOTES / ROUGH BOOK PAGE
+// app/notes/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function NotesPage() {
+  const [RB, setRB] = useState<any>(null);
+  useEffect(() => {
+    import("@/components/tools/RoughBook").then(m => setRB(() => m.default)).catch(() => {});
+  }, []);
+
+  return (
+    <div style={{ maxWidth:900, margin:"0 auto", padding:"24px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+      <div style={{ marginBottom:24 }}>
+        <h1 style={{ fontSize:26, fontWeight:800, color:"#1c2b3a", margin:"0 0 6px", letterSpacing:"-0.4px" }}>
+          📝 Digital Rough Book
+        </h1>
+        <p style={{ fontSize:14, color:"#718096", margin:0 }}>
+          Your personal finance notes — organised by lesson, tagged and cloud-synced.
+        </p>
+      </div>
+      {RB ? <RB /> : (
+        <div style={{ padding:40, textAlign:"center", color:"#718096", background:"#f8f9fa", borderRadius:14, border:"1px solid #e2e8f0" }}>
+          Loading your notes…
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 5. AI TUTOR PAGE
+// app/ai-tutor/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function AITutorPage() {
+  const [AIM, setAIM] = useState<any>(null);
+  useEffect(() => {
+    import("@/components/ai/AIMentor").then(m => setAIM(() => m.default));
+  }, []);
+
+  return (
+    <div style={{ maxWidth:760, margin:"0 auto", padding:"24px 20px 0", fontFamily:"var(--font-ui,system-ui)" }}>
+      <div style={{ marginBottom:16 }}>
+        <h1 style={{ fontSize:22, fontWeight:800, color:"#1c2b3a", margin:"0 0 4px" }}>🤖 AI Finance Mentor</h1>
+        <p style={{ fontSize:13, color:"#718096", margin:0 }}>Ask anything about finance — India-specific, source-cited, personalised to your learning history.</p>
+      </div>
+      {AIM ? (
+        <AIM />
+      ) : (
+        <div style={{ height:500, background:"#f8f9fa", borderRadius:14, border:"1px solid #e2e8f0", display:"flex", alignItems:"center", justifyContent:"center", color:"#718096" }}>
+          Loading AI Mentor…
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 6. CASE STUDIES LISTING
+// app/case-studies/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function CaseStudiesPage() {
+  const [cases,   setCases]   = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter,  setFilter]  = useState("all");
+
+  useEffect(() => {
+    supabase.from("case_studies").select("id,title,slug,subtitle,category,difficulty,protagonist,key_lesson,duration_minutes,is_free,tags").eq("is_published",true).order("created_at",{ascending:false})
+      .then(({data}) => { setCases(data||[]); setLoading(false); });
+  }, []);
+
+  const cats = ["all", ...Array.from(new Set(cases.map(c => c.category)))];
+  const filtered = filter==="all" ? cases : cases.filter(c => c.category===filter);
+
+  const DIFF_COLOR: Record<string,string> = { beginner:"#1D9E75", intermediate:"#D4A017", advanced:"#E53E3E" };
+
+  return (
+    <div style={{ maxWidth:860, margin:"0 auto", padding:"24px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+      <div style={{ marginBottom:24 }}>
+        <h1 style={{ fontSize:26, fontWeight:800, color:"#1c2b3a", margin:"0 0 6px", letterSpacing:"-0.4px" }}>📋 Case Studies</h1>
+        <p style={{ fontSize:14, color:"#718096", margin:0 }}>Real Indian stories. Real financial decisions. Real lessons.</p>
+      </div>
+
+      {/* Filter */}
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
+        {cats.map(c => (
+          <button key={c} onClick={()=>setFilter(c)}
+            style={{ padding:"7px 14px", fontSize:12, fontWeight:filter===c?700:400, background:filter===c?"#0E6163":"#fff", color:filter===c?"#fff":"#718096", border:`1px solid ${filter===c?"#0E6163":"#e2e8f0"}`, borderRadius:20, cursor:"pointer", textTransform:"capitalize" }}>
+            {c==="all"?"All Categories":c.replace(/-/g," ")}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {[1,2,3].map(i=><div key={i} style={{ height:140, background:"linear-gradient(90deg,#f5f5f5 25%,#ebebeb 50%,#f5f5f5 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.5s infinite", borderRadius:14 }}/>)}
+        </div>
+      ) : (
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          {filtered.map(cs => (
+            <a key={cs.id} href={`/case-studies/${cs.slug}`} style={{ display:"block", background:"#fff", border:"1px solid #e2e8f0", borderRadius:14, padding:"20px 22px", textDecoration:"none", transition:"all 0.15s" }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor="#0E6163";e.currentTarget.style.boxShadow="0 4px 16px rgba(14,97,99,0.1)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="#e2e8f0";e.currentTarget.style.boxShadow="none";}}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8, flexWrap:"wrap" }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:DIFF_COLOR[cs.difficulty]||"#718096", background:`${DIFF_COLOR[cs.difficulty]}18`, padding:"2px 8px", borderRadius:8, textTransform:"capitalize" }}>{cs.difficulty}</span>
+                    {!cs.is_free && <span style={{ fontSize:10, fontWeight:700, color:"#553C9A", background:"#FAF5FF", padding:"2px 8px", borderRadius:8 }}>💎 Pro</span>}
+                    <span style={{ fontSize:11, color:"#a0aec0" }}>⏱ {cs.duration_minutes} min read</span>
+                  </div>
+                  <h3 style={{ fontSize:16, fontWeight:700, color:"#1c2b3a", margin:"0 0 6px", lineHeight:1.3 }}>{cs.title}</h3>
+                  <p style={{ fontSize:13, color:"#718096", lineHeight:1.6, margin:"0 0 10px" }}>{cs.subtitle}</p>
+                  {cs.protagonist && <div style={{ fontSize:12, color:"#a0aec0" }}>👤 {cs.protagonist}</div>}
+                </div>
+                <div style={{ fontSize:24, flexShrink:0 }}>→</div>
+              </div>
+              {cs.key_lesson && (
+                <div style={{ marginTop:12, padding:"8px 12px", background:"#f0f9f9", borderLeft:"3px solid #0E6163", borderRadius:"0 8px 8px 0", fontSize:12, color:"#0E6163", fontWeight:600 }}>
+                  💡 {cs.key_lesson}
+                </div>
+              )}
+            </a>
+          ))}
+          {filtered.length===0 && <div style={{ textAlign:"center", padding:"48px 20px", color:"#718096" }}>No case studies in this category yet.</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 7. CERTIFICATE VERIFICATION PAGE
+// app/verify/[id]/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function VerifyPage({ params }: { params: { id: string } }) {
+  const [cert,    setCert]    = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [found,   setFound]   = useState(true);
+
+  useEffect(() => {
+    supabase.from("certificates").select("*").eq("verification_id", params.id).single()
+      .then(({data}) => { if(data){setCert(data);setFound(true);}else setFound(false); setLoading(false); });
+  }, [params.id]);
+
+  if (loading) return <div style={{ textAlign:"center", padding:80, fontFamily:"var(--font-ui,system-ui)", color:"#718096" }}>Verifying certificate…</div>;
+
+  return (
+    <div style={{ maxWidth:640, margin:"0 auto", padding:"40px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
+      {!found ? (
+        <div style={{ textAlign:"center" }}>
+          <div style={{ fontSize:60, marginBottom:16 }}>❌</div>
+          <h1 style={{ fontSize:22, fontWeight:700, color:"#1c2b3a", marginBottom:8 }}>Certificate not found</h1>
+          <p style={{ color:"#718096" }}>The ID <code style={{ background:"#f7fafc", padding:"2px 8px", borderRadius:6 }}>{params.id}</code> does not match any certificate.</p>
+          <a href="/" style={{ display:"inline-block", marginTop:20, color:"#0E6163", fontWeight:600 }}>Go to FinanceHub →</a>
+        </div>
+      ) : (
+        <div>
+          <div style={{ background:"#F0FFF4", border:"1px solid #C6F6D5", borderRadius:12, padding:"14px 18px", marginBottom:24, display:"flex", gap:12, alignItems:"center" }}>
+            <div style={{ fontSize:28 }}>✅</div>
+            <div>
+              <div style={{ fontSize:15, fontWeight:700, color:"#22543D" }}>Certificate Verified</div>
+              <div style={{ fontSize:12, color:"#276749" }}>This certificate is authentic, issued by FinanceHub on {new Date(cert.issued_at).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</div>
+            </div>
+          </div>
+          <div style={{ background:"linear-gradient(135deg,#0E6163,#1D9E75)", borderRadius:16, padding:"32px", color:"#fff", marginBottom:20 }}>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,0.6)", marginBottom:6 }}>CERTIFICATE OF COMPLETION</div>
+            <div style={{ fontSize:28, fontWeight:800, marginBottom:4 }}>{cert.user_name}</div>
+            <div style={{ fontSize:14, color:"rgba(255,255,255,0.7)", marginBottom:16 }}>has successfully completed</div>
+            <div style={{ fontSize:22, fontWeight:700, marginBottom:20 }}>{cert.track_name} Track</div>
+            <div style={{ display:"flex", gap:16 }}>
+              {[{l:"Lessons",v:cert.lesson_count},{l:"Avg Score",v:`${cert.quiz_avg_score}%`},{l:"Skills",v:cert.skills?.length||0}].map(s=>(
+                <div key={s.l}><div style={{ fontSize:18, fontWeight:700 }}>{s.v}</div><div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", textTransform:"uppercase" }}>{s.l}</div></div>
+              ))}
+            </div>
+            <div style={{ marginTop:20, fontSize:11, color:"rgba(255,255,255,0.5)", fontFamily:"monospace", letterSpacing:"0.1em" }}>ID: {cert.verification_id}</div>
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <a href="/signup" style={{ display:"inline-block", padding:"11px 24px", background:"#0E6163", color:"#fff", borderRadius:10, fontSize:14, fontWeight:600, textDecoration:"none" }}>
+              Earn your own certificate →
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 8. TRACK LANDING PAGE
+// app/tracks/[slug]/page.tsx
+// ─────────────────────────────────────────────────────────────
+export function TrackPage({ params }: { params: { slug: string } }) {
+  const [track,   setTrack]   = useState<any>(null);
+  const [levels,  setLevels]  = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded,setExpanded]= useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: t } = await supabase.from("tracks").select("*").eq("slug", params.slug).single();
+      if (!t) { setLoading(false); return; }
+      setTrack(t);
+      const { data: lvls } = await supabase.from("levels")
+        .select("id,name,slug,order_index,lessons(id,title,slug,duration_minutes,is_free,is_published)")
+        .eq("track_id", t.id).order("order_index");
+      setLevels(lvls||[]);
+      if (lvls?.length) setExpanded([lvls[0].id]);
+      setLoading(false);
+    })();
+  }, [params.slug]);
+
+  if (loading) return <div style={{ padding:40, textAlign:"center", color:"#718096" }}>Loading track…</div>;
+  if (!track)  return <div style={{ padding:40, textAlign:"center", color:"#718096" }}>Track not found.</div>;
+
+  const totalLessons = levels.reduce((s,lv)=>s+lv.lessons.filter((l:any)=>l.is_published).length,0);
+  const color = track.color_hex || "#0E6163";
+
+  return (
+    <div style={{ fontFamily:"var(--font-ui,system-ui)" }}>
+      {/* Hero */}
+      <div style={{ background:`linear-gradient(135deg,${color}18,${color}08)`, borderBottom:"1px solid #e2e8f0", padding:"48px 20px 40px" }}>
+        <div style={{ maxWidth:860, margin:"0 auto" }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>{track.icon_emoji||"📚"}</div>
+          <h1 style={{ fontSize:32, fontWeight:800, color:"#1c2b3a", margin:"0 0 10px", letterSpacing:"-0.5px" }}>{track.name}</h1>
+          <p style={{ fontSize:16, color:"#718096", maxWidth:560, lineHeight:1.7, margin:"0 0 20px" }}>{track.description}</p>
+          <div style={{ display:"flex", gap:20, fontSize:13, color:"#718096" }}>
+            <span>📖 {totalLessons} lessons</span>
+            <span>🎓 {levels.length} levels</span>
+          </div>
+          <a href="/signup" style={{ display:"inline-block", marginTop:20, padding:"11px 24px", background:color, color:"#fff", borderRadius:10, fontSize:14, fontWeight:600, textDecoration:"none" }}>
+            Start this track free →
+          </a>
+        </div>
+      </div>
+
+      {/* Levels + lessons */}
+      <div style={{ maxWidth:860, margin:"0 auto", padding:"32px 20px 80px" }}>
+        {levels.map(lv => {
+          const isOpen = expanded.includes(lv.id);
+          const published = lv.lessons.filter((l:any)=>l.is_published);
+          return (
+            <div key={lv.id} style={{ marginBottom:12, border:"1px solid #e2e8f0", borderRadius:14, overflow:"hidden" }}>
+              <button onClick={()=>setExpanded(e=>isOpen?e.filter(id=>id!==lv.id):[...e,lv.id])}
+                style={{ width:"100%", padding:"16px 20px", background:isOpen?"#f0f9f9":"#fff", border:"none", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", fontFamily:"inherit" }}>
+                <div style={{ textAlign:"left" }}>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#1c2b3a" }}>{lv.name}</div>
+                  <div style={{ fontSize:12, color:"#a0aec0", marginTop:2 }}>{published.length} lessons</div>
+                </div>
+                <span style={{ color:"#a0aec0", fontSize:18, transition:"transform 0.2s", transform:isOpen?"rotate(180deg)":"none" }}>↓</span>
+              </button>
+              {isOpen && published.map((l:any,i:number)=>(
+                <a key={l.id} href={`/learn/${l.slug}`}
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 20px", borderTop:"1px solid #f5f5f5", textDecoration:"none", background:"transparent" }}
+                  onMouseEnter={e=>(e.currentTarget.style.background="#f8f9fa")}
+                  onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                  <div style={{ width:22, height:22, borderRadius:"50%", background:"#EDF2F7", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#a0aec0", flexShrink:0 }}>{i+1}</div>
+                  <div style={{ flex:1, fontSize:14, fontWeight:500, color:"#1c2b3a" }}>{l.title}</div>
+                  <div style={{ display:"flex", gap:8, fontSize:11, color:"#a0aec0" }}>
+                    {l.is_free && <span style={{ color:"#1D9E75", fontWeight:600 }}>Free</span>}
+                    <span>{l.duration_minutes}m</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-02T22:37:01+05:30.
+</ADDITIONAL_METADATA>

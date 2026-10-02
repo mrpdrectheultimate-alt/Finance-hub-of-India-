@@ -1,368 +1,145 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-
-type CaseStudy = {
-  id:               string;
-  slug:             string;
-  title:            string;
-  subtitle:         string;
-  category:         string;
-  difficulty:       "beginner" | "intermediate" | "advanced";
-  duration_minutes: number;
-  protagonist:      string;
-  key_lesson:       string;
-  tags:             string[];
-};
-
-const CATEGORIES = ["All", "personal-finance", "trading-markets", "corporate-finance", "taxation", "investing"];
+import Logo from "@/components/ui/Logo";
+import Link from "next/link";
 
 export default function CaseStudiesPage() {
-  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+
+  const [cases,   setCases]   = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
+  const [filter,  setFilter]  = useState("all");
+
+
+
   useEffect(() => {
-    async function loadData() {
-      try {
-        const { data: studies } = await supabase
-          .from("case_studies")
-          .select("id, slug, title, subtitle, category, difficulty, duration_minutes, protagonist, key_lesson, tags")
-          .eq("is_published", true)
-          .order("created_at", { ascending: true });
 
-        if (studies) setCaseStudies(studies as CaseStudy[]);
+    supabase.from("case_studies").select("id,title,slug,subtitle,category,difficulty,protagonist,key_lesson,duration_minutes,is_free,tags").eq("is_published",true).order("created_at",{ascending:false})
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: completions } = await (supabase
-            .from("user_case_study_completions") as any)
-            .select("case_study_id")
-            .eq("user_id", user.id);
+      .then(({data}) => { setCases(data||[]); setLoading(false); });
 
-          if (completions) {
-            setCompletedIds((completions as any[]).map((c) => c.case_study_id));
-          }
-        }
-      } catch (err) {
-        console.error("Error loading case studies:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
   }, []);
 
-  const filteredStudies = caseStudies.filter((cs) => {
-    const matchesCategory = activeCategory === "All" || cs.category === activeCategory;
-    const matchesSearch =
-      cs.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (cs.protagonist && cs.protagonist.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (cs.key_lesson && cs.key_lesson.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (cs.subtitle && cs.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
 
-  const getDifficultyBadge = (diff: string) => {
-    switch (diff) {
-      case "beginner":
-        return { label: "Beginner", bg: "#E1F5EE", color: "#0F766E" };
-      case "intermediate":
-        return { label: "Intermediate", bg: "#E6F1FB", color: "#1D4ED8" };
-      case "advanced":
-        return { label: "Advanced", bg: "#FAEEDA", color: "#B45309" };
-      default:
-        return { label: diff, bg: "#F3F4F6", color: "#4B5563" };
-    }
-  };
+
+  const cats = ["all", ...Array.from(new Set(cases.map(c => c.category)))];
+
+  const filtered = filter==="all" ? cases : cases.filter(c => c.category===filter);
+
+
+
+  const DIFF_COLOR: Record<string,string> = { beginner:"#1D9E75", intermediate:"#D4A017", advanced:"#E53E3E" };
+
+
 
   return (
-    <div style={s.page}>
-      <div style={s.container}>
-        <div style={s.header}>
-          <Link href="/dashboard" style={s.backLink}>
-            ← Back to Dashboard
-          </Link>
-          <div style={s.badgeRow}>
-            <span style={s.headerBadge}>REAL-WORLD ANALYSIS</span>
-            <span style={s.headerBadgeSub}>20 XP per case</span>
-          </div>
-          <h1 style={s.title}>Indian Business & Finance Case Studies</h1>
-          <p style={s.sub}>
-            Analyse real corporate dilemmas, balance sheet crises, regulatory decisions, and personal finance choices across Indian history.
-          </p>
-        </div>
 
-        {/* Search & Filter Bar */}
-        <div style={s.filterContainer}>
-          <input
-            type="text"
-            placeholder="Search by topic, keyword, or character..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={s.searchInput}
-          />
-          <div style={s.categoryBar}>
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  ...s.catBtn,
-                  ...(activeCategory === cat ? s.catBtnActive : {}),
-                }}
-              >
-                {cat === "All" ? "All Categories" : cat}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div style={{ maxWidth:860, margin:"0 auto", padding:"24px 20px 80px", fontFamily:"var(--font-ui,system-ui)" }}>
 
-        {/* Case Studies Grid */}
-        {loading ? (
-          <div style={s.loadingGrid}>
-            {[1, 2, 3, 4].map((n) => (
-              <div key={n} style={s.skeletonCard} />
-            ))}
-          </div>
-        ) : filteredStudies.length === 0 ? (
-          <div style={s.emptyState}>
-            <h3>No case studies found</h3>
-            <p>Try adjusting your search query or category filter.</p>
-          </div>
-        ) : (
-          <div style={s.grid}>
-            {filteredStudies.map((cs) => {
-              const diffBadge = getDifficultyBadge(cs.difficulty);
-              const isCompleted = completedIds.includes(cs.id);
+      <div style={{ marginBottom:24 }}>
 
-              return (
-                <div key={cs.id} style={s.card}>
-                  <div style={s.cardHeader}>
-                    <span style={{ ...s.diffBadge, background: diffBadge.bg, color: diffBadge.color }}>
-                      {diffBadge.label}
-                    </span>
-                    <span style={s.readTime}>⏱️ {cs.duration_minutes || 10} min read</span>
-                    {isCompleted && <span style={s.completedBadge}>✓ Solved</span>}
-                  </div>
+        <h1 style={{ fontSize:26, fontWeight:800, color:"#1c2b3a", margin:"0 0 6px", letterSpacing:"-0.4px" }}>📋 Case Studies</h1>
 
-                  <h3 style={s.cardTitle}>{cs.title}</h3>
-                  {cs.protagonist && <div style={s.companyTag}>👤 {cs.protagonist}</div>}
-                  <p style={s.cardSummary}>{cs.subtitle || cs.key_lesson}</p>
+        <p style={{ fontSize:14, color:"#718096", margin:0 }}>Real Indian stories. Real financial decisions. Real lessons.</p>
 
-                  <div style={s.cardFooter}>
-                    <span style={s.categoryTag}>{cs.category}</span>
-                    <Link href={`/case-studies/${cs.slug}`} style={s.readBtn}>
-                      Read & Analyze →
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
+
+
+
+      {/* Filter */}
+
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:20 }}>
+
+        {cats.map(c => (
+
+          <button key={c} onClick={()=>setFilter(c)}
+
+            style={{ padding:"7px 14px", fontSize:12, fontWeight:filter===c?700:400, background:filter===c?"#0E6163":"#fff", color:filter===c?"#fff":"#718096", border:`1px solid ${filter===c?"#0E6163":"#e2e8f0"}`, borderRadius:20, cursor:"pointer", textTransform:"capitalize" }}>
+
+            {c==="all"?"All Categories":c.replace(/-/g," ")}
+
+          </button>
+
+        ))}
+
+      </div>
+
+
+
+      {loading ? (
+
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+
+          {[1,2,3].map(i=><div key={i} style={{ height:140, background:"linear-gradient(90deg,#f5f5f5 25%,#ebebeb 50%,#f5f5f5 75%)", backgroundSize:"200% 100%", animation:"shimmer 1.5s infinite", borderRadius:14 }}/>)}
+
+        </div>
+
+      ) : (
+
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+
+          {filtered.map(cs => (
+
+            <a key={cs.id} href={`/case-studies/${cs.slug}`} style={{ display:"block", background:"#fff", border:"1px solid #e2e8f0", borderRadius:14, padding:"20px 22px", textDecoration:"none", transition:"all 0.15s" }}
+
+              onMouseEnter={e=>{e.currentTarget.style.borderColor="#0E6163";e.currentTarget.style.boxShadow="0 4px 16px rgba(14,97,99,0.1)";}}
+
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="#e2e8f0";e.currentTarget.style.boxShadow="none";}}>
+
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
+
+                <div style={{ flex:1 }}>
+
+                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8, flexWrap:"wrap" }}>
+
+                    <span style={{ fontSize:10, fontWeight:700, color:DIFF_COLOR[cs.difficulty]||"#718096", background:`${DIFF_COLOR[cs.difficulty]}18`, padding:"2px 8px", borderRadius:8, textTransform:"capitalize" }}>{cs.difficulty}</span>
+
+                    {!cs.is_free && <span style={{ fontSize:10, fontWeight:700, color:"#553C9A", background:"#FAF5FF", padding:"2px 8px", borderRadius:8 }}>💎 Pro</span>}
+
+                    <span style={{ fontSize:11, color:"#a0aec0" }}>⏱ {cs.duration_minutes} min read</span>
+
+                  </div>
+
+                  <h3 style={{ fontSize:16, fontWeight:700, color:"#1c2b3a", margin:"0 0 6px", lineHeight:1.3 }}>{cs.title}</h3>
+
+                  <p style={{ fontSize:13, color:"#718096", lineHeight:1.6, margin:"0 0 10px" }}>{cs.subtitle}</p>
+
+                  {cs.protagonist && <div style={{ fontSize:12, color:"#a0aec0" }}>👤 {cs.protagonist}</div>}
+
+                </div>
+
+                <div style={{ fontSize:24, flexShrink:0 }}>→</div>
+
+              </div>
+
+              {cs.key_lesson && (
+
+                <div style={{ marginTop:12, padding:"8px 12px", background:"#f0f9f9", borderLeft:"3px solid #0E6163", borderRadius:"0 8px 8px 0", fontSize:12, color:"#0E6163", fontWeight:600 }}>
+
+                  💡 {cs.key_lesson}
+
+                </div>
+
+              )}
+
+            </a>
+
+          ))}
+
+          {filtered.length===0 && <div style={{ textAlign:"center", padding:"48px 20px", color:"#718096" }}>No case studies in this category yet.</div>}
+
+        </div>
+
+      )}
+
     </div>
+
   );
+
 }
 
-const s: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#F9FAFB",
-    padding: "32px 16px 60px",
-    fontFamily: "system-ui, -apple-system, sans-serif",
-  },
-  container: {
-    maxWidth: "1080px",
-    margin: "0 auto",
-  },
-  header: {
-    marginBottom: "28px",
-  },
-  backLink: {
-    display: "inline-block",
-    fontSize: "13px",
-    color: "#6B7280",
-    textDecoration: "none",
-    marginBottom: "12px",
-    fontWeight: 500,
-  },
-  badgeRow: {
-    display: "flex",
-    gap: "8px",
-    alignItems: "center",
-    marginBottom: "10px",
-  },
-  headerBadge: {
-    fontSize: "11px",
-    fontWeight: 700,
-    letterSpacing: "0.06em",
-    color: "#0F766E",
-    background: "#E1F5EE",
-    padding: "4px 10px",
-    borderRadius: "12px",
-  },
-  headerBadgeSub: {
-    fontSize: "11px",
-    fontWeight: 600,
-    color: "#D97706",
-    background: "#FEF3C7",
-    padding: "4px 10px",
-    borderRadius: "12px",
-  },
-  title: {
-    fontSize: "32px",
-    fontWeight: 800,
-    color: "#111827",
-    margin: "0 0 8px",
-    letterSpacing: "-0.5px",
-  },
-  sub: {
-    fontSize: "15px",
-    color: "#4B5563",
-    margin: 0,
-    maxWidth: "720px",
-    lineHeight: "1.5",
-  },
-  filterContainer: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "14px",
-    marginBottom: "32px",
-  },
-  searchInput: {
-    width: "100%",
-    padding: "12px 16px",
-    borderRadius: "10px",
-    border: "1px solid #E5E7EB",
-    fontSize: "14px",
-    background: "#FFFFFF",
-    outline: "none",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-  },
-  categoryBar: {
-    display: "flex",
-    gap: "8px",
-    overflowX: "auto",
-    paddingBottom: "4px",
-  },
-  catBtn: {
-    padding: "6px 14px",
-    borderRadius: "20px",
-    border: "1px solid #E5E7EB",
-    background: "#FFFFFF",
-    color: "#4B5563",
-    fontSize: "13px",
-    fontWeight: 500,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-  },
-  catBtnActive: {
-    background: "#111827",
-    color: "#FFFFFF",
-    borderColor: "#111827",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-    gap: "20px",
-  },
-  loadingGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-    gap: "20px",
-  },
-  skeletonCard: {
-    height: "220px",
-    background: "#E5E7EB",
-    borderRadius: "14px",
-  },
-  emptyState: {
-    textAlign: "center",
-    padding: "48px 16px",
-    background: "#FFFFFF",
-    borderRadius: "14px",
-    border: "1px solid #E5E7EB",
-    color: "#6B7280",
-  },
-  card: {
-    background: "#FFFFFF",
-    borderRadius: "14px",
-    border: "1px solid #E5E7EB",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-  },
-  cardHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "12px",
-  },
-  diffBadge: {
-    fontSize: "11px",
-    fontWeight: 700,
-    padding: "3px 8px",
-    borderRadius: "6px",
-  },
-  readTime: {
-    fontSize: "12px",
-    color: "#6B7280",
-  },
-  completedBadge: {
-    fontSize: "11px",
-    fontWeight: 700,
-    color: "#059669",
-    background: "#D1FAE5",
-    padding: "3px 8px",
-    borderRadius: "6px",
-  },
-  cardTitle: {
-    fontSize: "18px",
-    fontWeight: 750,
-    color: "#111827",
-    margin: "0 0 6px",
-    lineHeight: "1.3",
-  },
-  companyTag: {
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "#2563EB",
-    marginBottom: "10px",
-  },
-  cardSummary: {
-    fontSize: "13px",
-    color: "#4B5563",
-    lineHeight: "1.5",
-    margin: "0 0 20px",
-    flexGrow: 1,
-  },
-  cardFooter: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: "12px",
-    borderTop: "1px solid #F3F4F6",
-  },
-  categoryTag: {
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "#6B7280",
-    background: "#F3F4F6",
-    padding: "4px 8px",
-    borderRadius: "6px",
-  },
-  readBtn: {
-    fontSize: "13px",
-    fontWeight: 700,
-    color: "#0F766E",
-    textDecoration: "none",
-  },
-};
+
+
+// ─────────────────────────────────────────────────────────────
