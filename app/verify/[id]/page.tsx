@@ -5,18 +5,24 @@ import { CertificateCard, type Certificate } from "@/components/certificates/Cer
 
 // ============================================================
 // FinanceHub — Public Certificate Verification Page
-// app/verify/[certificateId]/page.tsx
+// app/verify/[id]/page.tsx
 // ============================================================
 
-export default function CertificateVerifyPage({ params }: { params: { certificateId: string } }) {
+export default function CertificateVerifyPage({ params }: { params: { id?: string; certificateId?: string } }) {
   const [cert,    setCert]    = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(true);
   const [found,   setFound]   = useState(true);
 
-  const verificationId = params.certificateId;
+  const verificationId = params.id || params.certificateId || "";
 
   useEffect(() => {
     (async () => {
+      if (!verificationId) {
+        setFound(false);
+        setLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("certificates")
         .select("*")
