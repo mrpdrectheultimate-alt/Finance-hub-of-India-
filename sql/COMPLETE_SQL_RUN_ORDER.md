@@ -115,3 +115,26 @@ ORDER BY metric;
 | League Tiers | 5 |
 
 *Note: All 27 SQL migration scripts are 100% safe, idempotent, and re-runnable.*
+
+
+---
+
+## UPDATED RUN ORDER — Phase 10 Added
+
+Run AFTER all previous files:
+
+`
+32. phase10_cases_hindi.sql   — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
+`
+
+## UPDATED EXPECTED COUNTS (After all 34 files)
+
+| Content | Count |
+|---------|-------|
+| Published lessons | 375+ |
+| Hindi lessons | 23+ |
+| Case studies | 25 |
+| Concepts (knowledge graph) | 100+ |
+| Videos | 157+ |
+| Career paths | 15 |
+| Badges | 20 |
