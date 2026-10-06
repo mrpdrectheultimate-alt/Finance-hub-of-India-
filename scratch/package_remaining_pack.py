@@ -15,6 +15,7 @@ copy_map = {
     'components/layout/Footer.tsx': 'outputs/Footer.tsx',
     'sql/gamification.sql': 'outputs/gamification.sql',
     'sql/community_career.sql': 'outputs/community_career.sql',
+    'scratch/final_missing_pages.tsx': 'outputs/final_missing_pages.tsx',
 }
 
 for src, dst in copy_map.items():
@@ -32,7 +33,8 @@ remaining_files = [
     'Navbar.tsx',
     'Footer.tsx',
     'gamification.sql',
-    'community_career.sql'
+    'community_career.sql',
+    'final_missing_pages.tsx'
 ]
 
 print("\n=== File sizes ===")
@@ -75,7 +77,7 @@ master_zip_path = os.path.join(outputs_dir, 'FinanceHub_COMPLETE_FINAL.zip')
 all_files = []
 for root, dirs, files in os.walk(outputs_dir):
     for file in files:
-        if file != 'FinanceHub_COMPLETE_FINAL.zip':
+        if file not in ['FinanceHub_COMPLETE_FINAL.zip', 'FinanceHub_Phase10_ContentPack.zip', 'FinanceHub_Phase9_ContentPack.zip', 'FinanceHub_Remaining_Pack.zip']:
             full_path = os.path.join(root, file)
             rel_path = os.path.relpath(full_path, outputs_dir)
             all_files.append((full_path, rel_path))
