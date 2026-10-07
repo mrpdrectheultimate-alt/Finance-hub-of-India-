@@ -18,7 +18,7 @@ export default function CaseStudiesPage() {
 
     supabase.from("case_studies").select("id,title,slug,subtitle,category,difficulty,protagonist,key_lesson,duration_minutes,is_free,tags").eq("is_published",true).order("created_at",{ascending:false})
 
-      .then(({data}) => { setCases(data||[]); setLoading(false); });
+      .then(({data}: any) => { setCases(data||[]); setLoading(false); });
 
   }, []);
 

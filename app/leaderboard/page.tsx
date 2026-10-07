@@ -118,7 +118,7 @@ export default function LeaderboardPage() {
         .order("xp_earned", { ascending: false })
         .limit(50);
 
-      const formatted = (leagueData || []).map((e: any, i) => ({
+      const formatted = (leagueData || []).map((e: any, i: number) => ({
         ...e,
         rank:    i + 1,
         profile: e.profiles,

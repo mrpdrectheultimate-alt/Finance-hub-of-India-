@@ -63,14 +63,14 @@ export default function AppLayout({ children, userRole = "free", userName = "", 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (!user) return;
       supabase
         .from("profiles")
         .select("role, xp_total, full_name, streak_current")
         .eq("id", user.id)
         .single()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (mounted && data) setProfile(data);
         });
     });

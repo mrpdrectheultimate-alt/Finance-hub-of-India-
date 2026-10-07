@@ -4,7 +4,7 @@
 // Handles: Auth protection · Rate limiting · Security · Redirects
 // ============================================================
 
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that require authentication
@@ -82,7 +82,23 @@ export async function middleware(request: NextRequest) {
 
   // ── 2. Supabase session management ──────────────────────────
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key",
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            res.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
 
   const { data: { session } } = await supabase.auth.getSession();
   const isAuthenticated = !!session;

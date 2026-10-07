@@ -18,7 +18,7 @@ export default function VerifyPage({ params }: { params: { id: string } }) {
 
     supabase.from("certificates").select("*").eq("verification_id", params.id).single()
 
-      .then(({data}) => { if(data){setCert(data);setFound(true);}else setFound(false); setLoading(false); });
+      .then(({data}: any) => { if(data){setCert(data);setFound(true);}else setFound(false); setLoading(false); });
 
   }, [params.id]);
 

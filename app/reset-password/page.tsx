@@ -12,7 +12,7 @@ export default function ResetPasswordPage() {
   const [strength, setStrength] = useState(0);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event: any) => {
       if (event === "PASSWORD_RECOVERY") {
         // User arrived via email link — session is now active
       }

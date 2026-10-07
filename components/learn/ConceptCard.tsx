@@ -349,7 +349,7 @@ export function MasteryDashboard({ trackSlug }: { trackSlug?: string }) {
         mastery: masteryMap.get(c.id) || null,
       }));
 
-      const due = enriched.filter(c =>
+      const due = enriched.filter((c: any) =>
         c.mastery?.next_review && new Date(c.mastery.next_review) <= new Date()
       ).length;
 

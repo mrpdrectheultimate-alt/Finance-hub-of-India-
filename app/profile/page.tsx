@@ -133,7 +133,7 @@ export default function ProfilePage() {
     const progress = progressRes.data || [];
     const quizScores = progress
       .map((item: { quiz_score: number | null }) => item.quiz_score)
-      .filter((score): score is number => typeof score === "number");
+      .filter((score: any): score is number => typeof score === "number");
 
     setProfile((profileRes.data as Profile | null) || null);
     setNewName((profileRes.data as Profile | null)?.full_name || "");
@@ -142,8 +142,8 @@ export default function ProfilePage() {
     setXpLog((xpLogRes.data as XpLogEntry[]) || []);
     setStats({
       lessonsCompleted: progress.length,
-      quizzesPassed: quizScores.filter((score) => score >= 70).length,
-      avgQuizScore: quizScores.length ? Math.round(quizScores.reduce((total, score) => total + score, 0) / quizScores.length) : 0,
+      quizzesPassed: quizScores.filter((score: number) => score >= 70).length,
+      avgQuizScore: quizScores.length ? Math.round(quizScores.reduce((total: number, score: number) => total + score, 0) / quizScores.length) : 0,
       aiQuestions: ((aiUsageRes.data as any[]) || []).reduce((total: number, row: any) => total + (row.count || 0), 0),
       tradesPlaced: tradesRes.count || 0,
       booksMarked: bookReadsRes.count || 0,

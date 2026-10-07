@@ -24,16 +24,16 @@ export default function Navbar() {
   const [userMenu,   setUserMenu]   = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
+    supabase.auth.getUser().then(({ data: { user: u } }: any) => {
       setUser(u);
       if (u) {
         supabase.from("profiles")
           .select("full_name,subscription_tier,xp_total,current_streak,avatar_url")
           .eq("id", u.id).single()
-          .then(({ data }) => setProfile(data as Profile | null));
+          .then(({ data }: any) => setProfile(data));
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_: any, session: any) => {
       setUser(session?.user || null);
     });
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -58,11 +58,10 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { label: "Explore",     href: "/explore" },
-    { label: "Site Map",    href: "/sitemap-guide" },
     { label: "Finance Lab", href: "/practice" },
     { label: "Library",     href: "/library" },
     { label: "AI Mentor",   href: "/ai-tutor" },
-    { label: "Leaderboard", href: "/leaderboard" },
+    { label: "Site Map",    href: "/sitemap-guide" },
   ];
 
   return (

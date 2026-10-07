@@ -79,7 +79,7 @@ export default function TrackLevelPage() {
       user ? supabase.from("user_progress").select("lesson_id").eq("user_id", user.id) : Promise.resolve({ data: [] }),
     ]);
 
-    const completedIds = new Set(progress?.map((item) => item.lesson_id) || []);
+    const completedIds = new Set(progress?.map((item: any) => item.lesson_id) || []);
     setLessons(((lessonData as Omit<LessonItem, "completed">[]) || []).map((lesson) => ({
       ...lesson,
       completed: completedIds.has(lesson.id),

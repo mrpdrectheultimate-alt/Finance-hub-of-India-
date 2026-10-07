@@ -48,7 +48,7 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       if (data.user) {
         setCurrentUserId(data.user.id);
       }

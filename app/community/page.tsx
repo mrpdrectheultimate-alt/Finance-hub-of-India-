@@ -18,7 +18,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     // Get current user session
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
       if (data.user) {
         setCurrentUserId(data.user.id);
       }
@@ -30,7 +30,7 @@ export default function CommunityPage() {
       .select("id, title")
       .eq("is_published", true)
       .limit(50)
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data) setLessonsList(data);
       });
 

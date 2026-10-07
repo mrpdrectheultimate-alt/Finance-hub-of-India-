@@ -253,10 +253,10 @@ export default function SiteMapPage() {
   const [userTier,   setUserTier]   = useState<string>("free");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (user) {
         supabase.from("profiles").select("subscription_tier").eq("id", user.id).single()
-          .then(({ data }) => { if (data) setUserTier(data.subscription_tier); });
+          .then(({ data }: any) => { if (data) setUserTier(data.subscription_tier); });
       }
     });
   }, []);

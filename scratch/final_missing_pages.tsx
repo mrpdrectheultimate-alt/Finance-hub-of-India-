@@ -132,7 +132,7 @@ export function ResetPasswordPage() {
   // Supabase puts the recovery token in the URL fragment
   // The onAuthStateChange picks it up automatically
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event: any) => {
       if (event === "PASSWORD_RECOVERY") {
         // User arrived via email link — session is now active
         // They can now submit a new password

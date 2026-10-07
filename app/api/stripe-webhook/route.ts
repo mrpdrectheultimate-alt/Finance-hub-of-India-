@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
       // ── Checkout completed → activate subscription ──────────
       case "checkout.session.completed": {
-        const session   = event.data.object as Stripe.CheckoutSession;
+        const session   = event.data.object as Stripe.Checkout.Session;
         const userId    = session.metadata?.user_id;
         const priceId   = session.metadata?.price_id;
         const tier      = PRICE_TO_TIER[priceId || ""] || "pro";
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         await supabase.from("profiles").update({
           subscription_status: "active",
           updated_at:          new Date().toISOString(),
-        } as any).eq("stripe_customer_id", customerId);
+        } as any).eq("stripe_customer_id" as any, customerId);
 
         await supabase.from("payment_logs").insert({
           provider:       "stripe",
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         await supabase.from("profiles").update({
           subscription_status: "past_due",
           updated_at:          new Date().toISOString(),
-        } as any).eq("stripe_customer_id", customerId);
+        } as any).eq("stripe_customer_id" as any, customerId);
 
         console.warn(`⚠️ Stripe: payment failed for customer ${customerId}`);
         break;
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
           subscription_tier:   "free",
           subscription_status: "cancelled",
           updated_at:          new Date().toISOString(),
-        } as any).eq("stripe_customer_id", customerId);
+        } as any).eq("stripe_customer_id" as any, customerId);
 
         console.log(`ℹ️ Stripe: subscription cancelled for customer ${customerId}`);
         break;
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
           subscription_tier:   tier,
           subscription_status: sub.status,
           updated_at:          new Date().toISOString(),
-        } as any).eq("stripe_customer_id", customerId);
+        } as any).eq("stripe_customer_id" as any, customerId);
 
         console.log(`✅ Stripe: subscription updated to ${tier} for customer ${customerId}`);
         break;
