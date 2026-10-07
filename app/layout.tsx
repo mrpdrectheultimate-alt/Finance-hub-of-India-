@@ -8,6 +8,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Lora }             from "next/font/google";
 import Script                       from "next/script";
 import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components/pwa/PWAInstall";
+import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 // ─── Fonts ───────────────────────────────────────────────────
 const inter = Inter({
@@ -319,7 +321,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}</style>
 
         {/* Page content */}
-        {children}
+        <ErrorBoundary>
+          <PostHogProvider>
+            <PostHogPageView />
+            {children}
+          </PostHogProvider>
+        </ErrorBoundary>
 
         {/* PWA components (client-side only) */}
         <PWAInstallPrompt />
