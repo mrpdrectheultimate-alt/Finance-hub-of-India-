@@ -58,6 +58,7 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { label: "Explore",     href: "/explore" },
+    { label: "Site Map",    href: "/sitemap-guide" },
     { label: "Finance Lab", href: "/practice" },
     { label: "Library",     href: "/library" },
     { label: "AI Mentor",   href: "/ai-tutor" },

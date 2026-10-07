@@ -433,6 +433,15 @@ export default function OnboardingPage() {
             <p style={{ fontSize: 11, color: "#a0aec0", marginTop: 12 }}>
               You can change your preferences anytime in Settings
             </p>
+
+            <div style={{ marginTop: 14 }}>
+              <a
+                href="/sitemap-guide"
+                style={{ fontSize: 13, color: accentColor, textDecoration: "none", fontWeight: 600 }}
+              >
+                Not sure where to start? See the full site map →
+              </a>
+            </div>
           </div>
         )}
       </div>

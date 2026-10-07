@@ -24,6 +24,7 @@ export default function Footer() {
     {
       title: "Platform",
       links: [
+        { label: "Site Map Guide",     href: "/sitemap-guide" },
         { label: "Explore Curriculum", href: "/explore" },
         { label: "Finance Lab",        href: "/practice" },
         { label: "AI Mentor",          href: "/ai-tutor" },
