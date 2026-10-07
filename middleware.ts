@@ -1,118 +1,131 @@
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// ============================================================
+// FinanceHub — Next.js Middleware
+// middleware.ts  (project root — runs on every request)
+// Handles: Auth protection · Rate limiting · Security · Redirects
+// ============================================================
 
-const PROTECTED = [
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { NextResponse, type NextRequest } from "next/server";
+
+// Routes that require authentication
+const PROTECTED_ROUTES = [
   "/dashboard",
-  "/learn",
-  "/practice",
+  "/settings",
   "/profile",
+  "/notes",
+  "/review",
   "/leaderboard",
   "/certificates",
-  "/ai-tutor",
-  "/ai-exam-generator",
-  "/ai-roadmap-planner",
-  "/ai-exam",
-  "/roadmap",
-  "/progress",
+  "/knowledge-map",
+  "/admin",
+  "/practice/net-worth",
+  "/practice/goals",
+  "/onboarding",
 ];
-const ADMIN_ROUTES = ["/admin"];
-const AUTH_ONLY = ["/auth/login", "/auth/signup"];
 
-export async function middleware(req: NextRequest) {
-  const path = req.nextUrl.pathname;
-  const isLocalPreview = ["localhost", "127.0.0.1"].includes(req.nextUrl.hostname);
-  const hasSupabaseEnv =
-    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-    Boolean(
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    );
+// Routes only for non-authenticated users
+const AUTH_ONLY_ROUTES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
-  if (
-    isLocalPreview &&
-    [...PROTECTED, ...ADMIN_ROUTES].some((route) => path.startsWith(route))
-  ) {
-    return NextResponse.next();
+// API routes with rate limiting (requests per minute per IP)
+const API_RATE_LIMITS: Record<string, number> = {
+  "/api/ai-mentor":       10,   // 10 req/min per IP
+  "/api/ai-exam":         5,
+  "/api/ai-roadmap":      5,
+  "/api/ai-weakness":     5,
+  "/api/search":          30,
+  "/api/complete-lesson": 60,
+  "/api/notes":           60,
+};
+
+// Simple in-memory rate limit store (resets on edge function cold start)
+const rateLimitStore = new Map<string, { count: number; reset: number }>();
+
+function checkRateLimit(key: string, limit: number): boolean {
+  const now = Date.now();
+  const window = 60_000; // 1 minute
+  const record = rateLimitStore.get(key);
+
+  if (!record || now > record.reset) {
+    rateLimitStore.set(key, { count: 1, reset: now + window });
+    return true;
   }
 
-  if (!hasSupabaseEnv) {
-    if ([...PROTECTED, ...ADMIN_ROUTES].some((route) => path.startsWith(route))) {
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("redirect", path);
-      return NextResponse.redirect(loginUrl);
-    }
+  if (record.count >= limit) return false;
 
-    return NextResponse.next();
-  }
+  record.count++;
+  return true;
+}
 
-  let res = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  });
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!,
-    {
-      cookies: {
-        getAll() {
-          return req.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
+  // ── 1. Rate limiting on AI + API routes ─────────────────────
+  for (const [route, limit] of Object.entries(API_RATE_LIMITS)) {
+    if (pathname.startsWith(route)) {
+      const key = `${ip}:${route}`;
+      if (!checkRateLimit(key, limit)) {
+        return new NextResponse(
+          JSON.stringify({ error: "Too many requests. Please wait a moment." }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "60",
+              "X-RateLimit-Limit": limit.toString(),
             },
-          });
-          cookiesToSet.forEach(({ name, value, options }) => {
-            res.cookies.set(name, value, options);
-          });
-        },
-      },
-    },
-  );
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const redirect = (url: URL) => {
-    const redirectRes = NextResponse.redirect(url);
-    res.cookies.getAll().forEach((cookie) => redirectRes.cookies.set(cookie));
-    return redirectRes;
-  };
-
-  if (session && AUTH_ONLY.some((route) => path.startsWith(route))) {
-    return redirect(new URL("/dashboard", req.url));
-  }
-
-  if (!session && PROTECTED.some((route) => path.startsWith(route))) {
-    const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("redirect", path);
-    return redirect(loginUrl);
-  }
-
-  if (ADMIN_ROUTES.some((route) => path.startsWith(route))) {
-    if (!session) {
-      return redirect(new URL("/auth/login", req.url));
-    }
-
-    const adminEmails = (process.env.ADMIN_EMAILS || "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
-
-    if (!adminEmails.includes((session.user.email || "").toLowerCase())) {
-      return redirect(new URL("/dashboard", req.url));
+          }
+        );
+      }
     }
   }
+
+  // ── 2. Supabase session management ──────────────────────────
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req: request, res });
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const isAuthenticated = !!session;
+
+  // ── 3. Protect authenticated routes ─────────────────────────
+  const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r));
+  if (isProtected && !isAuthenticated) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // ── 4. Redirect logged-in users away from auth pages ────────
+  const isAuthRoute = AUTH_ONLY_ROUTES.some(r => pathname.startsWith(r));
+  if (isAuthRoute && isAuthenticated) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // ── 5. Admin route protection ────────────────────────────────
+  if (pathname.startsWith("/admin")) {
+    if (!isAuthenticated) {
+      return NextResponse.redirect(new URL("/login?next=/admin/dashboard", request.url));
+    }
+    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim());
+    if (!adminEmails.includes(session?.user?.email || "")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
+  // ── 6. Security headers ──────────────────────────────────────
+  res.headers.set("X-DNS-Prefetch-Control", "on");
+  res.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  res.headers.set("X-Frame-Options", "SAMEORIGIN");
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
 
   return res;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/stripe-webhook).*)"],
+  matcher: [
+    // Match all routes except static files and Next internals
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons/|robots.txt|sitemap.xml).*)",
+  ],
 };
