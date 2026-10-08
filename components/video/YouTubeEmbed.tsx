@@ -1,6 +1,6 @@
 "use client";
 
-import VideoPlayer from "@/components/video/VideoPlayer";
+import VideoPlayer from "@/components/ui/VideoPlayer";
 
 type YouTubeEmbedProps = {
   title: string;

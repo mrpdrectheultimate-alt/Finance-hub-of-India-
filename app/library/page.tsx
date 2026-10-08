@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import AppLayout from "@/components/layout/AppLayout";
-import VideoPlayer from "@/components/video/VideoPlayer";
+import VideoPlayer from "@/components/ui/VideoPlayer";
 import { supabase } from "@/lib/supabase";
 
 type Video = {

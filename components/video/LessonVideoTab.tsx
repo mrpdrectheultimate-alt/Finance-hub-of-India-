@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
-import VideoPlayer from "@/components/video/VideoPlayer";
+import VideoPlayer from "@/components/ui/VideoPlayer";
 
 type Video = {
   id: string;
