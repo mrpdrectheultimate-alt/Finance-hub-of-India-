@@ -10,6 +10,7 @@ import Script                       from "next/script";
 import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components/pwa/PWAInstall";
 import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import FeedbackButton from "@/components/ui/FeedbackButton";
 
 // ─── Fonts ───────────────────────────────────────────────────
 const inter = Inter({
@@ -332,6 +333,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PWAInstallPrompt />
         <SWUpdateBanner />
         <OfflineIndicator />
+        <FeedbackButton />
 
       </body>
     </html>
