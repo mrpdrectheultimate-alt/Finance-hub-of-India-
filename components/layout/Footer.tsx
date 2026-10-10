@@ -104,8 +104,77 @@ export default function Footer() {
                 hello@financehub.in
               </a>
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>
               Support: <a href="mailto:support@financehub.in" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>support@financehub.in</a>
+            </div>
+
+            {/* Social Links */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <a
+                href="https://x.com/polymerhub_"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Follow @polymerhub_ on X"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.14)";
+                  e.currentTarget.style.borderColor = "#1D9E75";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                <span>@polymerhub_</span>
+              </a>
+
+              <a
+                href="https://www.linkedin.com/in/lpk-naidu-3414153b2"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Connect with LPK Naidu on LinkedIn"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 8,
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.14)";
+                  e.currentTarget.style.borderColor = "#0A66C2";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+                }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#0A66C2">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+                <span>LinkedIn</span>
+              </a>
             </div>
 
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", letterSpacing: "0.04em" }}>
@@ -176,10 +245,12 @@ export default function Footer() {
           </div>
           <div style={{ display: "flex", gap: 20 }}>
             {[
-              ["Privacy", "/legal/privacy"],
-              ["Terms",   "/legal/terms"],
-              ["Refund",  "/legal/refund"],
-              ["Contact", "mailto:hello@financehub.in"],
+              ["X (@polymerhub_)", "https://x.com/polymerhub_"],
+              ["LinkedIn",        "https://www.linkedin.com/in/lpk-naidu-3414153b2"],
+              ["Privacy",         "/legal/privacy"],
+              ["Terms",           "/legal/terms"],
+              ["Refund",          "/legal/refund"],
+              ["Contact",         "mailto:hello@financehub.in"],
             ].map(([l, h]) => (
               <a key={l} href={h}
                 style={{

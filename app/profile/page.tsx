@@ -398,6 +398,75 @@ export default function ProfilePage() {
                 )}
               </div>
             </section>
+
+            {/* Connect with the Founder Card */}
+            <section style={{
+              background: "linear-gradient(135deg, #0B1A2B 0%, #0E6163 100%)",
+              borderRadius: 16,
+              padding: "24px",
+              color: "#fff",
+              marginTop: 20,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 18 }}>👋</span>
+                    <span style={{ fontSize: 16, fontWeight: 700 }}>Connect with the Founder</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", margin: "0 0 16px", maxWidth: 460, lineHeight: 1.6 }}>
+                    Have suggestions, roadmap ideas, or questions about FinanceHub? Follow real-time product updates and connect directly with <strong>LPK Naidu</strong>.
+                  </p>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <a
+                      href="https://x.com/polymerhub_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 16px",
+                        background: "rgba(255,255,255,0.12)",
+                        border: "1px solid rgba(255,255,255,0.25)",
+                        borderRadius: 10,
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textDecoration: "none",
+                        transition: "all 0.15s",
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                      Follow @polymerhub_
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/in/lpk-naidu-3414153b2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 16px",
+                        background: "#0A66C2",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        borderRadius: 10,
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        textDecoration: "none",
+                        transition: "all 0.15s",
+                      }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                      </svg>
+                      Connect on LinkedIn
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </section>
           </>
         ) : null}
 
@@ -464,6 +533,12 @@ export default function ProfilePage() {
             </div>
 
             <div style={s.legalLinks}>
+              <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer" style={s.legalLink}>
+                X (@polymerhub_)
+              </a>
+              <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer" style={s.legalLink}>
+                LinkedIn
+              </a>
               <Link href="/privacy" style={s.legalLink}>
                 Privacy Policy
               </Link>

@@ -244,6 +244,20 @@ export default function HomePage() {
                   Explore Curriculum
                 </a>
               </div>
+              {/* Community & Founder Connect Badge */}
+              <div className="hero-in-3" style={{ display:"flex", alignItems:"center", gap:10, marginBottom:28, flexWrap:"wrap" }}>
+                <span style={{ fontSize:12, color:"#718096", fontWeight:500 }}>Follow the journey:</span>
+                <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:6, background:"#F0F3F5", color:"#0B1A2B", fontSize:12, fontWeight:600, border:"1px solid #e2e8f0", textDecoration:"none", transition:"all 0.15s" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  @polymerhub_
+                </a>
+                <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:6, background:"#EFF6FF", color:"#1D4ED8", fontSize:12, fontWeight:600, border:"1px solid #BFDBFE", textDecoration:"none", transition:"all 0.15s" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                  LPK Naidu
+                </a>
+              </div>
               {/* Capability chips */}
               <div className="hero-in-3" style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:40 }}>
                 {["Learn","Watch","Read","Practice","Simulate","Ask AI","Earn Certificates","Track Progress"].map(c => (
@@ -797,6 +811,25 @@ export default function HomePage() {
           <div style={{ fontSize:13, color:"rgba(255,255,255,0.35)", marginTop:20 }}>
             No prior knowledge required · Free forever · No credit card
           </div>
+
+          {/* Social / Founder Connect */}
+          <div style={{ marginTop:40, paddingTop:32, borderTop:"1px solid rgba(255,255,255,0.1)", display:"inline-flex", flexDirection:"column", alignItems:"center", gap:12 }}>
+            <div style={{ fontSize:13, color:"rgba(255,255,255,0.7)", fontWeight:600 }}>
+              Connect with the founder & stay updated:
+            </div>
+            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+              <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
+                style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:8, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.2)", color:"#fff", fontSize:13, fontWeight:600, textDecoration:"none", transition:"all 0.15s" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X: @polymerhub_
+              </a>
+              <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
+                style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:8, background:"rgba(10,102,194,0.2)", border:"1px solid rgba(10,102,194,0.4)", color:"#fff", fontSize:13, fontWeight:600, textDecoration:"none", transition:"all 0.15s" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#38BDF8"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                LinkedIn: LPK Naidu
+              </a>
+            </div>
+          </div>
         </div>
       </section>
       {/* ── FOOTER ───────────────────────────────────────────────── */}
@@ -822,7 +855,20 @@ export default function HomePage() {
               <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.75, maxWidth:240 }}>
                 Master finance. Build confidence. Shape your future. Built in India for every learner.
               </p>
-              <div style={{ marginTop:20, fontSize:11, color:"rgba(255,255,255,0.25)", lineHeight:1.6 }}>
+              {/* Social Links */}
+              <div style={{ display:"flex", gap:8, marginTop:16, marginBottom:16 }}>
+                <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontWeight:600 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  @polymerhub_
+                </a>
+                <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontWeight:600 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#0A66C2"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                  LinkedIn
+                </a>
+              </div>
+              <div style={{ marginTop:16, fontSize:11, color:"rgba(255,255,255,0.25)", lineHeight:1.6 }}>
                 🇮🇳 Built in India. Designed for the world.
               </div>
             </div>
@@ -859,8 +905,8 @@ export default function HomePage() {
             <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>
               © 2026 FinanceHub of India. All content is educational only — not investment advice.
             </div>
-            <div style={{ display:"flex", gap:20 }}>
-              {[["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"]].map(([l,h]) => (
+            <div style={{ display:"flex", gap:16, alignItems:"center", flexWrap:"wrap" }}>
+              {[["X (@polymerhub_)","https://x.com/polymerhub_"],["LinkedIn","https://www.linkedin.com/in/lpk-naidu-3414153b2"],["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"]].map(([l,h]) => (
                 <a key={l} href={h} style={{ fontSize:12, color:"rgba(255,255,255,0.25)", transition:"color 0.15s" }}
                   onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}
                   onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.25)")}>{l}</a>
