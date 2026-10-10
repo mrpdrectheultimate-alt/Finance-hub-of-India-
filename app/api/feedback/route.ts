@@ -62,6 +62,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Message too long" }, { status: 400 });
     }
 
+    // Save to Supabase feedback table
+    try {
+      const { createServiceClient } = await import("@/lib/supabase");
+      const supabase = createServiceClient();
+      await supabase.from("feedback").insert({
+        type,
+        rating,
+        page,
+        message: message.trim(),
+        email,
+        url,
+        status: "new",
+        created_at: ts,
+      } as any);
+    } catch (dbErr) {
+      console.warn("DB insert fallback:", dbErr);
+    }
+
     // Build email HTML for admin
     const typeLabel   = TYPE_LABELS[type as FeedbackType]   || "💬 Feedback";
     const urgency     = TYPE_URGENCY[type as FeedbackType]  || "🟢 LOW";
