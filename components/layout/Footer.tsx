@@ -104,76 +104,74 @@ export default function Footer() {
                 hello@financehub.in
               </a>
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>
               Support: <a href="mailto:support@financehub.in" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "none" }}>support@financehub.in</a>
             </div>
 
-            {/* Social Links */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {/* Social icons */}
+            <div style={{ display:"flex", gap:10, marginTop:20, marginBottom:16 }}>
+              {/* X / Twitter — @polymerhub_ */}
               <a
                 href="https://x.com/polymerhub_"
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Follow @polymerhub_ on X"
+                aria-label="Follow @polymerhub_ on X"
+                title="Follow @polymerhub_ on X (Twitter)"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 12px",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 8,
-                  color: "#fff",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  transition: "all 0.15s",
+                  width:36, height:36, borderRadius:9,
+                  background:"rgba(255,255,255,0.07)",
+                  border:"1px solid rgba(255,255,255,0.12)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  textDecoration:"none", transition:"all 0.18s", flexShrink:0,
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.14)";
-                  e.currentTarget.style.borderColor = "#1D9E75";
+                onMouseEnter={e=>{
+                  e.currentTarget.style.background="rgba(255,255,255,0.18)";
+                  e.currentTarget.style.borderColor="rgba(255,255,255,0.3)";
+                  e.currentTarget.style.transform="translateY(-2px)";
+                  e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.3)";
                 }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                onMouseLeave={e=>{
+                  e.currentTarget.style.background="rgba(255,255,255,0.07)";
+                  e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
+                  e.currentTarget.style.transform="translateY(0)";
+                  e.currentTarget.style.boxShadow="none";
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,0.75)">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
-                <span>@polymerhub_</span>
               </a>
 
+              {/* LinkedIn */}
               <a
                 href="https://www.linkedin.com/in/lpk-naidu-3414153b2"
                 target="_blank"
                 rel="noopener noreferrer"
-                title="Connect with LPK Naidu on LinkedIn"
+                aria-label="Connect on LinkedIn"
+                title="Connect with us on LinkedIn"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 12px",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 8,
-                  color: "#fff",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  transition: "all 0.15s",
+                  width:36, height:36, borderRadius:9,
+                  background:"rgba(255,255,255,0.07)",
+                  border:"1px solid rgba(255,255,255,0.12)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  textDecoration:"none", transition:"all 0.18s", flexShrink:0,
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.14)";
-                  e.currentTarget.style.borderColor = "#0A66C2";
+                onMouseEnter={e=>{
+                  e.currentTarget.style.background="#0A66C2";
+                  e.currentTarget.style.borderColor="#0A66C2";
+                  e.currentTarget.style.transform="translateY(-2px)";
+                  e.currentTarget.style.boxShadow="0 4px 12px rgba(10,102,194,0.4)";
                 }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="#0A66C2">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                onMouseLeave={e=>{
+                  e.currentTarget.style.background="rgba(255,255,255,0.07)";
+                  e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
+                  e.currentTarget.style.transform="translateY(0)";
+                  e.currentTarget.style.boxShadow="none";
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(255,255,255,0.75)">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                 </svg>
-                <span>LinkedIn</span>
               </a>
             </div>
 
@@ -245,12 +243,10 @@ export default function Footer() {
           </div>
           <div style={{ display: "flex", gap: 20 }}>
             {[
-              ["X (@polymerhub_)", "https://x.com/polymerhub_"],
-              ["LinkedIn",        "https://www.linkedin.com/in/lpk-naidu-3414153b2"],
-              ["Privacy",         "/legal/privacy"],
-              ["Terms",           "/legal/terms"],
-              ["Refund",          "/legal/refund"],
-              ["Contact",         "mailto:hello@financehub.in"],
+              ["Privacy", "/legal/privacy"],
+              ["Terms",   "/legal/terms"],
+              ["Refund",  "/legal/refund"],
+              ["Contact", "mailto:hello@financehub.in"],
             ].map(([l, h]) => (
               <a key={l} href={h}
                 style={{
