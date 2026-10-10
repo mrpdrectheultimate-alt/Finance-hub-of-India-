@@ -68,8 +68,8 @@ export function buildMetadata({
       title,
       description,
       images:      [ogImage],
-      creator:     "@FinanceHubIn",
-      site:        "@FinanceHubIn",
+      creator:     "@polymerhub_",
+      site:        "@polymerhub_",
     },
   };
 }
@@ -280,8 +280,8 @@ export function organizationStructuredData() {
       addressCountry:  "IN",
     },
     sameAs: [
-      "https://twitter.com/FinanceHubIn",
-      "https://www.linkedin.com/company/financehub-india",
+      "https://x.com/polymerhub_",
+      "https://www.linkedin.com/in/lpk-naidu-3414153b2",
       "https://www.youtube.com/@FinanceHubIndia",
     ],
     contactPoint: {

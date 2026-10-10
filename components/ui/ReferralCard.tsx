@@ -78,8 +78,8 @@ export function ReferralCard() {
   };
 
   const shareTwitter = () => {
-    const msg = `I've been learning finance on @FinanceHubIn — India's most complete finance education platform. Join free using my code ${code} and get a 150 XP bonus! ${window.location.origin}/signup?ref=${code} #PersonalFinance #Investing #India`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}`, "_blank");
+    const msg = `I've been learning finance on @polymerhub_ — India's most complete finance education platform. Join free using my code ${code} and get a 150 XP bonus! ${window.location.origin}/signup?ref=${code} #PersonalFinance #Investing #India`;
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   if (loading) return (

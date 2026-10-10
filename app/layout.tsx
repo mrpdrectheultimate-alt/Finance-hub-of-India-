@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     title:       "FinanceHub — Finance Education for India",
     description: "Free finance education in Hindi and English",
     images:      ["/og-image.png"],
-    creator:     "@financehub_in",
+    creator:     "@polymerhub_",
   },
   icons: {
     icon:        [
