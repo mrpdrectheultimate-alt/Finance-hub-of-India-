@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { ReferralCard } from "@/components/ui/ReferralCard";
 
 // ============================================================
 // FinanceHub — User Dashboard
@@ -493,6 +494,9 @@ export default function DashboardPage() {
               </a>
             </div>
           )}
+
+          {/* Referral Card */}
+          <ReferralCard />
 
           {/* Certificates */}
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "16px 18px" }}>

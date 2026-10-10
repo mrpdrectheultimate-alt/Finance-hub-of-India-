@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
+import { ReferralCard } from "@/components/ui/ReferralCard";
 import Logo from "@/components/ui/Logo";
 import Link from "next/link";
 
@@ -159,21 +161,7 @@ export default function SettingsPage() {
 
 
           <div>
-
-            <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#4a5568", marginBottom:6 }}>Theme</label>
-
-            <select value={profile.theme||"light"} onChange={e=>setProfile((p:any)=>({...p,theme:e.target.value}))}
-
-              style={{ width:"100%", padding:"10px 14px", border:"1px solid #e2e8f0", borderRadius:9, fontSize:14, outline:"none" }}>
-
-              <option value="light">☀️ Light</option>
-
-              <option value="dark">🌙 Dark</option>
-
-              <option value="sepia">📜 Sepia</option>
-
-            </select>
-
+            <DarkModeToggle />
           </div>
 
 
@@ -208,6 +196,10 @@ export default function SettingsPage() {
 
             </select>
 
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <ReferralCard />
           </div>
 
         </div>
