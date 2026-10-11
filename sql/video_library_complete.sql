@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- FinanceHub - Complete Video Library
 -- Audited YouTube seed: removes unavailable/private/deleted embeds before use.
 -- Run the verification report again before expanding this list.
@@ -745,7 +745,14 @@ BEGIN
 END $$;
 
 
--- Alias view to support queries referencing video_library
-CREATE OR REPLACE VIEW video_library AS
-SELECT *, is_published AS is_active
-FROM curated_playlists;
+-- Alias view to support queries referencing video_library if table does not exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relname = 'video_library' AND n.nspname = 'public'
+  ) THEN
+    EXECUTE 'CREATE VIEW video_library AS SELECT *, is_published AS is_active FROM curated_playlists';
+  END IF;
+END $$;

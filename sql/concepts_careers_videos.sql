@@ -5,6 +5,41 @@
 -- Adds: 100 concepts · 7 career paths · 70 videos
 -- ============================================================
 
+-- Ensure video_library table exists (and drop obsolete alias view if one was previously created)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_views
+    WHERE schemaname = 'public' AND viewname = 'video_library'
+  ) THEN
+    DROP VIEW public.video_library CASCADE;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS video_library (
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title            TEXT NOT NULL,
+  channel_name     TEXT NOT NULL,
+  youtube_url      TEXT NOT NULL,
+  youtube_id       TEXT NOT NULL,
+  duration_seconds INT DEFAULT 0,
+  category         TEXT NOT NULL,
+  subcategory      TEXT,
+  language         TEXT DEFAULT 'en',
+  difficulty       TEXT DEFAULT 'beginner',
+  description      TEXT,
+  tags             TEXT[] DEFAULT '{}',
+  is_active        BOOLEAN DEFAULT TRUE,
+  is_featured      BOOLEAN DEFAULT FALSE,
+  order_index      INT DEFAULT 0,
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT video_library_youtube_id_key UNIQUE (youtube_id)
+);
+
+ALTER TABLE video_library ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "video_library_public_read" ON video_library;
+CREATE POLICY "video_library_public_read" ON video_library FOR SELECT USING (is_active = TRUE);
+
 DO $EXPANSION$
 BEGIN
 
@@ -508,7 +543,37 @@ VALUES
 ('Home Loan Prepayment Strategy — Save ₹50 Lakh','CA Rachana Ranade','https://www.youtube.com/watch?v=home-loan-prepayment','home-loan-prepayment',1200,'personal-finance','loans','en','intermediate','When to prepay, how much to prepay, and the math of prepayment benefits',ARRAY['home-loan','prepayment','EMI','interest','savings'],TRUE,FALSE,569),
 ('REIT vs Real Estate — Better Investment?','Akshat Shrivastava','https://www.youtube.com/watch?v=reit-vs-property','reit-vs-property',1320,'personal-finance','real-estate','en','intermediate','Embassy REIT vs buying an apartment — yield, liquidity, appreciation',ARRAY['REIT','real-estate','yield','liquidity','income'],TRUE,FALSE,570)
 
-ON CONFLICT (youtube_id) DO NOTHING;
+ON CONFLICT (youtube_id) DO NOTHING;
+
+-- Sync curated videos into curated_playlists so all frontend video library and lesson tabs display them
+INSERT INTO curated_playlists (
+  title, channel_name, description, playlist_url, embed_id, embed_type, video_type,
+  platform, category, level, video_count, duration_hrs, is_featured, is_published, tags
+)
+SELECT
+  title,
+  channel_name,
+  description,
+  youtube_url,
+  youtube_id,
+  'video',
+  'video',
+  'youtube',
+  category,
+  difficulty,
+  1,
+  ROUND(duration_seconds / 3600.0, 2),
+  is_featured,
+  is_active,
+  tags
+FROM video_library
+ON CONFLICT (playlist_url) DO UPDATE SET
+  title = EXCLUDED.title,
+  channel_name = EXCLUDED.channel_name,
+  description = EXCLUDED.description,
+  embed_id = EXCLUDED.embed_id,
+  duration_hrs = EXCLUDED.duration_hrs,
+  tags = EXCLUDED.tags;
 
 RAISE NOTICE '✅ Expansion complete!';
 RAISE NOTICE '   Added 50 concepts (targeting 100+ total with existing)';
