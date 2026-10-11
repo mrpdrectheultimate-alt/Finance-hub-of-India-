@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend }                    from "resend";
 
-const resend     = new Resend(process.env.RESEND_API_KEY);
+const resend     = new Resend(process.env.RESEND_API_KEY || "re_placeholder_key");
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",")[0]?.trim()
                   || "mrpdrecuniverse@gmail.com";
 const FROM        = process.env.RESEND_FROM_EMAIL || "hello@financehub.in";
@@ -158,21 +158,23 @@ export async function POST(req: NextRequest) {
     // Send admin notification email
     const emailSubject = `[${type.toUpperCase()}] FinanceHub feedback${email ? ` from ${email}` : ""}${rating ? ` — ${rating}/5 stars` : ""}`;
 
-    const { error: emailError } = await resend.emails.send({
-      from:    FROM,
-      to:      ADMIN_EMAIL,
-      reply_to: email || undefined,
-      subject: emailSubject,
-      html:    adminHtml,
-    });
+    if (process.env.RESEND_API_KEY) {
+      const { error: emailError } = await resend.emails.send({
+        from:    FROM,
+        to:      ADMIN_EMAIL,
+        reply_to: email || undefined,
+        subject: emailSubject,
+        html:    adminHtml,
+      });
 
-    if (emailError) {
-      console.error("Resend error:", emailError);
-      // Don't fail the request — feedback is still valid even if email fails
+      if (emailError) {
+        console.error("Resend error:", emailError);
+        // Don't fail the request — feedback is still valid even if email fails
+      }
     }
 
     // Optionally send confirmation to user
-    if (email) {
+    if (email && process.env.RESEND_API_KEY) {
       const userSubject = `Got your feedback — FinanceHub`;
       const userHtml = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><style>

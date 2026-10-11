@@ -498,9 +498,9 @@ export default function SiteMapPage() {
 
       {/* Summary footer */}
       <div style={{ marginTop: 28, padding: "16px 20px", background: "#f8f9fa", borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 13, color: "#718096", lineHeight: 1.7 }}>
-        <strong style={{ color: "#1c2b3a" }}>What's free forever:</strong> Personal Finance, Crypto, Behavioral Finance & Hindi tracks · SIP, EMI, Tax calculators · 5 AI questions/day · Video library · Glossary · Case studies · Community Q&A
+        <strong style={{ color: "#1c2b3a" }}>What&apos;s free forever:</strong> Personal Finance, Crypto, Behavioral Finance & Hindi tracks · SIP, EMI, Tax calculators · 5 AI questions/day · Video library · Glossary · Case studies · Community Q&A
         <br />
-        <strong style={{ color: "#1c2b3a" }}>What's on Pro (₹499/month):</strong> All 8 tracks in full · Unlimited AI Mentor · All 9 simulators · Downloads · Verified certificates · Leaderboard leagues
+        <strong style={{ color: "#1c2b3a" }}>What&apos;s on Pro (₹499/month):</strong> All 8 tracks in full · Unlimited AI Mentor · All 9 simulators · Downloads · Verified certificates · Leaderboard leagues
         <br />
         <a href="/pricing" style={{ color: "#0E6163", fontWeight: 600, textDecoration: "none" }}>See full pricing →</a>
       </div>

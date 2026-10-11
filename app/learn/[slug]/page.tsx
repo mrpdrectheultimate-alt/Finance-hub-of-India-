@@ -160,23 +160,6 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
     })();
   }, [params.slug]);
 
-  // Track scroll progress
-  useEffect(() => {
-    const handleScroll = () => {
-      const el  = contentRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top;
-      const h   = el.offsetHeight;
-      const vh  = window.innerHeight;
-      const pct = Math.min(100, Math.max(0, ((vh - top) / (h + vh)) * 100));
-      setProgress(Math.round(pct));
-      // Auto-complete at 85% scroll
-      if (pct >= 85 && !completed && user) completeLesson(false);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [completed, user]);
-
   const completeLesson = useCallback(async (fromButton: boolean) => {
     if (!lesson || !user || (completed && !fromButton)) return;
     const elapsed = Math.round((Date.now() - startTime.current) / 1000);
@@ -203,6 +186,23 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
       if (result.certificate_id) setCertId(result.certificate_id);
     }
   }, [lesson, user, completed, quizDone, quizScore]);
+
+  // Track scroll progress
+  useEffect(() => {
+    const handleScroll = () => {
+      const el  = contentRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      const h   = el.offsetHeight;
+      const vh  = window.innerHeight;
+      const pct = Math.min(100, Math.max(0, ((vh - top) / (h + vh)) * 100));
+      setProgress(Math.round(pct));
+      // Auto-complete at 85% scroll
+      if (pct >= 85 && !completed && user) completeLesson(false);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [completed, user, completeLesson]);
 
   const submitQuiz = async () => {
     if (!questions.length) return;
@@ -560,7 +560,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
               {/* Dynamic import of AIMentor to avoid hydration issues */}
               <div style={{ background: "#f0f9f9", borderRadius: 12, padding: "14px 16px", marginBottom: 16, fontSize: 13, color: "#0E6163", lineHeight: 1.6 }}>
                 🤖 Ask the AI Mentor anything about <strong>{lesson.title}</strong>.
-                Questions, clarifications, examples — the AI knows you're studying this lesson.
+                Questions, clarifications, examples — the AI knows you&apos;re studying this lesson.
               </div>
               <a href="/ai-tutor" style={{
                 display: "block", textAlign: "center", padding: "12px",

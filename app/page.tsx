@@ -334,7 +334,7 @@ export default function HomePage() {
           <span style={S.eyebrow}>Who it is for</span>
           <h2 style={S.h2}>Finance knowledge for every stage of life</h2>
           <p style={{ ...S.body, marginBottom:40 }}>
-            Whether you're just starting out or deep in advanced markets — FinanceHub has a structured path for you.
+            Whether you&apos;re just starting out or deep in advanced markets — FinanceHub has a structured path for you.
           </p>
 
           {/* Audience tabs */}
@@ -479,7 +479,7 @@ export default function HomePage() {
           <span style={S.eyebrow}>Finance Lab</span>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:40, gap:20, flexWrap:"wrap" }}>
             <div>
-              <h2 style={{ ...S.h2, margin:0 }}>Don't just learn finance.<br/>Experience it.</h2>
+              <h2 style={{ ...S.h2, margin:0 }}>Don&apos;t just learn finance.<br/>Experience it.</h2>
               <p style={{ fontSize:16, color:"#526173", margin:"12px 0 0" }}>9 interactive simulators. Simulated money. Zero risk. Real insight.</p>
             </div>
             <a href="/practice" style={{ fontSize:14, fontWeight:600, color:"#0E6163", flexShrink:0 }}>Explore Finance Lab →</a>
@@ -551,7 +551,7 @@ export default function HomePage() {
             {/* Left */}
             <div>
               <span style={S.eyebrow}>AI Mentor</span>
-              <h2 style={S.h2}>Your finance questions<br/>don't need to wait.</h2>
+              <h2 style={S.h2}>Your finance questions<br/>don&apos;t need to wait.</h2>
               <p style={{ fontSize:16, color:"#526173", lineHeight:1.75, marginBottom:24 }}>
                 Ask FinanceHub AI to explain a concept, quiz you, simplify a complex topic or guide you through your learning path — with India-specific context and cited sources.
               </p>
@@ -660,7 +660,7 @@ export default function HomePage() {
                   <p style={{ fontSize:14, color:"#526173", lineHeight:1.7, marginBottom:24 }}>{path.desc}</p>
                   <div style={{ display:"flex", gap:10 }}>
                     <a href="/signup" style={{ flex:1, display:"block", textAlign:"center", padding:"12px", background:"#0E6163", color:"#fff", borderRadius:10, fontSize:14, fontWeight:600 }}>
-                      Start this path — it's free
+                      Start this path — it&apos;s free
                     </a>
                     <button onClick={() => { setQuizStep(0); setAnswers({}); setQuizDone(false); }}
                       style={{ padding:"12px 18px", fontSize:13, background:"#fff", border:"1px solid #d1dbe6", borderRadius:10, color:"#526173" }}>

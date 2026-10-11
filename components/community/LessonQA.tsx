@@ -96,6 +96,7 @@ export default function LessonQA({ lessonId, lessonTitle }: LessonQAProps) {
       }
       await loadQuestions();
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId, sortBy]);
 
   const loadQuestions = async () => {

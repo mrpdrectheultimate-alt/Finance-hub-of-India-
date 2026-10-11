@@ -55,6 +55,7 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
     });
 
     fetchThread();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchThread = async () => {

@@ -78,6 +78,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeague]);
 
   const loadData = async () => {

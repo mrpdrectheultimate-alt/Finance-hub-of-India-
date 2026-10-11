@@ -95,7 +95,7 @@ export default function Footer() {
             </div>
 
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.75, maxWidth: 260, marginBottom: 20 }}>
-              Master finance. Build confidence. Shape your future. India's most complete finance education platform.
+              Master finance. Build confidence. Shape your future. India&apos;s most complete finance education platform.
             </p>
 
             {/* Contact */}

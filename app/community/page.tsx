@@ -35,6 +35,7 @@ export default function CommunityPage() {
       });
 
     fetchQuestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchQuestions = async (search = searchQuery) => {
