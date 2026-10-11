@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
+
 // ============================================================
 // FinanceHub — World-Class Landing Page
 // app/page.tsx — Complete Rebuild
 // 13 Sections · Premium · Editorial · All Features Displayed
 // ============================================================
+
 const TRACKS = [
   { code:"PF", name:"Personal Finance",   icon:"💰", color:"#0E6163", bg:"#F0F9F7", desc:"Budgeting, saving, tax, insurance, retirement — the essentials no school taught.", lessons:45, quizzes:12, level:"Beginner → Advanced" },
   { code:"TM", name:"Trading & Markets",  icon:"📈", color:"#185FA5", bg:"#EEF4FB", desc:"From reading a chart to running a full trading strategy — three complete levels.", lessons:52, quizzes:14, level:"Beginner → Advanced" },
@@ -15,6 +17,7 @@ const TRACKS = [
   { code:"FX", name:"Forex & Currencies", icon:"💱", color:"#1D4ED8", bg:"#EEF2FF", desc:"Currency markets, FEMA, carry trades, hedging — the global money layer.", lessons:22, quizzes:6,  level:"Intermediate → Advanced" },
   { code:"HI", name:"हिंदी Finance",      icon:"🇮🇳", color:"#B91C1C", bg:"#FEF2F2", desc:"Personal finance and investing explained simply — in Hindi.", lessons:13, quizzes:4,  level:"Beginner" },
 ];
+
 const FEATURES = [
   { icon:"📖", name:"Structured Lessons",  desc:"320+ lessons across 8 tracks. Clear explanations with India-specific examples, cited sources and key takeaways.",  stat:"320+ lessons" },
   { icon:"▶️", name:"Video Library",       desc:"82 curated playlists from trusted Indian and global educators. Organised by topic so you can learn by watching.",   stat:"82 playlists" },
@@ -25,6 +28,7 @@ const FEATURES = [
   { icon:"🏆", name:"XP & Leagues",        desc:"Earn XP for every lesson. Compete in weekly leagues — Bronze to Master. Daily streaks keep you consistent.",         stat:"5 league tiers" },
   { icon:"🎓", name:"Certificates",        desc:"Complete a track, earn a verified certificate with a unique ID. Share on LinkedIn directly from your profile.",      stat:"Verifiable" },
 ];
+
 const SIMULATORS = [
   { name:"SIP Calculator",      icon:"📈", desc:"See compound interest work on your exact numbers", color:"#0E6163" },
   { name:"EMI Calculator",      icon:"🏠", desc:"Plan any loan — home, car, personal", color:"#185FA5" },
@@ -36,6 +40,7 @@ const SIMULATORS = [
   { name:"Crypto Paper Trade",  icon:"₿",  desc:"Build a crypto portfolio — no real money", color:"#B91C1C" },
   { name:"Compound Visualiser", icon:"📊", desc:"Watch ₹5,000/month grow over 30 years", color:"#0E6163" },
 ];
+
 const AUDIENCES = [
   { icon:"🎓", label:"Student",           desc:"Money basics, budgeting, savings, first investments. Build the right habits early.", track:"Personal Finance", lessons:22 },
   { icon:"💼", label:"Working Adult",     desc:"SIP, EMI, tax filing, mutual funds, insurance. The financial independence toolkit.", track:"Personal Finance", lessons:28 },
@@ -44,6 +49,7 @@ const AUDIENCES = [
   { icon:"🚀", label:"Founder",           desc:"Cash flow, valuation, fundraising, cap tables, unit economics.", track:"Corporate Finance", lessons:24 },
   { icon:"📝", label:"Exam Aspirant",     desc:"Structured learning for finance certifications and competitive exams.", track:"All Tracks", lessons:45 },
 ];
+
 const FAQS = [
   { q:"Is FinanceHub really free?",              a:"Yes. You can access 100+ lessons across all tracks, 5 AI Mentor questions per day, quizzes, and simulators — completely free. No credit card required." },
   { q:"Do I need prior finance knowledge?",      a:"Not at all. Every track starts from absolute zero. The Personal Finance Beginner track assumes you know nothing about money." },
@@ -54,6 +60,7 @@ const FAQS = [
   { q:"What payment methods do you accept?",     a:"Razorpay (UPI, cards, net banking, EMI) for Indian users and Stripe for international users." },
   { q:"Can I cancel my subscription anytime?",   a:"Yes. Cancel anytime from your account settings. No lock-in, no questions asked." },
 ];
+
 const QUIZ_STEPS = [
   { q:"Who are you?", key:"who", opts:[
     { label:"🎓 Student",         val:"student" },
@@ -77,6 +84,7 @@ const QUIZ_STEPS = [
     { label:"Advanced — I want depth", val:"adv" },
   ]},
 ];
+
 const PATHS: Record<string,{track:string;level:string;desc:string}> = {
   student:   { track:"Personal Finance",    level:"Absolute Beginner", desc:"Start with money basics — saving, budgeting and compound interest." },
   adult:     { track:"Personal Finance",    level:"Working Adult",     desc:"SIP, mutual funds, tax, insurance and building wealth." },
@@ -85,6 +93,7 @@ const PATHS: Record<string,{track:string;level:string;desc:string}> = {
   founder:   { track:"Corporate Finance",   level:"Business Basics",   desc:"Unit economics, valuation, fundraising and cap tables." },
   exam:      { track:"All Tracks",          level:"Structured",        desc:"Systematic coverage aligned with finance certification syllabi." },
 };
+
 export default function HomePage() {
   const [activeAudience, setActiveAudience] = useState(0);
   const [quizStep,       setQuizStep]       = useState(0);
@@ -93,18 +102,22 @@ export default function HomePage() {
   const [openFaq,        setOpenFaq]        = useState<number|null>(null);
   const [mobileMenu,     setMobileMenu]     = useState(false);
   const [scrolled,       setScrolled]       = useState(false);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive:true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
   const handleAnswer = (key:string, val:string) => {
     const next = { ...answers, [key]:val };
     setAnswers(next);
     if (quizStep < QUIZ_STEPS.length - 1) setQuizStep(s => s+1);
     else setQuizDone(true);
   };
+
   const path = PATHS[answers.who] || PATHS.adult;
+
   const S = {
     // Section wrappers
     white:   { background:"#ffffff", padding:"100px 0" } as React.CSSProperties,
@@ -122,8 +135,10 @@ export default function HomePage() {
     body: { fontSize:17, color:"#526173", lineHeight:1.75, margin:"0 0 32px", maxWidth:580 } as React.CSSProperties,
     bodyw:{ fontSize:17, color:"rgba(255,255,255,0.65)", lineHeight:1.75, margin:"0 0 32px", maxWidth:580 } as React.CSSProperties,
   };
+
   return (
     <div style={{ fontFamily:"'Inter', system-ui, sans-serif", color:"#0B1A2B", background:"#ffffff" }}>
+
       {/* Google Fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
@@ -147,6 +162,7 @@ export default function HomePage() {
           .hero-grid { grid-template-columns:1fr!important; }
         }
       `}</style>
+
       {/* ── 1. NAVIGATION ─────────────────────────────────────────── */}
       <nav style={{
         position:"sticky", top:0, zIndex:200,
@@ -182,6 +198,7 @@ export default function HomePage() {
               </div>
             </div>
           </a>
+
           {/* Nav links */}
           <div className="hide-mobile" style={{ display:"flex", gap:32, fontSize:14, fontWeight:500, color:"#526173" }}>
             {[["Tracks","#tracks"],["Finance Lab","#lab"],["Library","#library"],["AI Mentor","#ai"],["Pricing","#pricing"]].map(([l,h]) => (
@@ -190,6 +207,7 @@ export default function HomePage() {
                 onMouseLeave={e=>(e.currentTarget.style.color="#526173")}>{l}</a>
             ))}
           </div>
+
           {/* CTAs */}
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <a href="/login" className="hide-mobile" style={{ padding:"7px 16px", fontSize:13, fontWeight:500, color:"#526173", border:"1px solid #e5eaf0", borderRadius:8, background:"transparent" }}>
@@ -201,6 +219,7 @@ export default function HomePage() {
           </div>
         </div>
       </nav>
+
       {/* ── 2. HERO ───────────────────────────────────────────────── */}
       <section style={{ ...S.white, padding:"80px 0 0", overflow:"hidden" }}>
         <div style={{ ...S.container }}>
@@ -209,6 +228,7 @@ export default function HomePage() {
             <span style={{ width:6, height:6, borderRadius:"50%", background:"#1D9E75", display:"inline-block" }}/>
             Free to start · Built for India · No credit card needed
           </div>
+
           {/* Two-column hero */}
           <div className="hero-grid" style={{ display:"grid", gridTemplateColumns:"1fr 420px", gap:48, alignItems:"flex-start" }}>
             <div>
@@ -224,9 +244,11 @@ export default function HomePage() {
                 Master Finance.<br/>
                 <span style={{ color:"#0E6163" }}>Shape Your Future.</span>
               </h1>
+
               <p className="hero-in-2" style={{ fontSize:18, color:"#526173", lineHeight:1.75, margin:"0 0 36px", maxWidth:520 }}>
                 Learn personal finance, investing, trading, corporate finance, crypto and forex — through structured lessons, AI-powered guidance, interactive simulators and curated resources. In Hindi and English.
               </p>
+
               <div className="hero-in-3" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:40 }}>
                 <a href="/signup" style={{
                   padding:"13px 28px", fontSize:15, fontWeight:600,
@@ -244,20 +266,7 @@ export default function HomePage() {
                   Explore Curriculum
                 </a>
               </div>
-              {/* Community & Founder Connect Badge */}
-              <div className="hero-in-3" style={{ display:"flex", alignItems:"center", gap:10, marginBottom:28, flexWrap:"wrap" }}>
-                <span style={{ fontSize:12, color:"#718096", fontWeight:500 }}>Follow the journey:</span>
-                <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
-                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:6, background:"#F0F3F5", color:"#0B1A2B", fontSize:12, fontWeight:600, border:"1px solid #e2e8f0", textDecoration:"none", transition:"all 0.15s" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  @polymerhub_
-                </a>
-                <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
-                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"4px 10px", borderRadius:6, background:"#EFF6FF", color:"#1D4ED8", fontSize:12, fontWeight:600, border:"1px solid #BFDBFE", textDecoration:"none", transition:"all 0.15s" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                  LPK Naidu
-                </a>
-              </div>
+
               {/* Capability chips */}
               <div className="hero-in-3" style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:40 }}>
                 {["Learn","Watch","Read","Practice","Simulate","Ask AI","Earn Certificates","Track Progress"].map(c => (
@@ -265,6 +274,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+
             {/* Stats panel */}
             <div className="hero-in-3 hide-mobile" style={{
               background:"#F7F9F8",
@@ -294,6 +304,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
           {/* Stats bar — mobile visible */}
           <div style={{
             display:"grid", gridTemplateColumns:"repeat(4,1fr)",
@@ -316,6 +327,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 3. WHO IT'S FOR ───────────────────────────────────────── */}
       <section id="who" style={S.soft}>
         <div style={S.container}>
@@ -324,6 +336,7 @@ export default function HomePage() {
           <p style={{ ...S.body, marginBottom:40 }}>
             Whether you're just starting out or deep in advanced markets — FinanceHub has a structured path for you.
           </p>
+
           {/* Audience tabs */}
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
             {AUDIENCES.map((a,i) => (
@@ -339,6 +352,7 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+
           {/* Active audience card */}
           <div style={{
             background:"#ffffff", border:"1px solid #e5eaf0",
@@ -364,6 +378,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 4. WHY FINANCEHUB ─────────────────────────────────────── */}
       <section style={S.white}>
         <div style={S.container}>
@@ -390,6 +405,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 5. EIGHT LEARNING TRACKS ──────────────────────────────── */}
       <section id="tracks" style={S.soft}>
         <div style={S.container}>
@@ -400,6 +416,7 @@ export default function HomePage() {
             </div>
             <a href="/explore" style={{ fontSize:14, fontWeight:600, color:"#0E6163", flexShrink:0 }}>View all tracks →</a>
           </div>
+
           <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
             {TRACKS.map((t,i) => (
               <a key={i} href={`/tracks/${t.code.toLowerCase()}`} className="card-hover" style={{
@@ -429,6 +446,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 6. COMPLETE PLATFORM FEATURES ────────────────────────── */}
       <section style={S.navy}>
         <div style={S.container}>
@@ -437,6 +455,7 @@ export default function HomePage() {
           <p style={{ ...S.bodyw, marginBottom:48 }}>
             Not just lessons. A complete ecosystem built around how people actually learn and retain financial knowledge.
           </p>
+
           <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:20 }}>
             {FEATURES.map((f,i) => (
               <div key={i} className="card-hover" style={{
@@ -453,6 +472,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 7. FINANCE LAB ────────────────────────────────────────── */}
       <section id="lab" style={S.teal}>
         <div style={S.container}>
@@ -464,6 +484,7 @@ export default function HomePage() {
             </div>
             <a href="/practice" style={{ fontSize:14, fontWeight:600, color:"#0E6163", flexShrink:0 }}>Explore Finance Lab →</a>
           </div>
+
           <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
             {SIMULATORS.map((s,i) => (
               <a key={i} href="/practice" className="card-hover" style={{
@@ -486,17 +507,20 @@ export default function HomePage() {
               </a>
             ))}
           </div>
+
           <div style={{ textAlign:"center", marginTop:32, fontSize:13, color:"#718096" }}>
             Simulated only — no real money involved
           </div>
         </div>
       </section>
+
       {/* ── 8. LIBRARY & RESOURCES ───────────────────────────────── */}
       <section id="library" style={S.white}>
         <div style={S.container}>
           <span style={S.eyebrow}>Library & Resources</span>
           <h2 style={S.h2}>More than just lessons</h2>
           <p style={{ ...S.body }}>Videos, books, research, PDFs and guides — organised and curated by FinanceHub.</p>
+
           <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:20 }}>
             {[
               { icon:"▶️", title:"Video Library",    desc:"82 curated YouTube playlists from India's trusted finance educators — organised by track and topic.", count:"82 playlists",   color:"#B91C1C", href:"/library" },
@@ -519,6 +543,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 9. AI MENTOR ─────────────────────────────────────────── */}
       <section id="ai" style={S.soft}>
         <div style={S.container}>
@@ -551,6 +576,7 @@ export default function HomePage() {
               </a>
               <div style={{ fontSize:12, color:"#8a9ab0", marginTop:12 }}>5 free questions/day · No sign-in required to try</div>
             </div>
+
             {/* Right — chat mockup */}
             <div style={{
               background:"#0B1A2B", borderRadius:20,
@@ -588,6 +614,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 10. PERSONALISED PATH (QUIZ) ─────────────────────────── */}
       <section id="quiz" style={S.white}>
         <div style={S.container}>
@@ -597,6 +624,7 @@ export default function HomePage() {
             <p style={{ fontSize:16, color:"#526173", marginBottom:40 }}>
               Answer 3 quick questions. FinanceHub builds your exact starting path.
             </p>
+
             <div style={{ background:"#F7F9F8", border:"1px solid #e5eaf0", borderRadius:20, padding:36, textAlign:"left" }}>
               {!quizDone ? (
                 <>
@@ -645,6 +673,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 11. PRICING ──────────────────────────────────────────── */}
       <section id="pricing" style={S.soft}>
         <div style={S.container}>
@@ -653,6 +682,7 @@ export default function HomePage() {
             <h2 style={S.h2}>Start free. Upgrade when ready.</h2>
             <p style={{ fontSize:16, color:"#526173" }}>Core content is always free. Premium unlocks the full depth.</p>
           </div>
+
           <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, maxWidth:960, margin:"0 auto", alignItems:"start" }}>
             {[
               {
@@ -738,6 +768,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
           <div style={{ textAlign:"center", marginTop:28, fontSize:13, color:"#8a9ab0", display:"flex", gap:24, justifyContent:"center", flexWrap:"wrap" }}>
             <span>💳 No credit card for free plan</span>
             <span>🔒 Secure payments via Razorpay & Stripe</span>
@@ -746,12 +777,14 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 12. FAQ ──────────────────────────────────────────────── */}
       <section style={S.white}>
         <div style={S.container}>
           <div style={{ maxWidth:720, margin:"0 auto" }}>
             <span style={S.eyebrow}>FAQ</span>
             <h2 style={S.h2}>Frequently asked questions</h2>
+
             {FAQS.map((faq,i) => (
               <div key={i} className="faq-item" style={{
                 borderBottom:"1px solid #e5eaf0",
@@ -776,6 +809,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* ── 13. FINAL CTA ────────────────────────────────────────── */}
       <section style={{ ...S.navy, padding:"120px 0" }}>
         <div style={{ ...S.container, textAlign:"center" }}>
@@ -812,26 +846,69 @@ export default function HomePage() {
             No prior knowledge required · Free forever · No credit card
           </div>
 
-          {/* Social / Founder Connect */}
-          <div style={{ marginTop:40, paddingTop:32, borderTop:"1px solid rgba(255,255,255,0.1)", display:"inline-flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-            <div style={{ fontSize:13, color:"rgba(255,255,255,0.7)", fontWeight:600 }}>
-              Connect with the founder & stay updated:
-            </div>
-            <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-              <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
-                style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:8, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.2)", color:"#fff", fontSize:13, fontWeight:600, textDecoration:"none", transition:"all 0.15s" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                X: @polymerhub_
-              </a>
-              <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
-                style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:8, background:"rgba(10,102,194,0.2)", border:"1px solid rgba(10,102,194,0.4)", color:"#fff", fontSize:13, fontWeight:600, textDecoration:"none", transition:"all 0.15s" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#38BDF8"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                LinkedIn: LPK Naidu
-              </a>
-            </div>
+          {/* Social links */}
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginTop:28, justifyContent:"center" }}>
+            <span style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>Follow us</span>
+            {/* X */}
+            <a
+              href="https://x.com/polymerhub_"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow @polymerhub_ on X"
+              style={{
+                display:"flex", alignItems:"center", gap:7,
+                padding:"8px 14px",
+                background:"rgba(255,255,255,0.07)",
+                border:"1px solid rgba(255,255,255,0.12)",
+                borderRadius:20, textDecoration:"none",
+                transition:"all 0.18s",
+              }}
+              onMouseEnter={e=>{
+                e.currentTarget.style.background="rgba(255,255,255,0.15)";
+                e.currentTarget.style.borderColor="rgba(255,255,255,0.25)";
+              }}
+              onMouseLeave={e=>{
+                e.currentTarget.style.background="rgba(255,255,255,0.07)";
+                e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)" }}>@polymerhub_</span>
+            </a>
+            {/* LinkedIn */}
+            <a
+              href="https://www.linkedin.com/in/lpk-naidu-3414153b2"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Connect on LinkedIn"
+              style={{
+                display:"flex", alignItems:"center", gap:7,
+                padding:"8px 14px",
+                background:"rgba(255,255,255,0.07)",
+                border:"1px solid rgba(255,255,255,0.12)",
+                borderRadius:20, textDecoration:"none",
+                transition:"all 0.18s",
+              }}
+              onMouseEnter={e=>{
+                e.currentTarget.style.background="#0A66C2";
+                e.currentTarget.style.borderColor="#0A66C2";
+              }}
+              onMouseLeave={e=>{
+                e.currentTarget.style.background="rgba(255,255,255,0.07)";
+                e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              <span style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)" }}>LinkedIn</span>
+            </a>
           </div>
         </div>
       </section>
+
       {/* ── FOOTER ───────────────────────────────────────────────── */}
       <footer style={{ background:"#060E18", padding:"64px 0 32px" }}>
         <div style={S.container}>
@@ -855,23 +932,11 @@ export default function HomePage() {
               <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.75, maxWidth:240 }}>
                 Master finance. Build confidence. Shape your future. Built in India for every learner.
               </p>
-              {/* Social Links */}
-              <div style={{ display:"flex", gap:8, marginTop:16, marginBottom:16 }}>
-                <a href="https://x.com/polymerhub_" target="_blank" rel="noopener noreferrer"
-                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontWeight:600 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  @polymerhub_
-                </a>
-                <a href="https://www.linkedin.com/in/lpk-naidu-3414153b2" target="_blank" rel="noopener noreferrer"
-                  style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"6px 12px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:8, color:"#fff", fontSize:12, fontWeight:600 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#0A66C2"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                  LinkedIn
-                </a>
-              </div>
-              <div style={{ marginTop:16, fontSize:11, color:"rgba(255,255,255,0.25)", lineHeight:1.6 }}>
+              <div style={{ marginTop:20, fontSize:11, color:"rgba(255,255,255,0.25)", lineHeight:1.6 }}>
                 🇮🇳 Built in India. Designed for the world.
               </div>
             </div>
+
             {/* Learn */}
             <div>
               <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Learn</div>
@@ -881,6 +946,7 @@ export default function HomePage() {
                   onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{l}</a>
               ))}
             </div>
+
             {/* Platform */}
             <div>
               <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Platform</div>
@@ -890,6 +956,7 @@ export default function HomePage() {
                   onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{l}</a>
               ))}
             </div>
+
             {/* Legal */}
             <div>
               <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Legal</div>
@@ -900,13 +967,14 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
           {/* Bottom bar */}
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:28, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
             <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>
               © 2026 FinanceHub of India. All content is educational only — not investment advice.
             </div>
-            <div style={{ display:"flex", gap:16, alignItems:"center", flexWrap:"wrap" }}>
-              {[["X (@polymerhub_)","https://x.com/polymerhub_"],["LinkedIn","https://www.linkedin.com/in/lpk-naidu-3414153b2"],["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"]].map(([l,h]) => (
+            <div style={{ display:"flex", gap:20 }}>
+              {[["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"]].map(([l,h]) => (
                 <a key={l} href={h} style={{ fontSize:12, color:"rgba(255,255,255,0.25)", transition:"color 0.15s" }}
                   onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}
                   onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.25)")}>{l}</a>
