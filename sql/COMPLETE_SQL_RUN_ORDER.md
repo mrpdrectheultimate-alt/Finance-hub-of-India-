@@ -123,9 +123,12 @@ ORDER BY metric;
 
 Run AFTER all previous files:
 
-`
-32. phase10_cases_hindi.sql   — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
-`
+```
+32. concepts_careers_videos.sql    — 50 concepts, 7 careers, 70 raw video records
+33. fix_placeholder_video_ids.sql  — Unpublishes ~70 fake slugs (ppf-elss-nps-hindi etc.)
+34. video_library_expansion.sql   — Inserts 113+ verified real YouTube IDs
+35. phase10_cases_hindi.sql        — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
+```
 
 ## UPDATED EXPECTED COUNTS (After all 34 files)
 

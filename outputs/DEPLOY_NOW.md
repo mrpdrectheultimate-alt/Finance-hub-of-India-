@@ -241,10 +241,12 @@ Run in EXACT order:
 30. community_career.sql
 31. case_studies_expansion.sql
 32. concepts_careers_videos.sql
-33. phase9_10_quizzes.sql
-34. phase10_multimedia_trading.sql
-35. sitemap_navigation.sql
-36. phase0_reality_audit.sql   ← LAST — verifies everything
+33. fix_placeholder_video_ids.sql     ← Unpublishes ~70 fake slugs (ppf-elss-nps-hindi etc.)
+34. video_library_expansion.sql        ← Inserts 113+ verified real YouTube IDs
+35. phase9_10_quizzes.sql
+36. phase10_multimedia_trading.sql
+37. sitemap_navigation.sql
+38. phase0_reality_audit.sql           ← LAST — verifies everything
 ```
 
 ### Verify after running all 36:
