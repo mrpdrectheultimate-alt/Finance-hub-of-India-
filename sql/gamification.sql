@@ -6,16 +6,32 @@
 -- Functions: add_weekly_xp · generate_certificate · increment_xp
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ── XP Log ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS user_xp_log (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   xp_amount   INT  NOT NULL DEFAULT 0,
-  action      TEXT NOT NULL, -- 'lesson','quiz_pass','quiz_fail','streak','signup','review','simulator','note','subscription_upgrade','streak_milestone'
+  action      TEXT NOT NULL DEFAULT 'lesson',
   description TEXT,
   lesson_id   UUID REFERENCES lessons(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure schema evolution if user_xp_log was created in earlier migrations
+ALTER TABLE user_xp_log
+  ADD COLUMN IF NOT EXISTS action      TEXT DEFAULT 'lesson',
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS lesson_id   UUID REFERENCES lessons(id) ON DELETE SET NULL;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_xp_log' AND column_name = 'reason') THEN
+    UPDATE user_xp_log SET action = COALESCE(action, reason) WHERE action IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_xp_log_user     ON user_xp_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_xp_log_created  ON user_xp_log(created_at DESC);
@@ -25,15 +41,36 @@ CREATE INDEX IF NOT EXISTS idx_xp_log_action   ON user_xp_log(action);
 CREATE TABLE IF NOT EXISTS badges (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug        TEXT UNIQUE NOT NULL,
-  name        TEXT NOT NULL,
-  description TEXT NOT NULL,
+  name        TEXT,
+  description TEXT NOT NULL DEFAULT '',
   icon_emoji  TEXT NOT NULL DEFAULT '🏅',
-  category    TEXT NOT NULL DEFAULT 'achievement', -- 'streak','completion','quiz','community','special'
-  threshold   INT  NOT NULL DEFAULT 1, -- numeric trigger value
+  category    TEXT NOT NULL DEFAULT 'achievement',
+  threshold   INT  NOT NULL DEFAULT 1,
   xp_reward   INT  NOT NULL DEFAULT 50,
   is_active   BOOL NOT NULL DEFAULT TRUE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure schema evolution if badges was created in earlier migrations
+ALTER TABLE badges
+  ADD COLUMN IF NOT EXISTS name        TEXT,
+  ADD COLUMN IF NOT EXISTS icon_emoji  TEXT DEFAULT '🏅',
+  ADD COLUMN IF NOT EXISTS category    TEXT DEFAULT 'achievement',
+  ADD COLUMN IF NOT EXISTS threshold   INT  DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS xp_reward   INT  DEFAULT 50,
+  ADD COLUMN IF NOT EXISTS is_active   BOOL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ DEFAULT NOW();
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'title') THEN
+    UPDATE badges SET name = COALESCE(name, title) WHERE name IS NULL;
+    UPDATE badges SET title = COALESCE(title, name) WHERE title IS NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'icon') THEN
+    UPDATE badges SET icon_emoji = COALESCE(icon_emoji, icon) WHERE icon_emoji IS NULL;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS user_badges (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
