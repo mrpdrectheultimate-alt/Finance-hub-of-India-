@@ -9173,7 +9173,7 @@ IF q_id IS NULL THEN
 
   INSERT INTO quizzes (lesson_id, title, passing_score)
 
-  SELECT id, 'Porter''s Five Forces Quiz', 70, 25 FROM lessons WHERE slug='porters-five-forces';
+  SELECT id, 'Porter''s Five Forces Quiz', 70 FROM lessons WHERE slug='porters-five-forces';
 
   SELECT q.id INTO q_id FROM quizzes q JOIN lessons l ON q.lesson_id=l.id WHERE l.slug='porters-five-forces' LIMIT 1;
 
