@@ -63,59 +63,20 @@
 ## STEP 8 — World-Class Content Expansions & Final Localizations
 ```
 26_phase7_lessons.sql                   — +20 advanced lessons: PF advanced, Hindi (+3), Trading, Behavioral
-27_phase8_lessons.sql                   — +27 final lessons: Forex (+6), TA (+7), Crypto (+5), Corporate (+4), Hindi (+5)
+27_phase8_lessons.sql                   — +30 final lessons: Forex (+6), TA (+7), Crypto (+5), Corporate (+4), Hindi (+5)
+case_studies_expansion.sql              — +20 real-world Indian finance case studies (Total: 25)
+phase9_lessons.sql                      — +45 critical lessons: F&O basics, Ratio Analysis, Chart Patterns (Total: 375+)
+phase10_cases_hindi.sql                 — +13 case studies + 10 Hindi localized lessons (Total Hindi: 23+)
+phase9_10_quizzes.sql                   — +20 quizzes and 200+ interactive questions (Total questions: 380+)
 ```
 
 ---
 
-## QUICK VERIFICATION QUERY
-After executing all files, run this query in the Supabase SQL Editor:
-
-```sql
-SELECT 'Total Published Lessons' AS metric, COUNT(*)::TEXT AS value FROM lessons WHERE is_published = TRUE
-UNION ALL
-SELECT 'Hindi Lessons',           COUNT(*)::TEXT FROM lessons WHERE is_published = TRUE AND language = 'hi'
-UNION ALL
-SELECT 'Free Lessons',            COUNT(*)::TEXT FROM lessons WHERE is_published = TRUE AND is_free = TRUE
-UNION ALL
-SELECT 'Total Quizzes',           COUNT(*)::TEXT FROM quizzes
-UNION ALL
-SELECT 'Quiz Questions',          COUNT(*)::TEXT FROM quiz_questions
-UNION ALL
-SELECT 'Video Library Items',     COUNT(*)::TEXT FROM curated_playlists WHERE is_published = TRUE
-UNION ALL
-SELECT 'Knowledge Graph Concepts',COUNT(*)::TEXT FROM concepts WHERE is_published = TRUE
-UNION ALL
-SELECT 'Glossary Terms',          COUNT(*)::TEXT FROM glossary WHERE is_published = TRUE
-UNION ALL
-SELECT 'Case Studies',            COUNT(*)::TEXT FROM case_studies WHERE is_published = TRUE
-UNION ALL
-SELECT 'Email Sequences',         COUNT(*)::TEXT FROM email_sequences WHERE is_active = TRUE
-UNION ALL
-SELECT 'User Profiles',           COUNT(*)::TEXT FROM profiles
-ORDER BY metric;
-```
-
----
-
-## EXPECTED ENTITY COUNTS AFTER FULL RUN
-
-| Metric | Target Count |
-|---|---|
-| Published Lessons | 320–340+ |
-| Hindi Lessons | 13+ |
-| Free Lessons | 40+ |
-| Quizzes | 50+ |
-| Quiz Questions | 184+ |
-| Video Library Items | 82 |
-| Concepts in Knowledge Graph | 50 |
-| Financial Glossary Terms | 35+ |
-| Interactive Case Studies | 5 |
-| Email Sequences | 5 |
-| League Tiers | 5 |
-
-*Note: All 27 SQL migration scripts are 100% safe, idempotent, and re-runnable.*
-
+## CONVENIENT 3-BATCH EXECUTION (RECOMMENDED)
+Instead of running individual files, you can run these 3 master bundles in sequence:
+1. `sql/batch1_curriculum_expansion.sql` — Lessons, Quizzes, Hindi translations, and Case Studies (Phase 8, 9, 10)
+2. `sql/batch2_platform_systems.sql`     — Gamification (Seasons/Challenges), Community, Feedback, Referrals
+3. `sql/batch3_knowledge_and_videos.sql` — Concepts (101+), Careers (15), and Verified Video Library (157+)
 
 ---
 
