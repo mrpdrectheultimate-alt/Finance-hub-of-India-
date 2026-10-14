@@ -162,8 +162,9 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ── RLS policies ─────────────────────────────────────────────
-ALTER TABLE referral_codes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE referrals      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_codes   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_rewards ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users see own referral code"
   ON referral_codes FOR SELECT TO authenticated
@@ -172,6 +173,10 @@ CREATE POLICY "Users see own referral code"
 CREATE POLICY "Users see own referrals"
   ON referrals FOR SELECT TO authenticated
   USING (auth.uid() = referrer_id OR auth.uid() = referee_id);
+
+CREATE POLICY "Anyone can view active referral rewards"
+  ON referral_rewards FOR SELECT TO authenticated, anon
+  USING (is_active = TRUE);
 
 -- ── View: referral leaderboard ────────────────────────────────
 CREATE OR REPLACE VIEW referral_leaderboard AS

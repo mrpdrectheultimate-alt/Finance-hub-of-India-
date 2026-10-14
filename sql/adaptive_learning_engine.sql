@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- FinanceHub Phase 4: Adaptive Learning Engine
 -- Run AFTER phase1_critical_fixes.sql
 -- ============================================================
@@ -26,6 +26,18 @@ CREATE TABLE IF NOT EXISTS lesson_topics (
   is_primary BOOL DEFAULT TRUE,
   UNIQUE(lesson_id, topic_id)
 );
+
+ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "topics_read" ON topics;
+CREATE POLICY "topics_read" ON topics FOR SELECT USING (true);
+
+ALTER TABLE topic_prerequisites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "topic_prerequisites_read" ON topic_prerequisites;
+CREATE POLICY "topic_prerequisites_read" ON topic_prerequisites FOR SELECT USING (true);
+
+ALTER TABLE lesson_topics ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "lesson_topics_read" ON lesson_topics;
+CREATE POLICY "lesson_topics_read" ON lesson_topics FOR SELECT USING (true);
 
 CREATE TABLE IF NOT EXISTS user_mastery (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

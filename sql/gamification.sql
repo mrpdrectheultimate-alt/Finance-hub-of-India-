@@ -341,6 +341,23 @@ CREATE TABLE IF NOT EXISTS leaderboard_cache (
   UNIQUE(scope, period_key)
 );
 
+-- RLS FOR ADVANCED GAMIFICATION TABLES
+ALTER TABLE daily_challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "daily_challenges_read" ON daily_challenges;
+CREATE POLICY "daily_challenges_read" ON daily_challenges FOR SELECT USING (true);
+
+ALTER TABLE weekly_missions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "weekly_missions_read" ON weekly_missions;
+CREATE POLICY "weekly_missions_read" ON weekly_missions FOR SELECT USING (true);
+
+ALTER TABLE seasons ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "seasons_read" ON seasons;
+CREATE POLICY "seasons_read" ON seasons FOR SELECT USING (true);
+
+ALTER TABLE leaderboard_cache ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "leaderboard_cache_read" ON leaderboard_cache;
+CREATE POLICY "leaderboard_cache_read" ON leaderboard_cache FOR SELECT USING (true);
+
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_daily_challenges_date ON daily_challenges(date);
 CREATE INDEX IF NOT EXISTS idx_user_daily_ch_user ON user_daily_challenges(user_id);
