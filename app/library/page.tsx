@@ -295,7 +295,7 @@ export default function LibraryPage() {
                 </div>
               )}
               <div style={s.disclaimer}>
-                Videos are embedded from YouTube. FinanceHub does not host external video content.
+                📺 Videos are streamed directly via standard YouTube embedded players in accordance with YouTube Terms of Service. All intellectual property, trademarks, and view counts belong exclusively to the original creator channels. <Link href="/legal/copyright" style={{ color: "var(--accent, #0e6163)", textDecoration: "underline", marginLeft: 4 }}>Learn about our Fair Use &amp; Attribution Policy →</Link>
               </div>
             </main>
 
@@ -491,7 +491,7 @@ function BooksTab({
         })}
       </div>
       <div style={s.disclaimer}>
-        FinanceHub provides summaries and purchase links only. Free PDF links are only shown for legally free books.
+        📚 Book summaries and key takeaways are original educational syntheses provided under the Fair Dealing doctrine (Section 52, Indian Copyright Act 1957) for literary review and educational commentary. Purchase links direct to official publishers and retailers. <Link href="/legal/copyright" style={{ color: "var(--accent, #0e6163)", textDecoration: "underline", marginLeft: 4 }}>Read full IP policy →</Link>
       </div>
     </div>
   );

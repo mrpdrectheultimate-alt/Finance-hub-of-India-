@@ -41,11 +41,13 @@ export default function Footer() {
     {
       title: "Legal",
       links: [
-        { label: "Privacy Policy",   href: "/legal/privacy" },
-        { label: "Terms of Service", href: "/legal/terms" },
-        { label: "Disclaimer",       href: "/legal/disclaimer" },
-        { label: "Refund Policy",    href: "/legal/refund" },
-        { label: "Cookie Policy",    href: "/legal/cookies" },
+        { label: "Privacy Policy",      href: "/legal/privacy" },
+        { label: "Terms of Service",    href: "/legal/terms" },
+        { label: "Disclaimer",          href: "/legal/disclaimer" },
+        { label: "SEBI Compliance",     href: "/legal/sebi-compliance" },
+        { label: "Copyright & Fair Use",href: "/legal/copyright" },
+        { label: "Refund Policy",       href: "/legal/refund" },
+        { label: "Cookie Policy",       href: "/legal/cookies" },
       ],
     },
   ];
@@ -243,10 +245,13 @@ export default function Footer() {
           </div>
           <div style={{ display: "flex", gap: 20 }}>
             {[
-              ["Privacy", "/legal/privacy"],
-              ["Terms",   "/legal/terms"],
-              ["Refund",  "/legal/refund"],
-              ["Contact", "mailto:hello@financehub.in"],
+              ["Privacy",    "/legal/privacy"],
+              ["Terms",      "/legal/terms"],
+              ["Disclaimer", "/legal/disclaimer"],
+              ["Copyright",  "/legal/copyright"],
+              ["SEBI",       "/legal/sebi-compliance"],
+              ["Refund",     "/legal/refund"],
+              ["Contact",    "mailto:hello@financehub.in"],
             ].map(([l, h]) => (
               <a key={l} href={h}
                 style={{
