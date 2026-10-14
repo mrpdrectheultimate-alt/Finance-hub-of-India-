@@ -1919,6 +1919,8 @@ Indian residents can ONLY legally trade currency derivatives on NSE/BSE:
 9,800,TRUE,FALSE
 WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE slug='forex-trading-sessions');
 
+END $PHASE9$;
+
 -- Final count
 DO $$
 DECLARE v_total INT;
@@ -1932,5 +1934,3 @@ BEGIN
   RAISE NOTICE '          Porter''s Five Forces, ESG/BRSR, ESOPs, Ethereum PoS,';
   RAISE NOTICE '          e-Rupee, Anchoring biases, Herding/FOMO, Forex sessions';
 END $$;
-
-END $PHASE9$;

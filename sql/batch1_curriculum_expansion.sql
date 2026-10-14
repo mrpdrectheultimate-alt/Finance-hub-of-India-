@@ -1796,6 +1796,8 @@ Maximum: ₹75,000 deduction per year।
 9,13,TRUE,FALSE,'hi','human_reviewed'
 WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE slug='health-insurance-hindi');
 
+END $PHASE8_LESSONS$;
+
 -- Final count
 DO $$
 DECLARE v_total INT; v_hindi INT;
@@ -1807,8 +1809,6 @@ BEGIN
   RAISE NOTICE '   Hindi lessons: %', v_hindi;
   RAISE NOTICE '   New in Phase 8: Forex (+6), Technical Analysis (+7), Crypto (+5), Corporate (+4), Hindi (+5) = 27 lessons';
 END $$;
-
-END $PHASE8_LESSONS$;
 
 -- ── END OF phase8_lessons.sql ──
 
@@ -3734,6 +3734,8 @@ Indian residents can ONLY legally trade currency derivatives on NSE/BSE:
 9,800,TRUE,FALSE
 WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE slug='forex-trading-sessions');
 
+END $PHASE9$;
+
 -- Final count
 DO $$
 DECLARE v_total INT;
@@ -3747,8 +3749,6 @@ BEGIN
   RAISE NOTICE '          Porter''s Five Forces, ESG/BRSR, ESOPs, Ethereum PoS,';
   RAISE NOTICE '          e-Rupee, Anchoring biases, Herding/FOMO, Forex sessions';
 END $$;
-
-END $PHASE9$;
 
 -- ── END OF phase9_lessons.sql ──
 
@@ -5186,7 +5186,8 @@ END $CASES$;
 
 
 DO $PHASE10$
-
+DECLARE
+  hi_id UUID;
 BEGIN
 
 

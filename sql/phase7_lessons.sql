@@ -1352,6 +1352,8 @@ Past losses do not increase your probability of future wins. Each trade is indep
 9,64,TRUE,FALSE
 WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE slug='sunk-cost-fallacy-investing');
 
+END $PHASE7_LESSONS$;
+
 -- Final count
 DO $$
 DECLARE v_total INT;
@@ -1360,5 +1362,3 @@ BEGIN
   RAISE NOTICE 'Phase 7 lessons complete! Total published: %', v_total;
   RAISE NOTICE 'New lessons added: ~20 across Personal Finance, Trading, Behavioral Finance, and Hindi';
 END $$;
-
-END $PHASE7_LESSONS$;

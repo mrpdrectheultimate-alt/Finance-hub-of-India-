@@ -13,7 +13,8 @@
 
 
 DO $PHASE10$
-
+DECLARE
+  hi_id UUID;
 BEGIN
 
 

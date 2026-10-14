@@ -1789,6 +1789,8 @@ Maximum: ₹75,000 deduction per year।
 9,13,TRUE,FALSE,'hi','human_reviewed'
 WHERE NOT EXISTS (SELECT 1 FROM lessons WHERE slug='health-insurance-hindi');
 
+END $PHASE8_LESSONS$;
+
 -- Final count
 DO $$
 DECLARE v_total INT; v_hindi INT;
@@ -1800,5 +1802,3 @@ BEGIN
   RAISE NOTICE '   Hindi lessons: %', v_hindi;
   RAISE NOTICE '   New in Phase 8: Forex (+6), Technical Analysis (+7), Crypto (+5), Corporate (+4), Hindi (+5) = 27 lessons';
 END $$;
-
-END $PHASE8_LESSONS$;
