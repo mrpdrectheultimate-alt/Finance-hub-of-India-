@@ -19,6 +19,55 @@
 
 
 
+-- Ensure extensions exist
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Ensure career_paths table exists
+CREATE TABLE IF NOT EXISTS career_paths (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug         TEXT UNIQUE NOT NULL,
+  title        TEXT NOT NULL,
+  description  TEXT NOT NULL,
+  icon_emoji   TEXT NOT NULL DEFAULT '💼',
+  color_hex    TEXT NOT NULL DEFAULT '#0E6163',
+  skills       TEXT[] NOT NULL DEFAULT '{}',
+  salary_range TEXT,
+  demand_level TEXT NOT NULL DEFAULT 'high',
+  required_tracks TEXT[] NOT NULL DEFAULT '{}',
+  order_index  INT NOT NULL DEFAULT 0,
+  is_published BOOL NOT NULL DEFAULT TRUE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Ensure concepts table exists with all required columns
+CREATE TABLE IF NOT EXISTS concepts (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,
+  slug          TEXT UNIQUE NOT NULL,
+  simple_def    TEXT NOT NULL,
+  full_def      TEXT,
+  formula       TEXT,
+  formula_vars  JSONB DEFAULT '{}',
+  example       TEXT,
+  difficulty    TEXT DEFAULT 'beginner',
+  track_slugs   TEXT[] DEFAULT '{}',
+  tags          TEXT[] DEFAULT '{}',
+  is_published  BOOLEAN DEFAULT TRUE,
+  created_at    TIMESTAMPTZ DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE concepts
+  ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS full_def TEXT,
+  ADD COLUMN IF NOT EXISTS formula TEXT,
+  ADD COLUMN IF NOT EXISTS formula_vars JSONB DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS example TEXT,
+  ADD COLUMN IF NOT EXISTS difficulty TEXT DEFAULT 'beginner',
+  ADD COLUMN IF NOT EXISTS track_slugs TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS is_published BOOLEAN DEFAULT TRUE;
+
 -- Ensure video_library table exists (and drop obsolete alias view if one was previously created)
 DO $$
 BEGIN
@@ -31,7 +80,7 @@ BEGIN
 END $$;
 
 CREATE TABLE IF NOT EXISTS video_library (
-  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title            TEXT NOT NULL,
   channel_name     TEXT NOT NULL,
   youtube_url      TEXT NOT NULL,
@@ -53,6 +102,73 @@ CREATE TABLE IF NOT EXISTS video_library (
 ALTER TABLE video_library ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "video_library_public_read" ON video_library;
 CREATE POLICY "video_library_public_read" ON video_library FOR SELECT USING (is_active = TRUE);
+
+-- Ensure curated_playlists table exists and has all required columns and constraints
+CREATE TABLE IF NOT EXISTS curated_playlists (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title        TEXT NOT NULL,
+  channel_name TEXT,
+  description  TEXT,
+  playlist_url TEXT,
+  embed_id     TEXT,
+  embed_type   TEXT DEFAULT 'video',
+  video_type   TEXT DEFAULT 'video',
+  platform     TEXT DEFAULT 'youtube',
+  category     TEXT DEFAULT 'personal-finance',
+  level        TEXT DEFAULT 'beginner',
+  video_count  INT  DEFAULT 1,
+  duration_hrs NUMERIC DEFAULT 0.2,
+  is_featured  BOOL DEFAULT FALSE,
+  is_published BOOL DEFAULT TRUE,
+  tags         TEXT[] DEFAULT '{}',
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE curated_playlists
+  ADD COLUMN IF NOT EXISTS channel_name TEXT,
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS playlist_url TEXT,
+  ADD COLUMN IF NOT EXISTS embed_id TEXT,
+  ADD COLUMN IF NOT EXISTS embed_type TEXT DEFAULT 'video',
+  ADD COLUMN IF NOT EXISTS video_type TEXT DEFAULT 'video',
+  ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT 'youtube',
+  ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'personal-finance',
+  ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'beginner',
+  ADD COLUMN IF NOT EXISTS video_count INT DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS duration_hrs NUMERIC DEFAULT 0.2,
+  ADD COLUMN IF NOT EXISTS is_featured BOOL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS is_published BOOL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+
+-- Drop restrictive category check constraint on curated_playlists so all categories succeed
+ALTER TABLE curated_playlists DROP CONSTRAINT IF EXISTS curated_playlists_category_check;
+ALTER TABLE curated_playlists
+  ADD CONSTRAINT curated_playlists_category_check
+  CHECK (category IN (
+    'personal-finance',
+    'trading-markets',
+    'crypto-defi',
+    'corporate-finance',
+    'forex-currency',
+    'forex',
+    'behavioral-finance',
+    'technical-analysis',
+    'general'
+  ));
+
+-- Ensure unique constraint on playlist_url exists for ON CONFLICT (playlist_url)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'curated_playlists_playlist_url_key'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM pg_indexes WHERE indexname = 'curated_playlists_playlist_url_key'
+  ) THEN
+    ALTER TABLE curated_playlists ADD CONSTRAINT curated_playlists_playlist_url_key UNIQUE (playlist_url);
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  NULL;
+END $$;
 
 DO $EXPANSION$
 

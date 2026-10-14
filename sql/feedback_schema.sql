@@ -5,6 +5,12 @@
 -- Creates the feedback table used by /api/feedback
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Ensure profiles has email column if referenced anywhere
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
+
 CREATE TABLE IF NOT EXISTS feedback (
   id          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID    REFERENCES profiles(id) ON DELETE SET NULL,  -- null for anonymous
@@ -44,13 +50,10 @@ DROP POLICY IF EXISTS "Admins can read all feedback" ON feedback;
 CREATE POLICY "Admins can read all feedback"
   ON feedback FOR SELECT TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-      AND email = ANY(
-        string_to_array(current_setting('app.admin_emails', TRUE), ',')
-      )
+    (auth.jwt() ->> 'email') = ANY(
+      string_to_array(current_setting('app.admin_emails', TRUE), ',')
     )
+    OR auth.role() = 'service_role'
   );
 
 -- Admins can update status and notes
@@ -58,13 +61,10 @@ DROP POLICY IF EXISTS "Admins can update feedback" ON feedback;
 CREATE POLICY "Admins can update feedback"
   ON feedback FOR UPDATE TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-      AND email = ANY(
-        string_to_array(current_setting('app.admin_emails', TRUE), ',')
-      )
+    (auth.jwt() ->> 'email') = ANY(
+      string_to_array(current_setting('app.admin_emails', TRUE), ',')
     )
+    OR auth.role() = 'service_role'
   );
 
 -- Users can see their own feedback

@@ -6,6 +6,24 @@
 -- Functions: generate_referral_code · apply_referral
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Ensure user_xp_log compatibility (action, reason, description)
+CREATE TABLE IF NOT EXISTS user_xp_log (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  xp_amount   INT NOT NULL,
+  reason      TEXT,
+  action      TEXT,
+  description TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE user_xp_log ADD COLUMN IF NOT EXISTS action TEXT;
+ALTER TABLE user_xp_log ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE user_xp_log ADD COLUMN IF NOT EXISTS reason TEXT;
+ALTER TABLE user_xp_log ALTER COLUMN reason DROP NOT NULL;
+
 -- ── Referral codes table ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS referral_codes (
   id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,8 +158,8 @@ BEGIN
   SET xp_total = xp_total + v_reward.referee_xp, updated_at = NOW()
   WHERE id = p_referee_id;
 
-  INSERT INTO user_xp_log (user_id, xp_amount, action, description)
-  VALUES (p_referee_id, v_reward.referee_xp, 'referral_joined',
+  INSERT INTO user_xp_log (user_id, xp_amount, action, reason, description)
+  VALUES (p_referee_id, v_reward.referee_xp, 'referral_joined', 'referral_joined',
           'Joined via referral code ' || UPPER(TRIM(p_code)));
 
   -- Award XP to referrer
@@ -149,8 +167,8 @@ BEGIN
   SET xp_total = xp_total + v_reward.referrer_xp, updated_at = NOW()
   WHERE id = v_referrer_id;
 
-  INSERT INTO user_xp_log (user_id, xp_amount, action, description)
-  VALUES (v_referrer_id, v_reward.referrer_xp, 'referral_earned',
+  INSERT INTO user_xp_log (user_id, xp_amount, action, reason, description)
+  VALUES (v_referrer_id, v_reward.referrer_xp, 'referral_earned', 'referral_earned',
           'Friend joined using your referral code');
 
   RETURN jsonb_build_object(
@@ -166,14 +184,17 @@ ALTER TABLE referral_codes   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referral_rewards ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users see own referral code" ON referral_codes;
 CREATE POLICY "Users see own referral code"
   ON referral_codes FOR SELECT TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users see own referrals" ON referrals;
 CREATE POLICY "Users see own referrals"
   ON referrals FOR SELECT TO authenticated
   USING (auth.uid() = referrer_id OR auth.uid() = referee_id);
 
+DROP POLICY IF EXISTS "Anyone can view active referral rewards" ON referral_rewards;
 CREATE POLICY "Anyone can view active referral rewards"
   ON referral_rewards FOR SELECT TO authenticated, anon
   USING (is_active = TRUE);

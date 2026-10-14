@@ -8,14 +8,83 @@
 -- ON CONFLICT DO NOTHING — safe to re-run
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Ensure table and columns exist
+CREATE TABLE IF NOT EXISTS curated_playlists (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title        TEXT NOT NULL,
+  channel_name TEXT,
+  description  TEXT,
+  playlist_url TEXT,
+  embed_id     TEXT,
+  embed_type   TEXT DEFAULT 'video',
+  video_type   TEXT DEFAULT 'video',
+  platform     TEXT DEFAULT 'youtube',
+  category     TEXT DEFAULT 'personal-finance',
+  level        TEXT DEFAULT 'beginner',
+  video_count  INT  DEFAULT 1,
+  duration_hrs NUMERIC DEFAULT 0.2,
+  curator_note TEXT,
+  is_featured  BOOL DEFAULT FALSE,
+  is_published BOOL DEFAULT TRUE,
+  tags         TEXT[] DEFAULT '{}',
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE curated_playlists
+  ADD COLUMN IF NOT EXISTS channel_name TEXT,
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS playlist_url TEXT,
+  ADD COLUMN IF NOT EXISTS embed_id TEXT,
+  ADD COLUMN IF NOT EXISTS embed_type TEXT DEFAULT 'video',
+  ADD COLUMN IF NOT EXISTS video_type TEXT DEFAULT 'video',
+  ADD COLUMN IF NOT EXISTS platform TEXT DEFAULT 'youtube',
+  ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'personal-finance',
+  ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'beginner',
+  ADD COLUMN IF NOT EXISTS video_count INT DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS duration_hrs NUMERIC DEFAULT 0.2,
+  ADD COLUMN IF NOT EXISTS curator_note TEXT,
+  ADD COLUMN IF NOT EXISTS is_featured BOOL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS is_published BOOL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+
+-- Drop restrictive category check constraint so all categories succeed
+ALTER TABLE curated_playlists DROP CONSTRAINT IF EXISTS curated_playlists_category_check;
+ALTER TABLE curated_playlists
+  ADD CONSTRAINT curated_playlists_category_check
+  CHECK (category IN (
+    'personal-finance',
+    'trading-markets',
+    'crypto-defi',
+    'corporate-finance',
+    'forex-currency',
+    'forex',
+    'behavioral-finance',
+    'technical-analysis',
+    'general'
+  ));
+
+-- Deduplicate any existing identical embed_ids before adding constraint
+DELETE FROM curated_playlists a
+USING curated_playlists b
+WHERE a.id > b.id
+  AND a.embed_id = b.embed_id
+  AND a.embed_id IS NOT NULL;
+
 -- Ensure unique constraint on embed_id exists for safe idempotency
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint WHERE conname = 'curated_playlists_embed_id_key'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM pg_indexes WHERE indexname = 'curated_playlists_embed_id_key'
   ) THEN
     ALTER TABLE curated_playlists ADD CONSTRAINT curated_playlists_embed_id_key UNIQUE (embed_id);
   END IF;
+EXCEPTION WHEN OTHERS THEN
+  NULL;
 END $$;
 
 INSERT INTO curated_playlists

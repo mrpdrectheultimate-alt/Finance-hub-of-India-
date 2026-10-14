@@ -4,6 +4,9 @@
 -- Used by: /api/content-health
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS content_freshness_audits (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   audit_date     DATE NOT NULL DEFAULT CURRENT_DATE,

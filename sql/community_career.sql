@@ -6,6 +6,31 @@
 --         community_reactions · featured_answers
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ── Ensure community base tables exist ─────────────────────────
+CREATE TABLE IF NOT EXISTS community_questions (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL DEFAULT '',
+  content      TEXT NOT NULL DEFAULT '',
+  answer_count INT DEFAULT 0,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS community_answers (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  question_id     UUID,
+  user_id         UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  content         TEXT NOT NULL DEFAULT '',
+  is_staff_answer BOOL NOT NULL DEFAULT FALSE,
+  is_ai_answer    BOOL NOT NULL DEFAULT FALSE,
+  helpful_count   INT NOT NULL DEFAULT 0,
+  is_pinned       BOOL NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ── Community content reports (moderation) ───────────────────
 CREATE TABLE IF NOT EXISTS community_reports (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -179,26 +204,31 @@ ALTER TABLE community_reactions  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_roadmaps        ENABLE ROW LEVEL SECURITY;
 
 -- Reports: users can create, admins can read all
+DROP POLICY IF EXISTS "Users can create reports" ON community_reports;
 CREATE POLICY "Users can create reports"
   ON community_reports FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = reporter_id);
 
 -- Reactions: users own their reactions
+DROP POLICY IF EXISTS "Users manage own reactions" ON community_reactions;
 CREATE POLICY "Users manage own reactions"
   ON community_reactions FOR ALL TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Anyone can read reactions" ON community_reactions;
 CREATE POLICY "Anyone can read reactions"
   ON community_reactions FOR SELECT TO anon, authenticated
   USING (TRUE);
 
 -- Roadmaps: private to each user
+DROP POLICY IF EXISTS "Users own their roadmaps" ON user_roadmaps;
 CREATE POLICY "Users own their roadmaps"
   ON user_roadmaps FOR ALL TO authenticated
   USING (auth.uid() = user_id);
 
 -- Career paths: public read
 ALTER TABLE career_paths ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Career paths are public" ON career_paths;
 CREATE POLICY "Career paths are public"
   ON career_paths FOR SELECT TO anon, authenticated
   USING (is_published = TRUE);
@@ -217,7 +247,7 @@ END $$;
 
 -- TABLE 1: Lesson comments
 CREATE TABLE IF NOT EXISTS lesson_comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL CHECK (length(content) > 0 AND length(content) < 2000),
@@ -246,7 +276,7 @@ WITH CHECK (auth.uid() = user_id);
 
 -- TABLE 2: Comment upvotes
 CREATE TABLE IF NOT EXISTS comment_upvotes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   comment_id UUID REFERENCES lesson_comments(id) ON DELETE CASCADE,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -262,7 +292,7 @@ WITH CHECK (auth.uid() = user_id);
 
 -- TABLE 3: Finance interview Q&A bank
 CREATE TABLE IF NOT EXISTS interview_questions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question TEXT NOT NULL,
   answer TEXT NOT NULL,
   category TEXT NOT NULL,
@@ -294,7 +324,7 @@ USING (is_published = TRUE);
 
 -- TABLE 4: User saved interview questions
 CREATE TABLE IF NOT EXISTS user_saved_questions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   question_id UUID REFERENCES interview_questions(id) ON DELETE CASCADE,
   saved_at TIMESTAMPTZ DEFAULT NOW(),
