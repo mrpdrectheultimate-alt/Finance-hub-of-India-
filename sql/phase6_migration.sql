@@ -375,6 +375,56 @@ ALTER TABLE platform_metrics_daily ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "metrics_service" ON platform_metrics_daily FOR ALL USING (auth.role()='service_role');
 
 -- ─────────────────────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────────────────────
+-- 7b. FUNCTION: Take Daily Platform Metrics Snapshot
+-- ─────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION take_daily_snapshot()
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  INSERT INTO platform_metrics_daily (
+    snapshot_date,
+    total_users,
+    new_users,
+    active_users_dau,
+    pro_users,
+    expert_users,
+    total_completions,
+    completions_today,
+    ai_questions_today,
+    total_notes,
+    total_revenue_inr,
+    created_at
+  )
+  SELECT
+    CURRENT_DATE,
+    (SELECT COUNT(*) FROM profiles),
+    (SELECT COUNT(*) FROM profiles WHERE DATE(created_at) = CURRENT_DATE),
+    (SELECT COUNT(DISTINCT user_id) FROM user_progress WHERE DATE(updated_at) = CURRENT_DATE),
+    (SELECT COUNT(*) FROM profiles WHERE subscription_tier = 'pro' OR role = 'pro'),
+    (SELECT COUNT(*) FROM profiles WHERE subscription_tier = 'expert' OR role = 'expert'),
+    (SELECT COUNT(*) FROM user_progress WHERE completed_at IS NOT NULL),
+    (SELECT COUNT(*) FROM user_progress WHERE DATE(completed_at) = CURRENT_DATE),
+    (SELECT COUNT(*) FROM ai_question_logs WHERE DATE(created_at) = CURRENT_DATE),
+    (SELECT COUNT(*) FROM user_notes WHERE is_archived = FALSE),
+    (SELECT COALESCE(SUM(amount_inr), 0) FROM payment_logs WHERE status = 'success'),
+    NOW()
+  ON CONFLICT (snapshot_date) DO UPDATE SET
+    total_users = EXCLUDED.total_users,
+    new_users = EXCLUDED.new_users,
+    active_users_dau = EXCLUDED.active_users_dau,
+    pro_users = EXCLUDED.pro_users,
+    expert_users = EXCLUDED.expert_users,
+    total_completions = EXCLUDED.total_completions,
+    completions_today = EXCLUDED.completions_today,
+    ai_questions_today = EXCLUDED.ai_questions_today,
+    total_notes = EXCLUDED.total_notes,
+    total_revenue_inr = EXCLUDED.total_revenue_inr,
+    created_at = NOW();
+END;
+$$;
+
+-- ─────────────────────────────────────────────────────────────
 -- 8. VERIFY
 -- ─────────────────────────────────────────────────────────────
 DO $$

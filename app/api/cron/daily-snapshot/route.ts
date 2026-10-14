@@ -6,14 +6,20 @@ async function handleCron(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createServiceClient();
-  const { error } = await (supabase as any).rpc("take_daily_snapshot");
+  try {
+    const supabase = createServiceClient();
+    const { error } = await (supabase as any).rpc("take_daily_snapshot");
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("Daily snapshot RPC error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, date: new Date().toISOString().split("T")[0] });
+  } catch (err: any) {
+    console.error("Unhandled daily snapshot error:", err);
+    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true, date: new Date().toISOString().split("T")[0] });
 }
 
 export async function GET(req: NextRequest) {

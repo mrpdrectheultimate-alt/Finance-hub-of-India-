@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import RazorpayButton from "@/components/payment/RazorpayButton";
 
 type Billing = "monthly" | "annual";
 type PlanId = "free" | "pro" | "expert";
@@ -103,7 +104,7 @@ const PLANS: Plan[] = [
 const FAQ = [
   { q: "Can I cancel anytime?", a: "Yes. Cancel from your profile settings at any time. You keep access until the end of your billing period." },
   { q: "Is there a free trial?", a: "Pro and Expert plans include a 7-day free trial. No credit card charges until the trial ends." },
-  { q: "What payment methods are accepted?", a: "All major credit and debit cards through Stripe. UPI support can be enabled later." },
+  { q: "What payment methods are accepted?", a: "UPI (Google Pay, PhonePe, Paytm), RuPay & Indian cards, Net Banking via Razorpay, and all major international credit/debit cards through Stripe." },
   { q: "Is this financial advice?", a: "No. FinanceHub is an educational platform only. Nothing here is investment, tax, or financial advice." },
   { q: "Can I switch plans?", a: "Yes. Upgrade or downgrade anytime from your profile. Billing is handled by Stripe." },
   { q: "Are there student discounts?", a: "Email hello@financehub.in with your student ID for discount options." },
@@ -227,16 +228,50 @@ export default function PricingPage() {
                 )}
               </div>
 
-              {!isFree ? <div style={s.trialNote}>7-day free trial. Cancel anytime.</div> : null}
+              {!isFree ? <div style={s.trialNote}>Cancel anytime. Instant access after payment.</div> : null}
 
-              <button
-                onClick={() => void handleCheckout(plan)}
-                disabled={isLoading}
-                style={{ ...s.ctaBtn, background: isFree ? "#f0f0f0" : plan.color, color: isFree ? "#555" : "#fff", opacity: isLoading ? 0.7 : 1 }}
-                type="button"
-              >
-                {isLoading ? "Loading..." : plan.cta}
-              </button>
+              {isFree ? (
+                <button
+                  onClick={() => void handleCheckout(plan)}
+                  disabled={isLoading}
+                  style={{ ...s.ctaBtn, background: "#f0f0f0", color: "#555" }}
+                  type="button"
+                >
+                  {plan.cta}
+                </button>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", marginBottom: 12 }}>
+                  <RazorpayButton
+                    plan={`${plan.id}_${billing}` as any}
+                    label={`FinanceHub ${plan.name} (${billing === "annual" ? "Annual" : "Monthly"})`}
+                    amount={`₹${price}${billing === "annual" ? "/mo (₹" + (price * 12) + "/yr)" : "/mo"}`}
+                    color={plan.color}
+                    fullWidth
+                  />
+                  <button
+                    onClick={() => void handleCheckout(plan)}
+                    disabled={isLoading}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      background: "transparent",
+                      border: "1px solid #d1d5db",
+                      borderRadius: 8,
+                      fontSize: "0.8125rem",
+                      color: "#4b5563",
+                      fontWeight: 600,
+                      cursor: isLoading ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                    }}
+                    type="button"
+                  >
+                    {isLoading ? "Redirecting..." : "💳 Pay with Stripe (International)"}
+                  </button>
+                </div>
+              )}
 
               <div style={s.featureList}>
                 {plan.features.map((feature) => (

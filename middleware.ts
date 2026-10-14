@@ -134,7 +134,7 @@ export async function middleware(request: NextRequest) {
   res.headers.set("X-Frame-Options", "SAMEORIGIN");
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=*");
 
   return res;
 }

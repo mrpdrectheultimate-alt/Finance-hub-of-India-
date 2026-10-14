@@ -8,51 +8,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient }        from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const verificationId   = searchParams.get("id");
+  try {
+    const { searchParams } = new URL(req.url);
+    const verificationId   = searchParams.get("id");
 
-  if (!verificationId) {
-    return NextResponse.json({ error: "Verification ID required" }, { status: 400 });
-  }
+    if (!verificationId) {
+      return NextResponse.json({ error: "Verification ID required" }, { status: 400 });
+    }
 
-  const supabase = createServerClient();
+    const supabase = createServerClient();
 
-  // Verify the requester owns this certificate
-  const { data: { user } } = await supabase.auth.getUser();
+    // Verify the requester owns this certificate
+    const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: cert, error } = await supabase
-    .from("certificates")
-    .select("*")
-    .eq("verification_id", verificationId)
-    .eq("is_valid", true)
-    .single();
+    const { data: cert, error } = await supabase
+      .from("certificates")
+      .select("*")
+      .eq("verification_id", verificationId)
+      .eq("is_valid", true)
+      .single();
 
-  if (error || !cert) {
-    return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
-  }
+    if (error || !cert) {
+      return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
+    }
 
-  // Only owner can download their certificate
-  if (user && cert.user_id !== user.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
+    // Only owner can download their certificate
+    if (user && cert.user_id !== user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
 
-  const appUrl     = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
-  const verifyUrl  = `${appUrl}/verify/${verificationId}`;
-  const issuedDate = new Date(cert.issued_at).toLocaleDateString("en-IN", {
-    day: "numeric", month: "long", year: "numeric"
-  });
+    const appUrl     = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+    const verifyUrl  = `${appUrl}/verify/${verificationId}`;
+    const issuedDate = new Date(cert.issued_at).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric"
+    });
 
-  // Skills list HTML
-  const skillsHTML = (cert.skills || []).map((s: string) =>
-    `<span style="display:inline-block;margin:3px;padding:4px 12px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:12px;font-size:11px;font-weight:600">✓ ${s}</span>`
-  ).join("");
+    // Skills list HTML
+    const skillsHTML = (cert.skills || []).map((s: string) =>
+      `<span style="display:inline-block;margin:3px;padding:4px 12px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:12px;font-size:11px;font-weight:600">✓ ${s}</span>`
+    ).join("");
 
-  // QR code URL (using free QR service)
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0B1A2B&margin=4`;
+    // QR code URL (using free QR service)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(verifyUrl)}&bgcolor=ffffff&color=0B1A2B&margin=4`;
 
-  // Generate certificate HTML
-  const html = `<!DOCTYPE html>
+    // Generate certificate HTML
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -188,13 +191,17 @@ export async function GET(req: NextRequest) {
 </body>
 </html>`;
 
-  // Return as HTML (browser prints/saves as PDF)
-  return new NextResponse(html, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
-      "X-Certificate-ID": verificationId,
-    },
-  });
+    // Return as HTML (browser prints/saves as PDF)
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
+        "X-Certificate-ID": verificationId,
+      },
+    });
+  } catch (err: any) {
+    console.error("Generate certificate error:", err);
+    return NextResponse.json({ error: "Failed to generate certificate." }, { status: 500 });
+  }
 }

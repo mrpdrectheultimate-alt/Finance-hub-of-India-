@@ -7,21 +7,26 @@ async function handleCron(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createServiceClient();
-  const today    = new Date().toISOString().split("T")[0];
+  try {
+    const supabase = createServiceClient();
+    const today    = new Date().toISOString().split("T")[0];
 
-  // Reset ai_questions_today for all users whose reset date is not today
-  const { error, count } = await (supabase as any)
-    .from("profiles")
-    .update({ ai_questions_today: 0, ai_reset_date: today })
-    .neq("ai_reset_date", today);
+    // Reset ai_questions_today for all users whose reset date is not today
+    const { error, count } = await (supabase as any)
+      .from("profiles")
+      .update({ ai_questions_today: 0, ai_reset_date: today })
+      .neq("ai_reset_date", today);
 
-  if (error) {
-    console.error("AI limit reset error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("AI limit reset error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ reset: count, date: today });
+  } catch (err: any) {
+    console.error("Unhandled AI limit reset error:", err);
+    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ reset: count, date: today });
 }
 
 export async function GET(req: NextRequest) {

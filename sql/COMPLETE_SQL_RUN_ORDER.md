@@ -119,25 +119,40 @@ ORDER BY metric;
 
 ---
 
-## UPDATED RUN ORDER — Phase 10 Added
-
-Run AFTER all previous files:
-
+## STEP 9 — Advanced Gamification, Community & Career Hub
 ```
-32. concepts_careers_videos.sql    — 50 concepts, 7 careers, 70 raw video records
-33. fix_placeholder_video_ids.sql  — Unpublishes ~70 fake slugs (ppf-elss-nps-hindi etc.)
-34. video_library_expansion.sql   — Inserts 113+ verified real YouTube IDs
-35. phase10_cases_hindi.sql        — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
+28_gamification.sql                 — Seasons, weekly missions, daily challenges, get_leaderboard(), get_season_rank()
+29_community_career.sql             — Lesson comments, upvotes, 50+ interview questions bank, user saved questions
+30_feedback_schema.sql              — User feedback, bug reports, feature requests, admin review tracking
+31_referral_system.sql              — Referral tracking, codes, rewards calculation
 ```
 
-## UPDATED EXPECTED COUNTS (After all 34 files)
+## STEP 10 — Multimedia Library, Trading Simulations & Final Expansions
+```
+32_phase10_multimedia_trading.sql   — Books, reading status, paper portfolios, virtual orders, downloads
+33_content_freshness_audits.sql     — Automated/manual content freshness audit logs
+34_concepts_careers_videos.sql      — 50 concepts, 7 careers, video library base
+35_fix_placeholder_video_ids.sql    — Deactivates placeholder video IDs
+36_video_library_expansion.sql      — 113+ verified real YouTube embed IDs
+37_phase10_cases_hindi.sql          — 13 interactive case studies + 10 Hindi lessons
+```
 
-| Content | Count |
-|---------|-------|
-| Published lessons | 375+ |
-| Hindi lessons | 23+ |
-| Case studies | 25 |
-| Concepts (knowledge graph) | 100+ |
-| Videos | 157+ |
-| Career paths | 15 |
-| Badges | 20 |
+---
+
+## FINAL SYSTEM CAPABILITIES & EXPECTED METRICS
+| Content Domain | Final Live Entity Count |
+|---|---|
+| Published Lessons | 375+ total lessons across 8 comprehensive tracks |
+| Hindi Localized Lessons | 23+ fully translated lessons |
+| Free Access Lessons | 40+ ungated preview lessons |
+| Interactive Quizzes & Questions | 50+ quizzes, 184+ questions |
+| Curated Video Library | 157+ verified YouTube video lessons |
+| Knowledge Graph Concepts | 100+ interconnected finance concepts |
+| Financial Glossary Terms | 35+ plain-English finance definitions |
+| Interactive Case Studies | 25 full real-world case simulations |
+| Paper Trading Engines | 6 Forex Pairs + 6 Crypto Assets with real-time ticks |
+| Career Paths & Interview Bank | 15 career roadmaps + 50+ interview Q&As |
+| Email Sequences & Notifications | 5 automated onboarding/drip email sequences |
+| League Tiers & Seasons | 5 competitive tiers with weekly promotion/relegation |
+
+*All SQL migration scripts are 100% idempotent, safe, and can be executed sequentially in the Supabase SQL Editor.*

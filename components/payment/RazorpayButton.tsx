@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 interface PaymentButtonProps {
-  plan: "pro_monthly" | "pro_annual" | "expert_monthly";
+  plan: "pro_monthly" | "pro_annual" | "expert_monthly" | "expert_annual";
   label: string;
   amount: string; // display string e.g. "₹499/month"
   color?: string;

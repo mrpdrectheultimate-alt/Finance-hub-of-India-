@@ -17,6 +17,7 @@ const PLANS = {
   pro_monthly: { amount: 49900, label: "FinanceHub Pro — Monthly" },
   pro_annual: { amount: 399900, label: "FinanceHub Pro — Annual" },
   expert_monthly: { amount: 99900, label: "FinanceHub Expert — Monthly" },
+  expert_annual: { amount: 799900, label: "FinanceHub Expert — Annual" },
 } as const;
 
 export async function POST(req: NextRequest) {

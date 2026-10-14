@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ role: newRole })
+      .update({ role: newRole, subscription_tier: newRole } as any)
       .eq("id", user.id);
 
     if (updateError) {

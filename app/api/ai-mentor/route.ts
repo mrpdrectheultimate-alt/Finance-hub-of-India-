@@ -9,7 +9,8 @@ import Anthropic                     from "@anthropic-ai/sdk";
 import { createServerClient }        from "@/lib/supabase";
 import { checkAIRateLimit, incrementAIUsage } from "@/lib/ai-rate-limit";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY || "dummy_key";
+const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 
 // ─── Intent classifier ────────────────────────────────────────
 type Intent =
@@ -152,6 +153,13 @@ export async function POST(req: NextRequest) {
 
     if (!question?.trim()) {
       return NextResponse.json({ error: "Please enter a question." }, { status: 400 });
+    }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: "AI Mentor service is temporarily unavailable. Please check back shortly." },
+        { status: 503 }
+      );
     }
 
     // Get learner context
