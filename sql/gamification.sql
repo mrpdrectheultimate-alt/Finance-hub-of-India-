@@ -23,13 +23,21 @@ CREATE TABLE IF NOT EXISTS user_xp_log (
 -- Ensure schema evolution if user_xp_log was created in earlier migrations
 ALTER TABLE user_xp_log
   ADD COLUMN IF NOT EXISTS action      TEXT DEFAULT 'lesson',
+  ADD COLUMN IF NOT EXISTS reason      TEXT DEFAULT 'lesson',
   ADD COLUMN IF NOT EXISTS description TEXT,
   ADD COLUMN IF NOT EXISTS lesson_id   UUID REFERENCES lessons(id) ON DELETE SET NULL;
 
 DO $$
 BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_xp_log' AND column_name = 'reason' AND is_nullable = 'NO') THEN
+    ALTER TABLE user_xp_log ALTER COLUMN reason DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_xp_log' AND column_name = 'action' AND is_nullable = 'NO') THEN
+    ALTER TABLE user_xp_log ALTER COLUMN action DROP NOT NULL;
+  END IF;
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_xp_log' AND column_name = 'reason') THEN
     UPDATE user_xp_log SET action = COALESCE(action, reason) WHERE action IS NULL;
+    UPDATE user_xp_log SET reason = COALESCE(reason, action) WHERE reason IS NULL;
   END IF;
 END $$;
 
@@ -42,6 +50,7 @@ CREATE TABLE IF NOT EXISTS badges (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug        TEXT UNIQUE NOT NULL,
   name        TEXT,
+  title       TEXT,
   description TEXT NOT NULL DEFAULT '',
   icon_emoji  TEXT NOT NULL DEFAULT '🏅',
   category    TEXT NOT NULL DEFAULT 'achievement',
@@ -54,7 +63,9 @@ CREATE TABLE IF NOT EXISTS badges (
 -- Ensure schema evolution if badges was created in earlier migrations
 ALTER TABLE badges
   ADD COLUMN IF NOT EXISTS name        TEXT,
+  ADD COLUMN IF NOT EXISTS title       TEXT,
   ADD COLUMN IF NOT EXISTS icon_emoji  TEXT DEFAULT '🏅',
+  ADD COLUMN IF NOT EXISTS icon        TEXT DEFAULT '🏅',
   ADD COLUMN IF NOT EXISTS category    TEXT DEFAULT 'achievement',
   ADD COLUMN IF NOT EXISTS threshold   INT  DEFAULT 1,
   ADD COLUMN IF NOT EXISTS xp_reward   INT  DEFAULT 50,
@@ -63,12 +74,19 @@ ALTER TABLE badges
 
 DO $$
 BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'title' AND is_nullable = 'NO') THEN
+    ALTER TABLE badges ALTER COLUMN title DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'name' AND is_nullable = 'NO') THEN
+    ALTER TABLE badges ALTER COLUMN name DROP NOT NULL;
+  END IF;
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'title') THEN
     UPDATE badges SET name = COALESCE(name, title) WHERE name IS NULL;
     UPDATE badges SET title = COALESCE(title, name) WHERE title IS NULL;
   END IF;
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'badges' AND column_name = 'icon') THEN
     UPDATE badges SET icon_emoji = COALESCE(icon_emoji, icon) WHERE icon_emoji IS NULL;
+    UPDATE badges SET icon = COALESCE(icon, icon_emoji) WHERE icon IS NULL;
   END IF;
 END $$;
 
@@ -234,28 +252,28 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ── Seed default badges ──────────────────────────────────────
-INSERT INTO badges (slug, name, description, icon_emoji, category, threshold, xp_reward)
+INSERT INTO badges (slug, name, title, description, icon_emoji, category, threshold, xp_reward)
 VALUES
-  ('first-lesson',     'First Step',           'Complete your first lesson',                                         '🎯', 'completion', 1,    25),
-  ('streak-7',         'Week Warrior',          '7-day learning streak',                                              '🔥', 'streak',     7,    50),
-  ('streak-30',        'Monthly Master',        '30-day learning streak',                                             '🔥', 'streak',     30,   200),
-  ('streak-100',       'Century Streak',        '100-day learning streak',                                            '💯', 'streak',     100,  500),
-  ('lessons-10',       'Getting Serious',       'Complete 10 lessons',                                                '📚', 'completion', 10,   50),
-  ('lessons-50',       'Half Century',          'Complete 50 lessons',                                                '🏅', 'completion', 50,   150),
-  ('lessons-100',      'Centurion',             'Complete 100 lessons',                                               '🏆', 'completion', 100,  300),
-  ('quiz-perfect',     'Perfect Score',         'Score 100% on any quiz',                                             '💎', 'quiz',       100,  75),
-  ('quiz-10',          'Quiz Champion',         'Complete 10 quizzes',                                                '🎓', 'quiz',       10,   100),
-  ('first-track',      'Track Complete',        'Complete all lessons in one track',                                  '🗺️', 'completion', 1,    500),
-  ('ai-10',            'AI Explorer',           'Ask the AI Mentor 10 questions',                                     '🤖', 'special',    10,   50),
-  ('community-answer', 'Helpful Member',        'Answer a community question',                                        '💬', 'community',  1,    30),
-  ('hindi-learner',    'Hindi Learner',         'Complete 5 Hindi lessons',                                           '🇮🇳', 'special',    5,    75),
-  ('silver-league',    'Silver League',         'Reach Silver league',                                                '🥈', 'special',    500,  0),
-  ('gold-league',      'Gold League',           'Reach Gold league',                                                  '🥇', 'special',    2000, 0),
-  ('diamond-league',   'Diamond League',        'Reach Diamond league',                                               '💎', 'special',    5000, 0),
-  ('master-league',    'Master',                'Reach Master league',                                                '🏆', 'special',    10000,0),
-  ('note-taker',       'Note Taker',            'Write 10 lesson notes',                                              '📝', 'special',    10,   50),
-  ('pro-member',       'Pro Member',            'Upgrade to Pro plan',                                                '⭐', 'special',    1,    200),
-  ('early-adopter',    'Early Adopter',         'Joined FinanceHub in its first year',                               '🌟', 'special',    1,    100)
+  ('first-lesson',     'First Step', 'First Step',           'Complete your first lesson',                                         '🎯', 'completion', 1,    25),
+  ('streak-7',         'Week Warrior', 'Week Warrior',          '7-day learning streak',                                              '🔥', 'streak',     7,    50),
+  ('streak-30',        'Monthly Master', 'Monthly Master',        '30-day learning streak',                                             '🔥', 'streak',     30,   200),
+  ('streak-100',       'Century Streak', 'Century Streak',        '100-day learning streak',                                            '💯', 'streak',     100,  500),
+  ('lessons-10',       'Getting Serious', 'Getting Serious',       'Complete 10 lessons',                                                '📚', 'completion', 10,   50),
+  ('lessons-50',       'Half Century', 'Half Century',          'Complete 50 lessons',                                                '🏅', 'completion', 50,   150),
+  ('lessons-100',      'Centurion', 'Centurion',             'Complete 100 lessons',                                               '🏆', 'completion', 100,  300),
+  ('quiz-perfect',     'Perfect Score', 'Perfect Score',         'Score 100% on any quiz',                                             '💎', 'quiz',       100,  75),
+  ('quiz-10',          'Quiz Champion', 'Quiz Champion',         'Complete 10 quizzes',                                                '🎓', 'quiz',       10,   100),
+  ('first-track',      'Track Complete', 'Track Complete',        'Complete all lessons in one track',                                  '🗺️', 'completion', 1,    500),
+  ('ai-10',            'AI Explorer', 'AI Explorer',           'Ask the AI Mentor 10 questions',                                     '🤖', 'special',    10,   50),
+  ('community-answer', 'Helpful Member', 'Helpful Member',        'Answer a community question',                                        '💬', 'community',  1,    30),
+  ('hindi-learner',    'Hindi Learner', 'Hindi Learner',         'Complete 5 Hindi lessons',                                           '🇮🇳', 'special',    5,    75),
+  ('silver-league',    'Silver League', 'Silver League',         'Reach Silver league',                                                '🥈', 'special',    500,  0),
+  ('gold-league',      'Gold League', 'Gold League',           'Reach Gold league',                                                  '🥇', 'special',    2000, 0),
+  ('diamond-league',   'Diamond League', 'Diamond League',        'Reach Diamond league',                                               '💎', 'special',    5000, 0),
+  ('master-league',    'Master', 'Master',                'Reach Master league',                                                '🏆', 'special',    10000,0),
+  ('note-taker',       'Note Taker', 'Note Taker',            'Write 10 lesson notes',                                              '📝', 'special',    10,   50),
+  ('pro-member',       'Pro Member', 'Pro Member',            'Upgrade to Pro plan',                                                '⭐', 'special',    1,    200),
+  ('early-adopter',    'Early Adopter', 'Early Adopter',         'Joined FinanceHub in its first year',                               '🌟', 'special',    1,    100)
 ON CONFLICT (slug) DO NOTHING;
 
 DO $$
