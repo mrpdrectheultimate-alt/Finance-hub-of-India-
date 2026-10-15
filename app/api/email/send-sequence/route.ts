@@ -332,6 +332,10 @@ function emailLayout(content: string): string {
 }
 
 // ─── Main handler ─────────────────────────────────────────────
+export async function GET(req: NextRequest) {
+  return POST(req);
+}
+
 export async function POST(req: NextRequest) {
   // Verify cron secret
   const authHeader = req.headers.get("authorization");
