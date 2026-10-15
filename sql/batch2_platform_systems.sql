@@ -142,6 +142,7 @@ SELECT
 WHERE NOT EXISTS (SELECT 1 FROM leaderboard_weeks WHERE is_current = TRUE);
 
 -- ── Weekly XP summary view ────────────────────────────────────
+DROP VIEW IF EXISTS weekly_leaderboard CASCADE;
 CREATE OR REPLACE VIEW weekly_leaderboard AS
 SELECT
   wx.user_id,
@@ -797,6 +798,7 @@ VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- ── View: community health dashboard ─────────────────────────
+DROP VIEW IF EXISTS community_health CASCADE;
 CREATE OR REPLACE VIEW community_health AS
 SELECT
   COUNT(*)                                                   AS total_questions,
@@ -1150,6 +1152,7 @@ CREATE TRIGGER feedback_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_feedback_timestamp();
 
 -- Analytics view for admin
+DROP VIEW IF EXISTS feedback_summary CASCADE;
 CREATE OR REPLACE VIEW feedback_summary AS
 SELECT
   DATE_TRUNC('day', created_at)::DATE                              AS day,
@@ -1356,6 +1359,7 @@ CREATE POLICY "Anyone can view active referral rewards"
   USING (is_active = TRUE);
 
 -- ── View: referral leaderboard ────────────────────────────────
+DROP VIEW IF EXISTS referral_leaderboard CASCADE;
 CREATE OR REPLACE VIEW referral_leaderboard AS
 SELECT
   r.referrer_id,

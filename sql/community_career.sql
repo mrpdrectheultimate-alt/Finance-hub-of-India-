@@ -185,6 +185,7 @@ VALUES
 ON CONFLICT (slug) DO NOTHING;
 
 -- ── View: community health dashboard ─────────────────────────
+DROP VIEW IF EXISTS community_health CASCADE;
 CREATE OR REPLACE VIEW community_health AS
 SELECT
   COUNT(*)                                                   AS total_questions,

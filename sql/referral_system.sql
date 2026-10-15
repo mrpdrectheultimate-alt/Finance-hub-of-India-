@@ -200,6 +200,7 @@ CREATE POLICY "Anyone can view active referral rewards"
   USING (is_active = TRUE);
 
 -- ── View: referral leaderboard ────────────────────────────────
+DROP VIEW IF EXISTS referral_leaderboard CASCADE;
 CREATE OR REPLACE VIEW referral_leaderboard AS
 SELECT
   r.referrer_id,

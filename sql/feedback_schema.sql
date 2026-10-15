@@ -88,6 +88,7 @@ CREATE TRIGGER feedback_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_feedback_timestamp();
 
 -- Analytics view for admin
+DROP VIEW IF EXISTS feedback_summary CASCADE;
 CREATE OR REPLACE VIEW feedback_summary AS
 SELECT
   DATE_TRUNC('day', created_at)::DATE                              AS day,
