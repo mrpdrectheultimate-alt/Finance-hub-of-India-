@@ -76,13 +76,13 @@ export async function POST(req: NextRequest) {
     .from("lessons")
     .select(`
       title, level_id,
-      levels!inner(track_id, tracks!inner(id, name, slug))
+      levels(track_id, tracks(id, title, slug))
     `)
     .eq("id", lessonId)
-    .single();
+    .maybeSingle();
 
   const trackId   = (lessonData as any)?.levels?.track_id;
-  const trackName = (lessonData as any)?.levels?.tracks?.name || "";
+  const trackName = (lessonData as any)?.levels?.tracks?.title || (lessonData as any)?.levels?.tracks?.name || "General";
   const trackSlug = (lessonData as any)?.levels?.tracks?.slug || "";
 
   // ── 4. Update profile XP and streak ──────────────────────

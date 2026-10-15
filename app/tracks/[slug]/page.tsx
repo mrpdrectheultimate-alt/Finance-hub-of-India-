@@ -151,11 +151,22 @@ export default function TrackPage({ params }: { params: { slug: string } }) {
 
         const formattedLevels: Level[] = (lvls || []).map((lv: any) => ({
           id: lv.id,
-          title: lv.title || lv.name || "Level",
+          title: (lv.title || lv.name || "Level")
+            .replace(/â€”/g, "—")
+            .replace(/â€“/g, "–"),
           slug: lv.slug,
           order_index: lv.order_index || 0,
           lessons: (lv.lessons || [])
             .filter((l: any) => l && (l.is_published === undefined || l.is_published === true))
+            .map((l: any) => ({
+              ...l,
+              title: (l.title || "")
+                .replace(/â€”/g, "—")
+                .replace(/â€“/g, "–")
+                .replace(/â€™/g, "'")
+                .replace(/â€œ/g, '"')
+                .replace(/â€\x9d/g, '"'),
+            }))
             .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0)),
         }));
 

@@ -97,8 +97,8 @@ export default function DashboardPage() {
             lessons (
               title, slug, duration_minutes,
               levels (
-                name, title,
-                tracks (name, title, color_hex, slug)
+                title, slug,
+                tracks (title, color_hex, slug)
               )
             )
           `)
@@ -185,7 +185,7 @@ export default function DashboardPage() {
         .from("lessons")
         .select(`
           id, title, slug, duration_minutes, order_index,
-          levels!inner(name, title, tracks!inner(name, title, color_hex, slug))
+          levels (title, slug, tracks (title, color_hex, slug))
         `)
         .order("order_index")
         .limit(30);

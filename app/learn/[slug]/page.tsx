@@ -97,25 +97,72 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
       const { data: { user: u } } = await (supabase.auth as any).getUser();
       setUser(u);
 
-      // Fetch lesson by slug or id
-      const { data: lessonData } = await (supabase as any)
+      // Fetch lesson by slug or id safely
+      const rawSlug = decodeURIComponent(params.slug || "").trim();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawSlug);
+
+      let query = (supabase as any)
         .from("lessons")
         .select(`
           id, title, slug, content_mdx, duration_minutes,
           is_free, language, key_takeaways, difficulty_score, meta_description,
-          levels!inner(name, tracks!inner(name, slug, color_hex))
-        `)
-        .or(`slug.eq.${params.slug},id.eq.${params.slug}`)
-        .eq("is_published", true)
-        .single();
+          levels(id, title, slug, tracks(id, title, slug, color_hex, icon))
+        `);
 
-      if (!lessonData) { setLoading(false); return; }
+      if (isUuid) {
+        query = query.eq("id", rawSlug);
+      } else {
+        query = query.eq("slug", rawSlug);
+      }
+
+      let { data: lessonData, error: lErr } = await query.eq("is_published", true).maybeSingle();
+
+      // If not found by exact slug, try fallback search
+      if (!lessonData && !isUuid) {
+        const { data: fallback } = await (supabase as any)
+          .from("lessons")
+          .select(`
+            id, title, slug, content_mdx, duration_minutes,
+            is_free, language, key_takeaways, difficulty_score, meta_description,
+            levels(id, title, slug, tracks(id, title, slug, color_hex, icon))
+          `)
+          .ilike("slug", `%${rawSlug}%`)
+          .eq("is_published", true)
+          .limit(1)
+          .maybeSingle();
+
+        lessonData = fallback;
+      }
+
+      if (lErr) {
+        console.error("Lesson query error:", lErr);
+      }
+
+      if (!lessonData) {
+        setLoading(false);
+        return;
+      }
+
+      const cleanTitle = (lessonData.title || "")
+        .replace(/â€”/g, "—")
+        .replace(/â€“/g, "–")
+        .replace(/â€™/g, "'")
+        .replace(/â€œ/g, '"')
+        .replace(/â€\x9d/g, '"');
+
+      const lvl = (lessonData as any).levels;
+      const trk = lvl?.tracks;
 
       const mapped: Lesson = {
         ...lessonData,
+        title: cleanTitle,
         level: {
-          name:  (lessonData as any).levels.name,
-          track: (lessonData as any).levels.tracks,
+          name: lvl?.title || lvl?.name || "Level 1",
+          track: {
+            name: trk?.title || trk?.name || "Curriculum",
+            slug: trk?.slug || "explore",
+            color_hex: trk?.color_hex || "#0E6163",
+          },
         },
       };
       setLesson(mapped);
@@ -597,7 +644,14 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
 }
 
 // ─── Simple MDX renderer (no extra deps) ─────────────────────
-function renderMDX(mdx: string): string {
+function renderMDX(rawMdx: string): string {
+  const mdx = (rawMdx || "")
+    .replace(/â€”/g, "—")
+    .replace(/â€“/g, "–")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€\x9d/g, '"');
+
   return mdx
     .replace(/^# (.+)$/gm,   "<h1>$1</h1>")
     .replace(/^## (.+)$/gm,  "<h2>$1</h2>")
