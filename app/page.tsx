@@ -8,14 +8,14 @@ import { useState, useEffect } from "react";
 // ============================================================
 
 const TRACKS = [
-  { code:"PF", name:"Personal Finance",   icon:"💰", color:"#0E6163", bg:"#F0F9F7", desc:"Budgeting, saving, tax, insurance, retirement — the essentials no school taught.", lessons:45, quizzes:12, level:"Beginner → Advanced" },
-  { code:"TM", name:"Trading & Markets",  icon:"📈", color:"#185FA5", bg:"#EEF4FB", desc:"From reading a chart to running a full trading strategy — three complete levels.", lessons:52, quizzes:14, level:"Beginner → Advanced" },
-  { code:"CF", name:"Corporate Finance",  icon:"🏢", color:"#7C3AED", bg:"#F4F0FE", desc:"Valuation, M&A, fundraising, unit economics — for founders and finance careers.", lessons:38, quizzes:10, level:"Intermediate → Advanced" },
-  { code:"CR", name:"Crypto & DeFi",      icon:"₿",  color:"#0891B2", bg:"#EEF8FB", desc:"Blockchain, DeFi protocols, wallets, paper trading — without the hype.", lessons:28, quizzes:8,  level:"Beginner → Advanced" },
-  { code:"BF", name:"Behavioral Finance", icon:"🧠", color:"#B45309", bg:"#FEF7EC", desc:"Why smart people make bad money decisions — and how to stop.", lessons:24, quizzes:6,  level:"Beginner → Intermediate" },
-  { code:"TA", name:"Technical Analysis", icon:"📊", color:"#0F766E", bg:"#F0FAFA", desc:"Charts, indicators, candlesticks — read the market with confidence.", lessons:36, quizzes:9,  level:"Intermediate → Advanced" },
-  { code:"FX", name:"Forex & Currencies", icon:"💱", color:"#1D4ED8", bg:"#EEF2FF", desc:"Currency markets, FEMA, carry trades, hedging — the global money layer.", lessons:22, quizzes:6,  level:"Intermediate → Advanced" },
-  { code:"HI", name:"हिंदी Finance",      icon:"🇮🇳", color:"#B91C1C", bg:"#FEF2F2", desc:"Personal finance and investing explained simply — in Hindi.", lessons:13, quizzes:4,  level:"Beginner" },
+  { code:"PF", slug:"personal-finance", name:"Personal Finance",   icon:"💰", color:"#0E6163", bg:"#F0F9F7", desc:"Budgeting, saving, tax, insurance, retirement — the essentials no school taught.", lessons:45, quizzes:12, level:"Beginner → Advanced" },
+  { code:"TM", slug:"trading-markets",  name:"Trading & Markets",  icon:"📈", color:"#185FA5", bg:"#EEF4FB", desc:"From reading a chart to running a full trading strategy — three complete levels.", lessons:52, quizzes:14, level:"Beginner → Advanced" },
+  { code:"CF", slug:"corporate-finance", name:"Corporate Finance",  icon:"🏢", color:"#7C3AED", bg:"#F4F0FE", desc:"Valuation, M&A, fundraising, unit economics — for founders and finance careers.", lessons:38, quizzes:10, level:"Intermediate → Advanced" },
+  { code:"CR", slug:"crypto-defi",      name:"Crypto & DeFi",      icon:"₿",  color:"#0891B2", bg:"#EEF8FB", desc:"Blockchain, DeFi protocols, wallets, paper trading — without the hype.", lessons:28, quizzes:8,  level:"Beginner → Advanced" },
+  { code:"BF", slug:"behavioral-finance", name:"Behavioral Finance", icon:"🧠", color:"#B45309", bg:"#FEF7EC", desc:"Why smart people make bad money decisions — and how to stop.", lessons:24, quizzes:6,  level:"Beginner → Intermediate" },
+  { code:"TA", slug:"technical-analysis", name:"Technical Analysis", icon:"📊", color:"#0F766E", bg:"#F0FAFA", desc:"Charts, indicators, candlesticks — read the market with confidence.", lessons:36, quizzes:9,  level:"Intermediate → Advanced" },
+  { code:"FX", slug:"forex-currency",   name:"Forex & Currencies", icon:"💱", color:"#1D4ED8", bg:"#EEF2FF", desc:"Currency markets, FEMA, carry trades, hedging — the global money layer.", lessons:22, quizzes:6,  level:"Intermediate → Advanced" },
+  { code:"HI", slug:"hindi",            name:"हिंदी Finance",      icon:"🇮🇳", color:"#B91C1C", bg:"#FEF2F2", desc:"Personal finance and investing explained simply — in Hindi.", lessons:21, quizzes:4,  level:"Beginner" },
 ];
 
 const FEATURES = [
@@ -419,7 +419,7 @@ export default function HomePage() {
 
           <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
             {TRACKS.map((t,i) => (
-              <a key={i} href={`/tracks/${t.code.toLowerCase()}`} className="card-hover" style={{
+              <a key={i} href={`/tracks/${t.slug}`} className="card-hover" style={{
                 display:"block",
                 background:"#ffffff", border:"1px solid #e5eaf0",
                 borderRadius:14, overflow:"hidden",

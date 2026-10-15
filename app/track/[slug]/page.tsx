@@ -4,30 +4,45 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-const FIRST_LEVEL_BY_TRACK: Record<string, string> = {
-  "personal-finance": "beginner",
-  "trading-markets": "markets-101",
-  "crypto-defi": "crypto-basics",
-  "corporate-finance": "business-basics",
-  "behavioral-finance": "money-psychology",
-  "forex-currency": "forex-basics",
-  "technical-analysis": "chart-reading-fundamentals",
+const CANONICAL_MAP: Record<string, string> = {
+  "personal-finance": "personal-finance",
+  pf: "personal-finance",
+  "trading-markets": "trading-markets",
+  "stock-market": "trading-markets",
+  trading: "trading-markets",
+  tm: "trading-markets",
+  "crypto-defi": "crypto-defi",
+  crypto: "crypto-defi",
+  cr: "crypto-defi",
+  "corporate-finance": "corporate-finance",
+  cf: "corporate-finance",
+  "behavioral-finance": "behavioral-finance",
+  bf: "behavioral-finance",
+  "forex-currency": "forex-currency",
+  "forex-currencies": "forex-currency",
+  fx: "forex-currency",
+  "technical-analysis": "technical-analysis",
+  ta: "technical-analysis",
+  hi: "hindi",
+  hindi: "hindi",
+  "hindi-finance": "hindi",
 };
 
 export default function TrackRedirectPage({ params }: { params: { slug: string } }) {
-  const firstLevelSlug = FIRST_LEVEL_BY_TRACK[params.slug];
   const router = useRouter();
+  const rawSlug = (params?.slug || "").toLowerCase().trim();
+  const target = CANONICAL_MAP[rawSlug] || rawSlug;
 
   useEffect(() => {
-    router.replace(firstLevelSlug ? `/track/${params.slug}/${firstLevelSlug}` : "/explore");
-  }, [firstLevelSlug, params.slug, router]);
+    router.replace(`/tracks/${target}`);
+  }, [target, router]);
 
   return (
     <div style={s.page}>
       <div style={s.logoMark}>F</div>
       <div style={s.title}>Opening track...</div>
-      <Link href={firstLevelSlug ? `/track/${params.slug}/${firstLevelSlug}` : "/explore"} style={s.link}>
-        Continue
+      <Link href={`/tracks/${target}`} style={s.link}>
+        Continue to Track Syllabus →
       </Link>
     </div>
   );
@@ -48,7 +63,7 @@ const s: Record<string, React.CSSProperties> = {
     width: 44,
     height: 44,
     borderRadius: 10,
-    background: "#1D9E75",
+    background: "#0E6163",
     color: "#fff",
     display: "flex",
     alignItems: "center",
@@ -56,5 +71,5 @@ const s: Record<string, React.CSSProperties> = {
     fontWeight: 800,
   },
   title: { fontSize: 14, color: "#555", fontWeight: 600 },
-  link: { fontSize: 13, color: "#1D9E75", textDecoration: "none", fontWeight: 700 },
+  link: { fontSize: 13, color: "#0E6163", textDecoration: "none", fontWeight: 700 },
 };
