@@ -1,53 +1,46 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import AppLayout from "@/components/layout/AppLayout";
+import AIMentor from "@/components/ai/AIMentor";
 import { supabase } from "@/lib/supabase";
-import Logo from "@/components/ui/Logo";
-import Link from "next/link";
+
+// ============================================================
+// FinanceHub — AI Finance Mentor Page
+// app/ai-tutor/page.tsx
+// Frontier-grade interactive financial learning companion
+// ============================================================
 
 export default function AITutorPage() {
-
-  const [AIM, setAIM] = useState<any>(null);
+  const [profileRole, setProfileRole] = useState("free");
 
   useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-    import("@/components/ai/AIMentor").then(m => setAIM(() => m.default));
+        const { data } = await supabase
+          .from("profiles")
+          .select("role, subscription_tier")
+          .eq("id", user.id)
+          .single();
 
+        if (data) {
+          const p = data as any;
+          setProfileRole(p.subscription_tier || p.role || "free");
+        }
+      } catch (err) {
+        console.error("Error fetching profile role for AI Tutor:", err);
+      }
+    })();
   }, []);
 
-
-
   return (
-
-    <div style={{ maxWidth:760, margin:"0 auto", padding:"24px 20px 0", fontFamily:"var(--font-ui,system-ui)" }}>
-
-      <div style={{ marginBottom:16 }}>
-
-        <h1 style={{ fontSize:22, fontWeight:800, color:"#1c2b3a", margin:"0 0 4px" }}>🤖 AI Finance Mentor</h1>
-
-        <p style={{ fontSize:13, color:"#718096", margin:0 }}>Ask anything about finance — India-specific, source-cited, personalised to your learning history.</p>
-
+    <AppLayout userRole={profileRole}>
+      <div style={{ width: "100%", height: "calc(100vh - 54px)", overflow: "hidden", background: "#FFFFFF" }}>
+        <AIMentor />
       </div>
-
-      {AIM ? (
-
-        <AIM />
-
-      ) : (
-
-        <div style={{ height:500, background:"#f8f9fa", borderRadius:14, border:"1px solid #e2e8f0", display:"flex", alignItems:"center", justifyContent:"center", color:"#718096" }}>
-
-          Loading AI Mentor…
-
-        </div>
-
-      )}
-
-    </div>
-
+    </AppLayout>
   );
-
 }
-
-
-
-// ─────────────────────────────────────────────────────────────
