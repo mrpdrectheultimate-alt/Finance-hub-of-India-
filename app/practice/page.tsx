@@ -202,9 +202,11 @@ export default function PracticePage() {
           <button onClick={() => setActiveLab(null)} style={s.backBtn} type="button">
             ← Back to all labs
           </button>
-          <div style={s.activeTitle}>
+          <div style={s.activeBreadcrumb}>
+            <span style={s.breadcrumbMuted}>Practice Labs</span>
+            <span style={s.breadcrumbSep}>/</span>
             <span style={{ ...s.titleMark, background: activeLabConfig.color }}>{activeLabConfig.icon}</span>
-            {activeLabConfig.title}
+            <span style={s.breadcrumbCurrent}>{activeLabConfig.title}</span>
           </div>
         </div>
 
@@ -213,7 +215,10 @@ export default function PracticePage() {
         </div>
 
         <div style={s.otherLabs}>
-          <div style={s.otherTitle}>Other finance labs</div>
+          <div style={s.otherHeader}>
+            <h3 style={s.otherTitle}>Explore Other Finance Labs</h3>
+            <p style={s.otherSub}>Hands-on interactive calculators for investing, taxes, FIRE, and trading.</p>
+          </div>
           <div style={s.otherGrid}>
             {LABS.filter((lab) => lab.id !== activeLab).map((lab) => (
               <button
@@ -223,13 +228,18 @@ export default function PracticePage() {
                     window.location.href = lab.href;
                   } else {
                     setActiveLab(lab.id);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 }}
-                style={{ ...s.otherCard, borderColor: `${lab.color}30` }}
+                style={s.otherCard}
                 type="button"
               >
-                <span style={{ ...s.otherIcon, background: lab.bg, color: lab.color }}>{lab.icon}</span>
-                <span style={s.otherCardTitle}>{lab.title}</span>
+                <div style={{ ...s.otherIcon, background: lab.bg, color: lab.color }}>{lab.icon}</div>
+                <div style={s.otherCardTextWrap}>
+                  <div style={s.otherCardTitle}>{lab.title}</div>
+                  <div style={s.otherCardTag}>{lab.tags[0]}</div>
+                </div>
+                <span style={s.otherCardArrow}>→</span>
               </button>
             ))}
           </div>
@@ -330,15 +340,126 @@ const s: Record<string, CSSProperties> = {
   cardDesc: { fontSize: 13, color: "var(--text-secondary, #666)", lineHeight: 1.5, margin: "0 0 16px" },
   openBtn: { display: "block", width: "100%", padding: "10px", fontSize: 13, fontWeight: 650, border: "none", borderRadius: 9, color: "#fff", cursor: "pointer", fontFamily: "system-ui", textAlign: "center" },
   openBtnLink: { display: "block", width: "100%", padding: "10px", fontSize: 13, fontWeight: 650, border: "none", borderRadius: 9, color: "#fff", cursor: "pointer", fontFamily: "system-ui", textAlign: "center", textDecoration: "none", boxSizing: "border-box" },
-  activeHeader: { display: "flex", alignItems: "center", gap: 14, maxWidth: 1180, margin: "0 auto 20px", flexWrap: "wrap" },
-  backBtn: { padding: "8px 14px", fontSize: 13, fontWeight: 550, border: "0.5px solid var(--border, #ddd)", borderRadius: 8, background: "var(--bg-card, #fff)", cursor: "pointer", fontFamily: "system-ui", color: "var(--text-secondary, #555)" },
-  activeTitle: { display: "flex", alignItems: "center", gap: 10, fontWeight: 750, fontSize: 16, color: "var(--text-primary, #0a0a0a)" },
-  titleMark: { color: "#fff", borderRadius: 8, padding: "5px 7px", fontSize: 11, fontWeight: 800 },
-  labWrap: { marginBottom: 32 },
-  otherLabs: { maxWidth: 980, margin: "0 auto" },
-  otherTitle: { fontSize: 13, fontWeight: 650, color: "var(--text-muted, #888)", marginBottom: 12 },
-  otherGrid: { display: "flex", gap: 8, flexWrap: "wrap" },
-  otherCard: { display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", border: "0.5px solid", borderRadius: 9, background: "var(--bg-card, #fff)", cursor: "pointer", fontFamily: "system-ui" },
-  otherIcon: { minWidth: 32, textAlign: "center", borderRadius: 7, padding: "4px 5px", fontSize: 10, fontWeight: 800 },
-  otherCardTitle: { fontSize: 12, fontWeight: 550, color: "var(--text-secondary, #555)" },
+  activeHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    maxWidth: 1200,
+    margin: "0 auto 20px",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  backBtn: {
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 600,
+    border: "1px solid var(--border, #E2E8F0)",
+    borderRadius: 8,
+    background: "var(--bg-card, #fff)",
+    cursor: "pointer",
+    fontFamily: "system-ui",
+    color: "var(--text-secondary, #475569)",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+  },
+  activeBreadcrumb: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 13,
+  },
+  breadcrumbMuted: {
+    color: "var(--text-muted, #94A3B8)",
+    fontWeight: 500,
+  },
+  breadcrumbSep: {
+    color: "var(--text-muted, #CBD5E1)",
+  },
+  breadcrumbCurrent: {
+    fontWeight: 700,
+    color: "var(--text-primary, #0F172A)",
+  },
+  titleMark: {
+    color: "#fff",
+    borderRadius: 6,
+    padding: "3px 7px",
+    fontSize: 11,
+    fontWeight: 800,
+  },
+  labWrap: {
+    maxWidth: 1200,
+    margin: "0 auto 40px",
+  },
+  otherLabs: {
+    maxWidth: 1200,
+    margin: "0 auto",
+    borderTop: "1px solid var(--border, #E2E8F0)",
+    paddingTop: 32,
+  },
+  otherHeader: {
+    marginBottom: 16,
+  },
+  otherTitle: {
+    fontSize: 16,
+    fontWeight: 750,
+    color: "var(--text-primary, #0F172A)",
+    margin: "0 0 4px",
+    letterSpacing: "-0.01em",
+  },
+  otherSub: {
+    fontSize: 13,
+    color: "var(--text-muted, #64748B)",
+    margin: 0,
+  },
+  otherGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+    gap: 10,
+  },
+  otherCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "12px 14px",
+    border: "1px solid var(--border, #E2E8F0)",
+    borderRadius: 10,
+    background: "var(--bg-card, #fff)",
+    cursor: "pointer",
+    fontFamily: "system-ui",
+    textAlign: "left",
+    transition: "all 0.15s ease",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+  },
+  otherIcon: {
+    minWidth: 36,
+    height: 36,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    fontSize: 11,
+    fontWeight: 800,
+    flexShrink: 0,
+  },
+  otherCardTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  otherCardTitle: {
+    fontSize: 13,
+    fontWeight: 650,
+    color: "var(--text-primary, #1E293B)",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  otherCardTag: {
+    fontSize: 11,
+    color: "var(--text-muted, #64748B)",
+    marginTop: 2,
+  },
+  otherCardArrow: {
+    fontSize: 14,
+    color: "var(--text-muted, #94A3B8)",
+    marginLeft: 4,
+  },
 };
