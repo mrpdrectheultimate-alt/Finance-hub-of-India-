@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 // ============================================================
 // FinanceHub — World-Class Explore Courses Catalog
 // app/explore/page.tsx
-// Responsive Grid & List views · Dynamic DB sync · Progress tracking · Bilingual
+// Balanced Track Deck · Full-Width Curriculum Workspace · Zero Truncation · Progress Rings
 // ============================================================
 
 type Lesson = {
@@ -41,10 +41,8 @@ type Track = {
   name?: string;
   description: string;
   icon: string;
-  icon_emoji?: string;
   color_hex: string;
   order_index: number;
-  is_featured?: boolean;
   levels: Level[];
 };
 
@@ -73,15 +71,21 @@ export default function ExplorePage() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedTrack, setSelectedTrack] = useState<string>("all");
+  const [selectedTrackFilter, setSelectedTrackFilter] = useState<string>("all");
   const [langFilter, setLangFilter] = useState<"all" | "en" | "hi">("all");
   const [tierFilter, setTierFilter] = useState<"all" | "free" | "pro">("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [expandedTracks, setExpandedTracks] = useState<string[]>([]);
+  
+  // Active track being inspected in full-width curriculum workspace
+  const [activeCurriculumTrackId, setActiveCurriculumTrackId] = useState<string | null>(null);
+  
+  // Accordion state for list view
+  const [expandedListTracks, setExpandedListTracks] = useState<string[]>([]);
+  
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<any>(null);
 
-  // 1. Fetch tracks, levels, lessons and user progress from Supabase
+  // 1. Fetch tracks, levels, lessons, and user progress from Supabase
   useEffect(() => {
     let mounted = true;
 
@@ -127,7 +131,7 @@ export default function ExplorePage() {
                 slug: t.slug,
                 title: t.title || t.name || "Learning Track",
                 description: t.description || "Master essential financial strategies and concepts.",
-                icon: TRACK_ICONS[t.slug] || t.icon || t.icon_emoji || "📚",
+                icon: TRACK_ICONS[t.slug] || t.icon || "📚",
                 color_hex: t.color_hex || "#0E6163",
                 order_index: t.order_index || 0,
                 levels: sortedLevels,
@@ -140,9 +144,10 @@ export default function ExplorePage() {
 
           setTracks(validTracks);
 
-          // By default in list view, expand the first track
+          // By default, select the first track for the curriculum focus
           if (validTracks.length > 0) {
-            setExpandedTracks([validTracks[0].id]);
+            setActiveCurriculumTrackId(validTracks[0].id);
+            setExpandedListTracks([validTracks[0].id]);
           }
         }
 
@@ -172,7 +177,7 @@ export default function ExplorePage() {
     };
   }, []);
 
-  // 2. Computed totals
+  // 2. Computed Metrics
   const totalLessonsCount = useMemo(() => {
     return tracks.reduce((acc, t) => acc + t.levels.reduce((lsum, lv) => lsum + lv.lessons.length, 0), 0);
   }, [tracks]);
@@ -189,12 +194,7 @@ export default function ExplorePage() {
     );
   }, [tracks]);
 
-  // 3. User progress across all tracks
-  const userTotalCompleted = useMemo(() => {
-    return completedIds.size;
-  }, [completedIds]);
-
-  // Active track user has most progress in for "Continue Learning" banner
+  // 3. User progress across all tracks (for Continue Learning hero)
   const activeProgressTrack = useMemo(() => {
     if (!user || completedIds.size === 0) return null;
     let highestTrack: Track | null = null;
@@ -228,7 +228,7 @@ export default function ExplorePage() {
   // 4. Filtering logic
   const filteredTracks = useMemo(() => {
     return tracks
-      .filter((t) => selectedTrack === "all" || t.slug === selectedTrack)
+      .filter((t) => selectedTrackFilter === "all" || t.slug === selectedTrackFilter)
       .map((track) => ({
         ...track,
         levels: track.levels
@@ -251,32 +251,31 @@ export default function ExplorePage() {
           .filter((lv) => lv.lessons.length > 0),
       }))
       .filter((t) => t.levels.length > 0);
-  }, [tracks, selectedTrack, search, langFilter, tierFilter]);
+  }, [tracks, selectedTrackFilter, search, langFilter, tierFilter]);
 
-  // Accordion toggles
-  const toggleTrack = (trackId: string) => {
-    setExpandedTracks((prev) =>
-      prev.includes(trackId) ? prev.filter((id) => id !== trackId) : [...prev, trackId]
-    );
-  };
-
-  const expandAll = () => setExpandedTracks(tracks.map((t) => t.id));
-  const collapseAll = () => setExpandedTracks([]);
-
-  // Per-track progress calculation
+  // Track stats helper
   const getTrackStats = (track: Track) => {
     const total = track.levels.reduce((s, lv) => s + lv.lessons.length, 0);
     const done = track.levels.reduce(
       (s, lv) => s + lv.lessons.filter((l) => completedIds.has(l.id)).length,
       0
     );
-    const freeCount = track.levels.reduce(
-      (s, lv) => s + lv.lessons.filter((l) => l.is_free).length,
-      0
-    );
     const approxHours = Math.max(1, Math.round((total * 12) / 60));
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { total, done, freeCount, approxHours, pct };
+    return { total, done, approxHours, pct };
+  };
+
+  // Currently focused track for the full-width curriculum workspace
+  const focusedCurriculumTrack = useMemo(() => {
+    if (!activeCurriculumTrackId) return null;
+    return filteredTracks.find((t) => t.id === activeCurriculumTrackId) || null;
+  }, [filteredTracks, activeCurriculumTrackId]);
+
+  // Toggle for list view
+  const toggleListTrack = (trackId: string) => {
+    setExpandedListTracks((prev) =>
+      prev.includes(trackId) ? prev.filter((id) => id !== trackId) : [...prev, trackId]
+    );
   };
 
   return (
@@ -284,7 +283,7 @@ export default function ExplorePage() {
       <div style={s.mainContainer}>
 
         {/* ══════════════════════════════════════════════════════════ */}
-        {/* 1. HERO HEADER WITH METRICS & PURPOSE                      */}
+        {/* 1. HERO HEADER WITH SOCIAL PROOF & METRICS                 */}
         {/* ══════════════════════════════════════════════════════════ */}
         <header style={s.heroHeader}>
           <div style={s.heroTopPill}>
@@ -293,7 +292,7 @@ export default function ExplorePage() {
           </div>
           <h1 style={s.heroTitle}>Explore Courses &amp; Learning Tracks</h1>
           <p style={s.heroSubtitle}>
-            Build real financial mastery through structured, self-paced lessons. From foundational money management to algorithmic trading, corporate valuation, and macroeconomic policy.
+            Build real financial mastery through structured, self-paced lessons. From foundational personal money management to algorithmic trading, corporate valuation, and macroeconomic policy.
           </p>
 
           {/* Quick Metrics Bar */}
@@ -333,7 +332,7 @@ export default function ExplorePage() {
         </header>
 
         {/* ══════════════════════════════════════════════════════════ */}
-        {/* 2. CONTINUE LEARNING BANNER (For Logged In Users)         */}
+        {/* 2. CONTINUE LEARNING HERO (Personalized for logged-in user)*/}
         {/* ══════════════════════════════════════════════════════════ */}
         {activeProgressTrack && (
           <div style={s.continueLearningCard}>
@@ -425,7 +424,7 @@ export default function ExplorePage() {
                 }}
                 title="Card Grid View"
               >
-                <span>⊞</span> Grid
+                <span>⊞</span> Grid View
               </button>
               <button
                 type="button"
@@ -449,8 +448,14 @@ export default function ExplorePage() {
             <div style={s.filterGroup}>
               <label style={s.filterLabel}>Track:</label>
               <select
-                value={selectedTrack}
-                onChange={(e) => setSelectedTrack(e.target.value)}
+                value={selectedTrackFilter}
+                onChange={(e) => {
+                  setSelectedTrackFilter(e.target.value);
+                  if (e.target.value !== "all") {
+                    const target = tracks.find((t) => t.slug === e.target.value);
+                    if (target) setActiveCurriculumTrackId(target.id);
+                  }
+                }}
                 style={s.selectInput}
               >
                 <option value="all">All Tracks ({tracks.length})</option>
@@ -506,22 +511,15 @@ export default function ExplorePage() {
               </div>
             </div>
 
-            {/* Expand / Collapse All Controls (In List View) */}
-            {viewMode === "list" && (
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                <button type="button" onClick={expandAll} style={s.auxBtn}>
-                  Expand All
-                </button>
-                <button type="button" onClick={collapseAll} style={s.auxBtn}>
-                  Collapse All
-                </button>
-              </div>
-            )}
+            {/* Filter Count summary */}
+            <div style={{ marginLeft: "auto", fontSize: 12.5, color: "#64748B" }}>
+              Showing <strong>{filteredTracks.length}</strong> active tracks
+            </div>
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════ */}
-        {/* 4. TRACKS & LESSONS RENDERING                              */}
+        {/* 4. CONTENT AREA: TRACK DECK & CURRICULUM WORKSPACE        */}
         {/* ══════════════════════════════════════════════════════════ */}
         {loading ? (
           <div style={s.skeletonGrid}>
@@ -542,7 +540,7 @@ export default function ExplorePage() {
               type="button"
               onClick={() => {
                 setSearch("");
-                setSelectedTrack("all");
+                setSelectedTrackFilter("all");
                 setLangFilter("all");
                 setTierFilter("all");
               }}
@@ -552,126 +550,180 @@ export default function ExplorePage() {
             </button>
           </div>
         ) : viewMode === "grid" ? (
-          /* ─── MODE A: RESPONSIVE TRACK CARDS GRID ─── */
-          <div style={s.tracksGrid}>
-            {filteredTracks.map((track) => {
-              const stats = getTrackStats(track);
-              const isOpen = expandedTracks.includes(track.id);
-              const theme = TRACK_THEMES[track.slug] || { bg: "#F1F5F9", text: "#334155" };
+          /* ══════════════════════════════════════════════════════════ */
+          /* MODE A: EQUAL-HEIGHT TRACK DECK + FULL-WIDTH CURRICULUM   */
+          /* ══════════════════════════════════════════════════════════ */
+          <div>
+            {/* Section Header */}
+            <div style={s.sectionHeaderRow}>
+              <div>
+                <h2 style={s.sectionTitle}>All Learning Tracks</h2>
+                <p style={s.sectionSub}>Select any track to inspect its full curriculum in the workspace below</p>
+              </div>
+              <span style={s.sectionCountBadge}>{filteredTracks.length} Specializations</span>
+            </div>
 
-              return (
-                <div
-                  key={track.id}
-                  style={{
-                    ...s.trackGridCard,
-                    borderColor: isOpen ? track.color_hex : "#E2E8F0",
-                    boxShadow: isOpen ? `0 8px 24px ${track.color_hex}15` : "0 2px 6px rgba(0,0,0,0.02)",
-                  }}
-                >
-                  {/* Top Colored Accent Strip */}
-                  <div style={{ height: 5, background: track.color_hex }} />
+            {/* ── Balanced Track Deck (Equal Height Cards, No Voids!) ── */}
+            <div style={s.tracksDeckGrid}>
+              {filteredTracks.map((track) => {
+                const stats = getTrackStats(track);
+                const isFocused = activeCurriculumTrackId === track.id;
+                const theme = TRACK_THEMES[track.slug] || { bg: "#F1F5F9", text: "#334155" };
 
-                  <div style={s.trackCardBody}>
-                    {/* Header Row */}
-                    <div style={s.trackCardHeader}>
-                      <div
-                        style={{
-                          ...s.trackIconBubble,
-                          background: `${track.color_hex}15`,
-                          borderColor: `${track.color_hex}30`,
-                        }}
-                      >
-                        <span style={{ fontSize: 24 }}>{track.icon}</span>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={s.trackCardTagRow}>
-                          <span style={{ ...s.trackCategoryBadge, background: theme.bg, color: theme.text }}>
-                            {stats.total} Lessons
-                          </span>
-                          <span style={s.trackMetaDot}>·</span>
-                          <span style={s.trackTimeBadge}>~{stats.approxHours} hrs</span>
-                        </div>
-                        <h2 style={s.trackCardTitle}>{track.title}</h2>
-                      </div>
-                    </div>
+                return (
+                  <div
+                    key={track.id}
+                    onClick={() => setActiveCurriculumTrackId(track.id)}
+                    style={{
+                      ...s.trackDeckCard,
+                      borderColor: isFocused ? track.color_hex : "#E2E8F0",
+                      boxShadow: isFocused ? `0 8px 24px ${track.color_hex}20` : "0 2px 6px rgba(0,0,0,0.02)",
+                      transform: isFocused ? "translateY(-2px)" : "none",
+                    }}
+                  >
+                    {/* Top Accent Strip */}
+                    <div style={{ height: 4, background: track.color_hex }} />
 
-                    {/* Description */}
-                    <p style={s.trackCardDesc}>{track.description}</p>
-
-                    {/* Level Chips Row */}
-                    <div style={s.levelChipsRow}>
-                      {track.levels.map((lv) => (
-                        <span key={lv.id} style={s.levelChip}>
-                          {lv.title} ({lv.lessons.length})
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div style={s.trackProgressContainer}>
-                      <div style={s.trackProgressHeader}>
-                        <span style={s.trackProgressLabel}>Track Completion</span>
-                        <span style={{ ...s.trackProgressPct, color: track.color_hex }}>
-                          {stats.pct}%
-                        </span>
-                      </div>
-                      <div style={s.trackProgressBarBg}>
+                    <div style={s.trackDeckCardBody}>
+                      {/* Top Header: Icon + Progress Ring */}
+                      <div style={s.deckTopRow}>
                         <div
                           style={{
-                            ...s.trackProgressBarFill,
-                            width: `${stats.pct}%`,
-                            background: track.color_hex,
+                            ...s.deckIconBubble,
+                            background: `${track.color_hex}15`,
+                            borderColor: `${track.color_hex}30`,
                           }}
-                        />
+                        >
+                          <span style={{ fontSize: 24 }}>{track.icon}</span>
+                        </div>
+
+                        {/* Circular SVG Progress Ring */}
+                        <ProgressRing percent={stats.pct} color={track.color_hex} />
+                      </div>
+
+                      {/* Title + Meta */}
+                      <div style={s.deckMetaRow}>
+                        <span style={{ ...s.deckCategoryTag, background: theme.bg, color: theme.text }}>
+                          {stats.total} Lessons
+                        </span>
+                        <span style={s.deckTimeTag}>~{stats.approxHours} hrs</span>
+                      </div>
+
+                      <h3 style={s.deckTitle}>{track.title}</h3>
+                      <p style={s.deckDesc}>{track.description}</p>
+
+                      {/* Level Badges */}
+                      <div style={s.deckLevelChips}>
+                        {track.levels.map((lv) => (
+                          <span key={lv.id} style={s.deckLevelChip}>
+                            {lv.title} ({lv.lessons.length})
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Action Bar */}
+                      <div style={s.deckActionRow}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveCurriculumTrackId(isFocused ? null : track.id);
+                          }}
+                          style={{
+                            ...s.deckCurriculumBtn,
+                            background: isFocused ? track.color_hex : "#F8FAFC",
+                            color: isFocused ? "#FFFFFF" : "#334155",
+                            borderColor: isFocused ? track.color_hex : "#CBD5E1",
+                          }}
+                        >
+                          {isFocused ? "▲ Active Curriculum" : "▼ Explore Lessons"}
+                        </button>
+
+                        <Link
+                          href={`/tracks/${track.slug}`}
+                          onClick={(e) => e.stopPropagation()}
+                          style={s.deckTrackLink}
+                          title="Open dedicated track page"
+                        >
+                          →
+                        </Link>
                       </div>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                    {/* Card Actions */}
-                    <div style={s.trackCardActions}>
-                      <button
-                        type="button"
-                        onClick={() => toggleTrack(track.id)}
-                        style={{
-                          ...s.curriculumToggleBtn,
-                          color: isOpen ? track.color_hex : "#334155",
-                          borderColor: isOpen ? track.color_hex : "#CBD5E1",
-                        }}
-                      >
-                        <span>{isOpen ? "▲ Hide Curriculum" : `▼ View Lessons (${stats.total})`}</span>
-                      </button>
-
-                      <Link
-                        href={`/tracks/${track.slug}`}
-                        style={{
-                          ...s.trackExploreBtn,
-                          background: track.color_hex,
-                        }}
-                      >
-                        Start Track →
-                      </Link>
+            {/* ── Full-Width Active Curriculum Workspace (Zero Truncation!) ── */}
+            {focusedCurriculumTrack && (
+              <div style={s.fullWidthWorkspace}>
+                <div style={s.workspaceHeader}>
+                  <div style={s.workspaceHeaderLeft}>
+                    <div
+                      style={{
+                        ...s.workspaceIconBubble,
+                        background: `${focusedCurriculumTrack.color_hex}15`,
+                        borderColor: `${focusedCurriculumTrack.color_hex}30`,
+                      }}
+                    >
+                      <span style={{ fontSize: 28 }}>{focusedCurriculumTrack.icon}</span>
                     </div>
-
-                    {/* In-Card Expanded Curriculum List */}
-                    {isOpen && (
-                      <div style={s.inlineCurriculumWrap}>
-                        <TrackCurriculumSection
-                          track={track}
-                          completedIds={completedIds}
-                          searchQuery={search}
-                        />
+                    <div>
+                      <div style={s.workspaceTagRow}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            background: `${focusedCurriculumTrack.color_hex}15`,
+                            color: focusedCurriculumTrack.color_hex,
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          ACTIVE CURRICULUM
+                        </span>
+                        <span style={{ fontSize: 13, color: "#64748B" }}>
+                          {getTrackStats(focusedCurriculumTrack).total} Lessons across{" "}
+                          {focusedCurriculumTrack.levels.length} Structured Levels
+                        </span>
                       </div>
-                    )}
+                      <h2 style={s.workspaceTitle}>{focusedCurriculumTrack.title}</h2>
+                      <p style={s.workspaceDesc}>{focusedCurriculumTrack.description}</p>
+                    </div>
+                  </div>
+
+                  <div style={s.workspaceHeaderRight}>
+                    <Link
+                      href={`/tracks/${focusedCurriculumTrack.slug}`}
+                      style={{
+                        ...s.workspaceTrackBtn,
+                        background: focusedCurriculumTrack.color_hex,
+                      }}
+                    >
+                      Launch Dedicated Track →
+                    </Link>
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Untruncated Full-Width Curriculum Levels */}
+                <div style={s.workspaceBody}>
+                  <TrackCurriculumSection
+                    track={focusedCurriculumTrack}
+                    completedIds={completedIds}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          /* ─── MODE B: COMPREHENSIVE CURRICULUM LIST ─── */
+          /* ══════════════════════════════════════════════════════════ */
+          /* MODE B: COMPREHENSIVE FULL-WIDTH CURRICULUM LIST          */
+          /* ══════════════════════════════════════════════════════════ */
           <div style={s.waterfallList}>
             {filteredTracks.map((track) => {
               const stats = getTrackStats(track);
-              const isOpen = expandedTracks.includes(track.id);
+              const isOpen = expandedListTracks.includes(track.id);
 
               return (
                 <div
@@ -684,7 +736,7 @@ export default function ExplorePage() {
                   {/* Track Header Accordion Bar */}
                   <button
                     type="button"
-                    onClick={() => toggleTrack(track.id)}
+                    onClick={() => toggleListTrack(track.id)}
                     style={{
                       ...s.waterfallHeaderBtn,
                       background: isOpen ? "#FAFAFA" : "#FFFFFF",
@@ -697,7 +749,7 @@ export default function ExplorePage() {
                         borderColor: `${track.color_hex}30`,
                       }}
                     >
-                      <span style={{ fontSize: 22 }}>{track.icon}</span>
+                      <span style={{ fontSize: 24 }}>{track.icon}</span>
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
@@ -722,15 +774,15 @@ export default function ExplorePage() {
                       <p style={s.waterfallTrackDesc}>{track.description}</p>
                     </div>
 
-                    {/* Chevron Indicator */}
-                    <div style={s.waterfallChevron}>
-                      <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>
-                        {isOpen ? "Hide Lessons" : "Show Curriculum"}
-                      </span>
+                    {/* Progress Ring & Chevron */}
+                    <div style={s.waterfallRightControls}>
+                      <ProgressRing percent={stats.pct} color={track.color_hex} />
                       <span
                         style={{
                           transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
                           transition: "transform 0.2s ease",
+                          fontSize: 14,
+                          color: "#64748B",
                           display: "inline-block",
                         }}
                       >
@@ -745,7 +797,6 @@ export default function ExplorePage() {
                       <TrackCurriculumSection
                         track={track}
                         completedIds={completedIds}
-                        searchQuery={search}
                       />
                     </div>
                   )}
@@ -784,18 +835,16 @@ export default function ExplorePage() {
 }
 
 // ────────────────────────────────────────────────────────────
-// SUB-COMPONENT: TRACK CURRICULUM SECTION
-// Renders levels and structured lesson cards with proper spacing
+// SUB-COMPONENT: FULL-WIDTH UNTRUNCATED CURRICULUM SECTION
+// Generous horizontal space ($800px+) so titles NEVER truncate
 // ────────────────────────────────────────────────────────────
 
 function TrackCurriculumSection({
   track,
   completedIds,
-  searchQuery,
 }: {
   track: Track;
   completedIds: Set<string>;
-  searchQuery: string;
 }) {
   return (
     <div style={s.curriculumContainer}>
@@ -814,11 +863,11 @@ function TrackCurriculumSection({
                 )}
               </div>
               <span style={s.levelCountBadge}>
-                {levelCompleted}/{level.lessons.length} done
+                {levelCompleted}/{level.lessons.length} completed
               </span>
             </div>
 
-            {/* Individual Lesson Cards */}
+            {/* Individual Lesson Cards: Full width, no truncation */}
             <div style={s.lessonsList}>
               {level.lessons.map((lesson, lessonIdx) => {
                 const isCompleted = completedIds.has(lesson.id);
@@ -844,7 +893,7 @@ function TrackCurriculumSection({
                       {isCompleted ? "✓" : lessonIdx + 1}
                     </div>
 
-                    {/* Lesson Title & Topic */}
+                    {/* Full Untruncated Lesson Title */}
                     <div style={s.lessonTitleWrap}>
                       <span
                         style={{
@@ -900,6 +949,58 @@ function TrackCurriculumSection({
         >
           Open Dedicated Track Page →
         </Link>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
+// SUB-COMPONENT: CIRCULAR SVG PROGRESS RING
+// Visual completion indicator for each track header
+// ────────────────────────────────────────────────────────────
+
+function ProgressRing({ percent, color }: { percent: number; color: string }) {
+  const size = 46;
+  const strokeWidth = 4.5;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dash = (percent / 100) * circumference;
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#E2E8F0"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${dash} ${circumference}`}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 11,
+          fontWeight: 800,
+          color: "#0F172A",
+        }}
+      >
+        {percent}%
       </div>
     </div>
   );
@@ -1076,7 +1177,7 @@ const s: Record<string, CSSProperties> = {
     border: "1px solid #E2E8F0",
     borderRadius: 14,
     padding: "16px 20px",
-    marginBottom: 24,
+    marginBottom: 28,
     boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
   },
   toolbarPrimaryRow: {
@@ -1191,175 +1292,134 @@ const s: Record<string, CSSProperties> = {
     fontFamily: "inherit",
     transition: "all 0.15s ease",
   },
-  auxBtn: {
-    padding: "5px 10px",
-    background: "transparent",
-    border: "1px solid #E2E8F0",
-    borderRadius: 7,
-    fontSize: 12,
-    color: "#64748B",
-    fontWeight: 600,
-    cursor: "pointer",
-    fontFamily: "inherit",
-  },
 
-  /* SKELETONS & EMPTY STATES */
-  skeletonGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-    gap: 20,
+  /* SECTION HEADERS */
+  sectionHeaderRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 16,
+    flexWrap: "wrap",
+    gap: 10,
   },
-  skeletonCard: {
-    height: 240,
-    borderRadius: 16,
-    background: "linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)",
-    backgroundSize: "200% 100%",
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 800,
+    color: "#0F172A",
+    margin: "0 0 3px",
+    letterSpacing: "-0.015em",
   },
-  noResultsCard: {
-    background: "#FFFFFF",
-    borderRadius: 14,
-    border: "1px solid #E2E8F0",
-    padding: "60px 20px",
-    textAlign: "center",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
-  },
-  resetFiltersBtn: {
-    padding: "8px 16px",
-    borderRadius: 8,
-    border: "none",
-    background: "#0F3D3E",
-    color: "#FFFFFF",
+  sectionSub: {
     fontSize: 13,
+    color: "#64748B",
+    margin: 0,
+  },
+  sectionCountBadge: {
+    fontSize: 11.5,
     fontWeight: 700,
-    cursor: "pointer",
-    fontFamily: "inherit",
+    color: "#475569",
+    background: "#E2E8F0",
+    padding: "3px 10px",
+    borderRadius: 9999,
   },
 
-  /* ─── GRID VIEW: TRACK CARDS ─── */
-  tracksGrid: {
+  /* ─── GRID VIEW: BALANCED TRACK DECK (EQUAL HEIGHT) ─── */
+  tracksDeckGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(370px, 1fr))",
-    gap: 22,
+    gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+    gap: 20,
+    marginBottom: 32,
   },
-  trackGridCard: {
+  trackDeckCard: {
     background: "#FFFFFF",
     border: "1px solid",
     borderRadius: 16,
     overflow: "hidden",
+    cursor: "pointer",
     transition: "all 0.2s ease",
     display: "flex",
     flexDirection: "column",
   },
-  trackCardBody: {
+  trackDeckCardBody: {
     padding: "20px 22px 22px",
     display: "flex",
     flexDirection: "column",
     flex: 1,
   },
-  trackCardHeader: {
+  deckTopRow: {
     display: "flex",
-    alignItems: "flex-start",
-    gap: 14,
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  trackIconBubble: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+  deckIconBubble: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     border: "1px solid",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
   },
-  trackCardTagRow: {
+  deckMetaRow: {
     display: "flex",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
+    gap: 8,
+    marginBottom: 6,
   },
-  trackCategoryBadge: {
+  deckCategoryTag: {
     fontSize: 11,
     fontWeight: 700,
     padding: "2px 7px",
     borderRadius: 6,
-    letterSpacing: "0.02em",
   },
-  trackMetaDot: {
-    fontSize: 12,
-    color: "#94A3B8",
-  },
-  trackTimeBadge: {
+  deckTimeTag: {
     fontSize: 11.5,
     color: "#64748B",
     fontWeight: 500,
   },
-  trackCardTitle: {
-    fontSize: 17.5,
+  deckTitle: {
+    fontSize: 17,
     fontWeight: 800,
     color: "#0F172A",
-    margin: 0,
+    margin: "0 0 6px",
     letterSpacing: "-0.015em",
   },
-  trackCardDesc: {
-    fontSize: 13,
-    color: "#475569",
+  deckDesc: {
+    fontSize: 12.5,
+    color: "#64748B",
     lineHeight: 1.5,
     margin: "0 0 14px",
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
     flex: 1,
   },
-  levelChipsRow: {
+  deckLevelChips: {
     display: "flex",
     gap: 6,
     flexWrap: "wrap",
     marginBottom: 16,
   },
-  levelChip: {
-    fontSize: 11,
+  deckLevelChip: {
+    fontSize: 10.5,
     fontWeight: 600,
     color: "#475569",
     background: "#F1F5F9",
-    padding: "3px 8px",
-    borderRadius: 6,
+    padding: "2px 7px",
+    borderRadius: 5,
   },
-  trackProgressContainer: {
-    marginBottom: 16,
-  },
-  trackProgressHeader: {
+  deckActionRow: {
     display: "flex",
-    justifyContent: "space-between",
-    fontSize: 11.5,
-    fontWeight: 600,
-    marginBottom: 6,
-  },
-  trackProgressLabel: {
-    color: "#64748B",
-  },
-  trackProgressPct: {
-    fontWeight: 800,
-  },
-  trackProgressBarBg: {
-    height: 6,
-    background: "#F1F5F9",
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  trackProgressBarFill: {
-    height: "100%",
-    borderRadius: 999,
-    transition: "width 0.4s ease",
-  },
-  trackCardActions: {
-    display: "grid",
-    gridTemplateColumns: "1.4fr 1fr",
-    gap: 10,
+    gap: 8,
     marginTop: "auto",
   },
-  curriculumToggleBtn: {
-    padding: "9px 12px",
+  deckCurriculumBtn: {
+    flex: 1,
+    padding: "8px 12px",
+    borderRadius: 8,
     border: "1px solid",
-    borderRadius: 9,
-    background: "#FFFFFF",
     fontSize: 12.5,
     fontWeight: 700,
     cursor: "pointer",
@@ -1367,23 +1427,241 @@ const s: Record<string, CSSProperties> = {
     textAlign: "center",
     transition: "all 0.15s ease",
   },
-  trackExploreBtn: {
+  deckTrackLink: {
+    width: 36,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "9px 12px",
-    borderRadius: 9,
-    color: "#FFFFFF",
-    fontSize: 12.5,
+    borderRadius: 8,
+    background: "#F1F5F9",
+    color: "#334155",
+    fontSize: 15,
     fontWeight: 700,
     textDecoration: "none",
-    textAlign: "center",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+    transition: "background 0.15s ease",
   },
-  inlineCurriculumWrap: {
-    marginTop: 18,
-    paddingTop: 16,
-    borderTop: "1px solid #E2E8F0",
+
+  /* ─── FULL-WIDTH CURRICULUM WORKSPACE (ZERO TRUNCATION) ─── */
+  fullWidthWorkspace: {
+    background: "#FFFFFF",
+    border: "1px solid #E2E8F0",
+    borderRadius: 18,
+    overflow: "hidden",
+    boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+    marginBottom: 40,
+  },
+  workspaceHeader: {
+    padding: "24px 28px 20px",
+    borderBottom: "1px solid #E2E8F0",
+    background: "#F8FAFC",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  workspaceHeaderLeft: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 16,
+    flex: 1,
+    minWidth: 300,
+  },
+  workspaceIconBubble: {
+    width: 58,
+    height: 58,
+    borderRadius: 16,
+    border: "1px solid",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  workspaceTagRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 4,
+  },
+  workspaceTitle: {
+    fontSize: "clamp(1.4rem, 2.2vw, 1.75rem)",
+    fontWeight: 800,
+    color: "#0F172A",
+    margin: "0 0 4px",
+    letterSpacing: "-0.02em",
+  },
+  workspaceDesc: {
+    fontSize: 13.5,
+    color: "#475569",
+    margin: 0,
+    maxWidth: 720,
+    lineHeight: 1.5,
+  },
+  workspaceHeaderRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  workspaceTrackBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "10px 18px",
+    borderRadius: 9,
+    color: "#FFFFFF",
+    fontSize: 13.5,
+    fontWeight: 750,
+    textDecoration: "none",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+  },
+  workspaceBody: {
+    padding: "20px 28px 28px",
+  },
+
+  /* ─── CURRICULUM LEVEL SECTIONS & LESSON CARDS ─── */
+  curriculumContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 24,
+  },
+  levelSection: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  levelHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    background: "#F1F5F9",
+    border: "1px solid #E2E8F0",
+    borderRadius: 10,
+    padding: "10px 16px",
+  },
+  levelHeaderLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  levelNumberBadge: {
+    fontSize: 10.5,
+    fontWeight: 800,
+    color: "#475569",
+    background: "#E2E8F0",
+    padding: "3px 7px",
+    borderRadius: 5,
+    letterSpacing: "0.06em",
+  },
+  levelTitle: {
+    fontSize: 14,
+    fontWeight: 750,
+    color: "#0F172A",
+    margin: 0,
+  },
+  levelDescMuted: {
+    fontSize: 12.5,
+    color: "#64748B",
+  },
+  levelCountBadge: {
+    fontSize: 11.5,
+    fontWeight: 600,
+    color: "#64748B",
+  },
+  lessonsList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
+  lessonCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    padding: "12px 18px",
+    borderRadius: 10,
+    border: "1px solid",
+    textDecoration: "none",
+    transition: "transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease",
+  },
+  lessonStatusIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: "50%",
+    fontSize: 11,
+    fontWeight: 800,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  lessonTitleWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  lessonTitle: {
+    fontSize: 14,
+    fontWeight: 650,
+    display: "block",
+    lineHeight: 1.45,
+  },
+  lessonMetaGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexShrink: 0,
+  },
+  hindiBadge: {
+    fontSize: 11,
+    fontWeight: 750,
+    color: "#EA580C",
+    background: "#FFF7ED",
+    border: "1px solid #FFEDD5",
+    padding: "2px 7px",
+    borderRadius: 6,
+  },
+  freeBadge: {
+    fontSize: 10.5,
+    fontWeight: 800,
+    color: "#059669",
+    background: "#ECFDF5",
+    border: "1px solid #A7F3D0",
+    padding: "2px 7px",
+    borderRadius: 6,
+    letterSpacing: "0.04em",
+  },
+  proBadge: {
+    fontSize: 10.5,
+    fontWeight: 800,
+    color: "#D97706",
+    background: "#FEF3C7",
+    border: "1px solid #FDE68A",
+    padding: "2px 7px",
+    borderRadius: 6,
+    letterSpacing: "0.04em",
+  },
+  durationBadge: {
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: 500,
+    fontFamily: "monospace",
+  },
+  lessonArrow: {
+    fontSize: 14,
+    color: "#94A3B8",
+  },
+  curriculumFooter: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "14px 18px",
+    background: "#F8FAFC",
+    borderRadius: 10,
+    border: "1px solid #E2E8F0",
+    marginTop: 8,
+  },
+  curriculumFullLink: {
+    fontSize: 13,
+    fontWeight: 700,
+    textDecoration: "none",
   },
 
   /* ─── LIST VIEW: WATERFALL CARDS ─── */
@@ -1402,7 +1680,7 @@ const s: Record<string, CSSProperties> = {
   },
   waterfallHeaderBtn: {
     width: "100%",
-    padding: "18px 22px",
+    padding: "18px 24px",
     border: "none",
     cursor: "pointer",
     fontFamily: "inherit",
@@ -1444,159 +1722,47 @@ const s: Record<string, CSSProperties> = {
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
-  waterfallChevron: {
+  waterfallRightControls: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
+    gap: 14,
     flexShrink: 0,
   },
   waterfallCurriculumBody: {
-    padding: "0 22px 20px",
+    padding: "0 24px 24px",
     borderTop: "1px solid #F1F5F9",
   },
 
-  /* ─── CURRICULUM SECTION & LESSON CARDS ─── */
-  curriculumContainer: {
-    paddingTop: 14,
+  /* ─── SKELETONS & EMPTY STATES ─── */
+  skeletonGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
+    gap: 20,
   },
-  levelSection: {
-    marginBottom: 20,
+  skeletonCard: {
+    height: 250,
+    borderRadius: 16,
+    background: "linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)",
+    backgroundSize: "200% 100%",
   },
-  levelHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    background: "#F8FAFC",
+  noResultsCard: {
+    background: "#FFFFFF",
+    borderRadius: 14,
     border: "1px solid #E2E8F0",
-    borderRadius: 9,
-    padding: "8px 14px",
-    marginBottom: 8,
+    padding: "60px 20px",
+    textAlign: "center",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
   },
-  levelHeaderLeft: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  levelNumberBadge: {
-    fontSize: 10,
-    fontWeight: 800,
-    color: "#64748B",
-    background: "#E2E8F0",
-    padding: "2px 6px",
-    borderRadius: 4,
-    letterSpacing: "0.06em",
-  },
-  levelTitle: {
-    fontSize: 13.5,
-    fontWeight: 750,
-    color: "#0F172A",
-    margin: 0,
-  },
-  levelDescMuted: {
-    fontSize: 12,
-    color: "#64748B",
-  },
-  levelCountBadge: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#64748B",
-  },
-  lessonsList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  },
-  lessonCard: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "10px 14px",
-    borderRadius: 9,
-    border: "1px solid",
-    textDecoration: "none",
-    transition: "all 0.15s ease",
-  },
-  lessonStatusIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: "50%",
-    fontSize: 11,
-    fontWeight: 700,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  lessonTitleWrap: {
-    flex: 1,
-    minWidth: 0,
-  },
-  lessonTitle: {
-    fontSize: 13.5,
-    fontWeight: 600,
-    display: "block",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  lessonMetaGroup: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 0,
-  },
-  hindiBadge: {
-    fontSize: 10.5,
-    fontWeight: 750,
-    color: "#EA580C",
-    background: "#FFF7ED",
-    border: "1px solid #FFEDD5",
-    padding: "1px 6px",
-    borderRadius: 6,
-  },
-  freeBadge: {
-    fontSize: 10,
-    fontWeight: 800,
-    color: "#059669",
-    background: "#ECFDF5",
-    border: "1px solid #A7F3D0",
-    padding: "1px 6px",
-    borderRadius: 6,
-    letterSpacing: "0.04em",
-  },
-  proBadge: {
-    fontSize: 10,
-    fontWeight: 800,
-    color: "#D97706",
-    background: "#FEF3C7",
-    border: "1px solid #FDE68A",
-    padding: "1px 6px",
-    borderRadius: 6,
-    letterSpacing: "0.04em",
-  },
-  durationBadge: {
-    fontSize: 11,
-    color: "#64748B",
-    fontWeight: 500,
-  },
-  lessonArrow: {
-    fontSize: 13,
-    color: "#94A3B8",
-  },
-  curriculumFooter: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px 14px",
-    background: "#F8FAFC",
+  resetFiltersBtn: {
+    padding: "8px 16px",
     borderRadius: 8,
-    marginTop: 10,
-  },
-  curriculumFullLink: {
-    fontSize: 12.5,
+    border: "none",
+    background: "#0F3D3E",
+    color: "#FFFFFF",
+    fontSize: 13,
     fontWeight: 700,
-    textDecoration: "none",
+    cursor: "pointer",
+    fontFamily: "inherit",
   },
 
   /* ─── BOTTOM SIGNUP CTA BANNER ─── */
