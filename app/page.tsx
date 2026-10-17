@@ -1,984 +1,1640 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  BookOpen,
+  Calculator,
+  Brain,
+  Award,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Sparkles,
+  ShieldCheck,
+  TrendingUp,
+  Zap,
+  GraduationCap,
+  Briefcase,
+  LineChart,
+  Rocket,
+  Compass,
+} from "lucide-react";
 
 // ============================================================
-// FinanceHub — World-Class Landing Page
-// app/page.tsx — Complete Rebuild
-// 13 Sections · Premium · Editorial · All Features Displayed
+// FinanceHub — World-Class Homepage
+// app/page.tsx
+// 10-Stage Storytelling Flow · Dynamic Hero Mockup · 5 Personas
+// 4 Pillars · 8 Tracks · 15 Labs Showcase · AI Terminal · Pricing Toggle
 // ============================================================
+
+// ─── Data Definitions ────────────────────────────────────────
+
+const TRUST_STATS = [
+  { val: "320+", label: "Published Lessons", sub: "Curated modules" },
+  { val: "8", label: "Learning Tracks", sub: "Beginner to advanced" },
+  { val: "15", label: "Interactive Labs", sub: "Zero-risk simulators" },
+  { val: "100%", label: "Free Core Content", sub: "No credit card needed" },
+];
+
+const PERSONAS = [
+  {
+    icon: GraduationCap,
+    label: "Student",
+    title: "Money Basics & First Habits",
+    desc: "Budgeting, avoiding consumer debt, student bank accounts, and starting your first ₹500 SIP early.",
+    track: "Personal Finance",
+    trackSlug: "personal-finance",
+    badge: "Absolute Beginner",
+    color: "#059669",
+  },
+  {
+    icon: Briefcase,
+    label: "Working Adult",
+    title: "Salary, Taxes & Wealth Growth",
+    desc: "Master Old vs New tax regimes, 80C/80D deductions, health insurance, emergency funds, and long-term index SIPs.",
+    track: "Personal Finance",
+    trackSlug: "personal-finance",
+    badge: "Practical Life",
+    color: "#2563EB",
+  },
+  {
+    icon: LineChart,
+    label: "Investor",
+    title: "Equities & Long-Term Compounding",
+    desc: "Understand P/E ratios, mutual fund selection, asset allocation rebalancing, and avoiding behavioral traps.",
+    track: "Trading & Markets",
+    trackSlug: "trading-markets",
+    badge: "Wealth Building",
+    color: "#7C3AED",
+  },
+  {
+    icon: TrendingUp,
+    label: "Trader",
+    title: "Technical Analysis & Risk Control",
+    desc: "Chart reading, candlestick patterns, support/resistance, RSI/MACD, and virtual paper trading with zero capital risk.",
+    track: "Technical Analysis",
+    trackSlug: "technical-analysis",
+    badge: "Market Skills",
+    color: "#EA580C",
+  },
+  {
+    icon: Rocket,
+    label: "Founder",
+    title: "Startup Finance & Unit Economics",
+    desc: "Cash runway modeling, customer acquisition cost, gross margins, valuation, cap tables, and fundraising mechanics.",
+    track: "Corporate Finance",
+    trackSlug: "corporate-finance",
+    badge: "Business Mastery",
+    color: "#DC2626",
+  },
+];
+
+const PILLARS = [
+  {
+    icon: BookOpen,
+    title: "Structured Curriculum",
+    desc: "320+ bite-sized lessons across 8 comprehensive tracks. Each lesson features real Indian market examples, cited sources, and clear takeaways.",
+    badge: "320+ Lessons",
+    color: "#0E6163",
+  },
+  {
+    icon: Calculator,
+    title: "15 Interactive Simulators",
+    desc: "Test financial decisions hands-on. Model SIP compounding, calculate loan EMI amortizations, compare tax regimes, and practice paper trading.",
+    badge: "15 Finance Labs",
+    color: "#2563EB",
+  },
+  {
+    icon: Brain,
+    title: "Frontier AI Mentor",
+    desc: "Ask any financial question 24/7. Get clear, step-by-step breakdowns citing official RBI, SEBI, and AMFI guidelines with zero commercial bias.",
+    badge: "24/7 Intelligent Tutor",
+    color: "#7C3AED",
+  },
+  {
+    icon: Award,
+    title: "XP, Streaks & Verified Certificates",
+    desc: "Stay consistent with daily streaks, earn XP for lessons, compete in weekly leagues, and earn shareable certificates with unique credential IDs.",
+    badge: "Verifiable Credentials",
+    color: "#D97706",
+  },
+];
 
 const TRACKS = [
-  { code:"PF", slug:"personal-finance", name:"Personal Finance",   icon:"💰", color:"#0E6163", bg:"#F0F9F7", desc:"Budgeting, saving, tax, insurance, retirement — the essentials no school taught.", lessons:45, quizzes:12, level:"Beginner → Advanced" },
-  { code:"TM", slug:"trading-markets",  name:"Trading & Markets",  icon:"📈", color:"#185FA5", bg:"#EEF4FB", desc:"From reading a chart to running a full trading strategy — three complete levels.", lessons:52, quizzes:14, level:"Beginner → Advanced" },
-  { code:"CF", slug:"corporate-finance", name:"Corporate Finance",  icon:"🏢", color:"#7C3AED", bg:"#F4F0FE", desc:"Valuation, M&A, fundraising, unit economics — for founders and finance careers.", lessons:38, quizzes:10, level:"Intermediate → Advanced" },
-  { code:"CR", slug:"crypto-defi",      name:"Crypto & DeFi",      icon:"₿",  color:"#0891B2", bg:"#EEF8FB", desc:"Blockchain, DeFi protocols, wallets, paper trading — without the hype.", lessons:28, quizzes:8,  level:"Beginner → Advanced" },
-  { code:"BF", slug:"behavioral-finance", name:"Behavioral Finance", icon:"🧠", color:"#B45309", bg:"#FEF7EC", desc:"Why smart people make bad money decisions — and how to stop.", lessons:24, quizzes:6,  level:"Beginner → Intermediate" },
-  { code:"TA", slug:"technical-analysis", name:"Technical Analysis", icon:"📊", color:"#0F766E", bg:"#F0FAFA", desc:"Charts, indicators, candlesticks — read the market with confidence.", lessons:36, quizzes:9,  level:"Intermediate → Advanced" },
-  { code:"FX", slug:"forex-currency",   name:"Forex & Currencies", icon:"💱", color:"#1D4ED8", bg:"#EEF2FF", desc:"Currency markets, FEMA, carry trades, hedging — the global money layer.", lessons:22, quizzes:6,  level:"Intermediate → Advanced" },
-  { code:"HI", slug:"hindi",            name:"हिंदी Finance",      icon:"🇮🇳", color:"#B91C1C", bg:"#FEF2F2", desc:"Personal finance and investing explained simply — in Hindi.", lessons:21, quizzes:4,  level:"Beginner" },
+  {
+    slug: "personal-finance",
+    name: "Personal Finance",
+    icon: "💰",
+    code: "PF",
+    color: "#059669",
+    lessons: 73,
+    quizzes: 18,
+    level: "Beginner → Advanced",
+    desc: "Budgeting, savings, emergency cushion, insurance, tax planning, and retirement corpus building.",
+  },
+  {
+    slug: "trading-markets",
+    name: "Trading & Markets",
+    icon: "📈",
+    code: "TM",
+    color: "#2563EB",
+    lessons: 51,
+    quizzes: 14,
+    level: "Beginner → Advanced",
+    desc: "How stock exchanges operate, equities vs bonds, market orders, order books, and risk management.",
+  },
+  {
+    slug: "corporate-finance",
+    name: "Corporate Finance",
+    icon: "🏢",
+    code: "CF",
+    color: "#7C3AED",
+    lessons: 43,
+    quizzes: 11,
+    level: "Intermediate → Advanced",
+    desc: "Discounted cash flow, company valuation, capital structure, M&A, and financial statement analysis.",
+  },
+  {
+    slug: "crypto-defi",
+    name: "Crypto & DeFi",
+    icon: "₿",
+    code: "CR",
+    color: "#0891B2",
+    lessons: 36,
+    quizzes: 9,
+    level: "Beginner → Advanced",
+    desc: "Blockchain architecture, smart contracts, decentralized finance protocols, and digital asset custody.",
+  },
+  {
+    slug: "behavioral-finance",
+    name: "Behavioral Finance",
+    icon: "🧠",
+    code: "BF",
+    color: "#B45309",
+    lessons: 23,
+    quizzes: 6,
+    level: "Beginner → Intermediate",
+    desc: "Loss aversion, FOMO, sunk cost fallacy, mental accounting, and cognitive biases that cost money.",
+  },
+  {
+    slug: "technical-analysis",
+    name: "Technical Analysis",
+    icon: "📊",
+    code: "TA",
+    color: "#0F766E",
+    lessons: 44,
+    quizzes: 12,
+    level: "Intermediate → Advanced",
+    desc: "Candlestick patterns, trendlines, support & resistance, moving averages, RSI, and chart patterns.",
+  },
+  {
+    slug: "forex-currency",
+    name: "Forex & Currencies",
+    icon: "💱",
+    code: "FX",
+    color: "#1D4ED8",
+    lessons: 26,
+    quizzes: 7,
+    level: "Intermediate → Advanced",
+    desc: "Global foreign exchange mechanics, currency pairs, central bank interest rates, FEMA, and hedging.",
+  },
+  {
+    slug: "hindi",
+    name: "हिंदी Finance",
+    icon: "🇮🇳",
+    code: "HI",
+    color: "#B91C1C",
+    lessons: 21,
+    quizzes: 5,
+    level: "Beginner",
+    desc: "Personal finance, mutual funds, aur share market ke buniyadi siddhant saral Hindi bhasha mein.",
+  },
 ];
 
-const FEATURES = [
-  { icon:"📖", name:"Structured Lessons",  desc:"320+ lessons across 8 tracks. Clear explanations with India-specific examples, cited sources and key takeaways.",  stat:"320+ lessons" },
-  { icon:"▶️", name:"Video Library",       desc:"82 curated playlists from trusted Indian and global educators. Organised by topic so you can learn by watching.",   stat:"82 playlists" },
-  { icon:"📚", name:"Resource Library",    desc:"Books, PDFs, research papers and guides. FinanceHub-created and authorised external resources in one place.",      stat:"50+ resources" },
-  { icon:"🧮", name:"Finance Lab",         desc:"9 interactive simulators — SIP, EMI, tax, retirement, net worth, goal planning, Forex and crypto paper trading.",   stat:"9 simulators" },
-  { icon:"🤖", name:"AI Mentor",           desc:"Ask anything. Get India-specific answers with RBI/SEBI sources cited. Personalised to your learning history.",       stat:"24/7 available" },
-  { icon:"📝", name:"Digital Rough Book",  desc:"Take notes while you learn. Cloud-synced across all your devices. Organise, highlight and revisit.",               stat:"Your notes" },
-  { icon:"🏆", name:"XP & Leagues",        desc:"Earn XP for every lesson. Compete in weekly leagues — Bronze to Master. Daily streaks keep you consistent.",         stat:"5 league tiers" },
-  { icon:"🎓", name:"Certificates",        desc:"Complete a track, earn a verified certificate with a unique ID. Share on LinkedIn directly from your profile.",      stat:"Verifiable" },
-];
-
-const SIMULATORS = [
-  { name:"SIP Calculator",      icon:"📈", desc:"See compound interest work on your exact numbers", color:"#0E6163" },
-  { name:"EMI Calculator",      icon:"🏠", desc:"Plan any loan — home, car, personal", color:"#185FA5" },
-  { name:"Tax Comparison",      icon:"💰", desc:"Old vs new regime — find which saves you more", color:"#7C3AED" },
-  { name:"Retirement Planner",  icon:"🌅", desc:"How much corpus do you need?", color:"#B45309" },
-  { name:"Net Worth Tracker",   icon:"💎", desc:"Assets minus liabilities — your true financial score", color:"#0891B2" },
-  { name:"Goal Planner",        icon:"🎯", desc:"SIP needed for home, education, travel — inflation adjusted", color:"#0F766E" },
-  { name:"Forex Paper Trade",   icon:"💱", desc:"Trade currency pairs with simulated money", color:"#1D4ED8" },
-  { name:"Crypto Paper Trade",  icon:"₿",  desc:"Build a crypto portfolio — no real money", color:"#B91C1C" },
-  { name:"Compound Visualiser", icon:"📊", desc:"Watch ₹5,000/month grow over 30 years", color:"#0E6163" },
-];
-
-const AUDIENCES = [
-  { icon:"🎓", label:"Student",           desc:"Money basics, budgeting, savings, first investments. Build the right habits early.", track:"Personal Finance", lessons:22 },
-  { icon:"💼", label:"Working Adult",     desc:"SIP, EMI, tax filing, mutual funds, insurance. The financial independence toolkit.", track:"Personal Finance", lessons:28 },
-  { icon:"📈", label:"Investor",          desc:"Markets, equity analysis, portfolio management, behavioural traps to avoid.", track:"Trading & Markets", lessons:35 },
-  { icon:"📊", label:"Trader",            desc:"Technical analysis, charts, risk management, derivatives and strategy.", track:"Technical Analysis", lessons:36 },
-  { icon:"🚀", label:"Founder",           desc:"Cash flow, valuation, fundraising, cap tables, unit economics.", track:"Corporate Finance", lessons:24 },
-  { icon:"📝", label:"Exam Aspirant",     desc:"Structured learning for finance certifications and competitive exams.", track:"All Tracks", lessons:45 },
-];
-
-const FAQS = [
-  { q:"Is FinanceHub really free?",              a:"Yes. You can access 100+ lessons across all tracks, 5 AI Mentor questions per day, quizzes, and simulators — completely free. No credit card required." },
-  { q:"Do I need prior finance knowledge?",      a:"Not at all. Every track starts from absolute zero. The Personal Finance Beginner track assumes you know nothing about money." },
-  { q:"How does the AI Mentor work?",            a:"The AI knows your completed lessons, your weak areas and your primary track. It answers questions in India-specific context, cites RBI/SEBI/AMFI sources and never gives investment advice — only education." },
-  { q:"Are the simulators using real money?",    a:"No. All simulators use fictional/simulated amounts. They exist to help you understand financial concepts — not to trade or invest real money." },
-  { q:"Can I get a certificate?",                a:"Yes. Complete all lessons in a track and a verified certificate is generated automatically with a unique ID. You can add it to LinkedIn directly." },
-  { q:"Is the content available in Hindi?",      a:"Yes. We have a growing Hindi Finance track with 13+ lessons covering personal finance, investing and tax — explained simply in Hindi." },
-  { q:"What payment methods do you accept?",     a:"Razorpay (UPI, cards, net banking, EMI) for Indian users and Stripe for international users." },
-  { q:"Can I cancel my subscription anytime?",   a:"Yes. Cancel anytime from your account settings. No lock-in, no questions asked." },
+const HERO_LABS = [
+  {
+    title: "SIP & Investment Calculator",
+    code: "SIP",
+    icon: "📈",
+    desc: "Model how monthly investments compound over 10 to 30 years at custom CAGR growth rates.",
+    color: "#059669",
+    href: "/practice/sip",
+    tag: "Investing",
+    duration: "5 min",
+  },
+  {
+    title: "Loan & EMI Calculator",
+    code: "EMI",
+    icon: "🏠",
+    desc: "Calculate monthly repayments for home and auto loans, and measure the impact of annual prepayments.",
+    color: "#2563EB",
+    href: "/practice/emi",
+    tag: "Loans",
+    duration: "3 min",
+  },
+  {
+    title: "Tax Calculator FY 2024-25",
+    code: "TAX",
+    icon: "💰",
+    desc: "Compare Old vs New income tax slabs side-by-side with 80C, 80D, HRA, and standard deduction calculations.",
+    color: "#D97706",
+    href: "/practice/tax",
+    tag: "Tax Planning",
+    duration: "3 min",
+  },
+  {
+    title: "Budget Simulator (50/30/20)",
+    code: "BUD",
+    icon: "📊",
+    desc: "Split your monthly take-home salary into Needs, Wants, and Wealth Investments with instant visual breakdowns.",
+    color: "#0D9488",
+    href: "/practice/budget",
+    tag: "Budgeting",
+    duration: "5 min",
+  },
 ];
 
 const QUIZ_STEPS = [
-  { q:"Who are you?", key:"who", opts:[
-    { label:"🎓 Student",         val:"student" },
-    { label:"💼 Working Adult",   val:"adult" },
-    { label:"📈 Investor",        val:"investor" },
-    { label:"📊 Trader",          val:"trader" },
-    { label:"🚀 Founder",         val:"founder" },
-    { label:"📝 Exam Aspirant",   val:"exam" },
-  ]},
-  { q:"What is your main goal?", key:"goal", opts:[
-    { label:"Stop living paycheck to paycheck",  val:"basics" },
-    { label:"Start investing confidently",       val:"invest" },
-    { label:"Learn trading and markets",         val:"trade" },
-    { label:"Understand my business finances",   val:"business" },
-    { label:"Pass a finance exam",               val:"exam" },
-  ]},
-  { q:"How much do you know already?", key:"level", opts:[
-    { label:"Almost nothing",          val:"zero" },
-    { label:"I know the basics",       val:"basic" },
-    { label:"Intermediate — I've started", val:"mid" },
-    { label:"Advanced — I want depth", val:"adv" },
-  ]},
+  {
+    q: "What best describes your current stage?",
+    key: "who",
+    opts: [
+      { label: "🎓 College Student / Fresh Graduate", val: "student" },
+      { label: "💼 Salaried Working Professional", val: "adult" },
+      { label: "📈 Active Long-Term Investor", val: "investor" },
+      { label: "📊 Active Trader / Technical Analyst", val: "trader" },
+      { label: "🚀 Business Founder / Entrepreneur", val: "founder" },
+    ],
+  },
+  {
+    q: "What is your primary financial goal right now?",
+    key: "goal",
+    opts: [
+      { label: "Master budgeting & start my first SIP", val: "basics" },
+      { label: "Save tax & optimize salary deductions", val: "tax" },
+      { label: "Learn stock analysis & portfolio building", val: "invest" },
+      { label: "Master chart patterns & paper trading", val: "trade" },
+      { label: "Understand startup valuation & cash flow", val: "business" },
+    ],
+  },
+  {
+    q: "What is your existing finance knowledge level?",
+    key: "level",
+    opts: [
+      { label: "Absolute beginner — starting from zero", val: "zero" },
+      { label: "I know basic terms but lack a structured system", val: "basic" },
+      { label: "Intermediate — already investing or trading", val: "mid" },
+      { label: "Advanced — looking for professional depth", val: "adv" },
+    ],
+  },
 ];
 
-const PATHS: Record<string,{track:string;level:string;desc:string}> = {
-  student:   { track:"Personal Finance",    level:"Absolute Beginner", desc:"Start with money basics — saving, budgeting and compound interest." },
-  adult:     { track:"Personal Finance",    level:"Working Adult",     desc:"SIP, mutual funds, tax, insurance and building wealth." },
-  investor:  { track:"Trading & Markets",   level:"Markets 101",       desc:"Equity investing, fundamentals and portfolio management." },
-  trader:    { track:"Technical Analysis",  level:"Intermediate",      desc:"Charts, indicators, risk management and trading psychology." },
-  founder:   { track:"Corporate Finance",   level:"Business Basics",   desc:"Unit economics, valuation, fundraising and cap tables." },
-  exam:      { track:"All Tracks",          level:"Structured",        desc:"Systematic coverage aligned with finance certification syllabi." },
+const PATH_RECOMMENDATIONS: Record<
+  string,
+  { track: string; trackSlug: string; level: string; desc: string; icon: string }
+> = {
+  student: {
+    track: "Personal Finance",
+    trackSlug: "personal-finance",
+    level: "Level 1: Absolute Beginner",
+    desc: "Start with budgeting essentials, understanding inflation, and the power of starting small monthly SIPs.",
+    icon: "💰",
+  },
+  adult: {
+    track: "Personal Finance",
+    trackSlug: "personal-finance",
+    level: "Level 2: Wealth & Tax Optimization",
+    desc: "Optimize your salary breakdown, compare Old vs New tax regimes, build an emergency buffer, and set up index funds.",
+    icon: "💼",
+  },
+  investor: {
+    track: "Trading & Markets",
+    trackSlug: "trading-markets",
+    level: "Level 1: Equity & Market Structure",
+    desc: "Learn fundamental equity analysis, financial ratios (P/E, ROE, Debt/Equity), and asset allocation strategies.",
+    icon: "📈",
+  },
+  trader: {
+    track: "Technical Analysis",
+    trackSlug: "technical-analysis",
+    level: "Level 1: Chart Reading Fundamentals",
+    desc: "Master candlesticks, support/resistance levels, trendlines, and risk-reward ratios with simulated paper trading.",
+    icon: "📊",
+  },
+  founder: {
+    track: "Corporate Finance",
+    trackSlug: "corporate-finance",
+    level: "Level 1: Business Finance & Runway",
+    desc: "Model cash burn rates, gross margins, valuation multiples, and fundraising mechanics for growing ventures.",
+    icon: "🚀",
+  },
 };
 
-export default function HomePage() {
-  const [activeAudience, setActiveAudience] = useState(0);
-  const [quizStep,       setQuizStep]       = useState(0);
-  const [answers,        setAnswers]        = useState<Record<string,string>>({});
-  const [quizDone,       setQuizDone]       = useState(false);
-  const [openFaq,        setOpenFaq]        = useState<number|null>(null);
-  const [mobileMenu,     setMobileMenu]     = useState(false);
-  const [scrolled,       setScrolled]       = useState(false);
+const FAQS = [
+  {
+    q: "Is FinanceHub really 100% free to start?",
+    a: "Yes. You can access over 100+ beginner lessons across all 8 tracks, practice with all 15 interactive simulators, and ask up to 5 AI Mentor questions every day completely free of charge. No credit card or payment information is required.",
+  },
+  {
+    q: "Do I need any prior finance or math background?",
+    a: "None whatsoever. Our curriculum is engineered from the ground up for complete beginners. Every concept is broken down into plain language using intuitive Indian market examples, step-by-step graphics, and zero unnecessary jargon.",
+  },
+  {
+    q: "How does the Frontier AI Mentor work?",
+    a: "The AI Mentor is trained on structured finance educational frameworks. It tailors explanations to your current lesson, breaks down complex formulas, and references official Indian regulatory guidelines (RBI, SEBI, AMFI, Income Tax India). It never offers personalized financial advice.",
+  },
+  {
+    q: "Are the trading and investment simulators using real money?",
+    a: "No. All simulators and paper trading terminals operate exclusively with virtual, simulated currency. They exist so you can master order timing, risk management, and portfolio compounding without risking actual hard-earned capital.",
+  },
+  {
+    q: "How do I earn verified certificates?",
+    a: "When you finish all lessons in a track and pass the associated module quizzes with a score of 70% or higher, a verified digital certificate is generated with a unique verification ID that you can display on LinkedIn or your resume.",
+  },
+  {
+    q: "Is content available in Hindi?",
+    a: "Yes. We maintain a dedicated 'हिंदी Finance' curriculum featuring 21+ lessons covering personal budgeting, mutual fund SIPs, tax planning, and stock market fundamentals explained clearly in simple Hindi.",
+  },
+];
 
+export default function HomePage() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [selectedPersona, setSelectedPersona] = useState(0);
+
+  // Onboarding Quiz State
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  const [quizComplete, setQuizComplete] = useState(false);
+
+  // FAQ Accordion State
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Scroll detection for navbar
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive:true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleAnswer = (key:string, val:string) => {
-    const next = { ...answers, [key]:val };
-    setAnswers(next);
-    if (quizStep < QUIZ_STEPS.length - 1) setQuizStep(s => s+1);
-    else setQuizDone(true);
+  const handleQuizAnswer = (key: string, val: string) => {
+    const nextAnswers = { ...quizAnswers, [key]: val };
+    setQuizAnswers(nextAnswers);
+    if (quizStep < QUIZ_STEPS.length - 1) {
+      setQuizStep((s) => s + 1);
+    } else {
+      setQuizComplete(true);
+    }
   };
 
-  const path = PATHS[answers.who] || PATHS.adult;
-
-  const S = {
-    // Section wrappers
-    white:   { background:"#ffffff", padding:"100px 0" } as React.CSSProperties,
-    soft:    { background:"#F7F9F8", padding:"100px 0" } as React.CSSProperties,
-    navy:    { background:"#0B1A2B", padding:"100px 0" } as React.CSSProperties,
-    teal:    { background:"#F0F9F7", padding:"100px 0" } as React.CSSProperties,
-    // Container
-    container: { maxWidth:1160, margin:"0 auto", padding:"0 32px" } as React.CSSProperties,
-    // Eyebrow
-    eyebrow: { fontSize:12, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase" as const, color:"#0E6163", marginBottom:14, display:"block" as const },
-    // Headings
-    h1: { fontSize:"clamp(42px,5.5vw,68px)", fontWeight:700, lineHeight:1.08, letterSpacing:"-2px", color:"#0B1A2B", margin:"0 0 24px" } as React.CSSProperties,
-    h2: { fontSize:"clamp(30px,3.5vw,46px)", fontWeight:700, lineHeight:1.12, letterSpacing:"-1px", color:"#0B1A2B", margin:"0 0 16px" } as React.CSSProperties,
-    h2w:{ fontSize:"clamp(30px,3.5vw,46px)", fontWeight:700, lineHeight:1.12, letterSpacing:"-1px", color:"#ffffff", margin:"0 0 16px" } as React.CSSProperties,
-    body: { fontSize:17, color:"#526173", lineHeight:1.75, margin:"0 0 32px", maxWidth:580 } as React.CSSProperties,
-    bodyw:{ fontSize:17, color:"rgba(255,255,255,0.65)", lineHeight:1.75, margin:"0 0 32px", maxWidth:580 } as React.CSSProperties,
-  };
+  const recommendedPath =
+    PATH_RECOMMENDATIONS[quizAnswers.who] || PATH_RECOMMENDATIONS.adult;
 
   return (
-    <div style={{ fontFamily:"'Inter', system-ui, sans-serif", color:"#0B1A2B", background:"#ffffff" }}>
-
-      {/* Google Fonts */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { margin:0; }
-        a { text-decoration:none; color:inherit; }
-        button { font-family:inherit; cursor:pointer; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        .hero-in { animation: fadeUp 0.7s ease both; }
-        .hero-in-2 { animation: fadeUp 0.7s 0.15s ease both; }
-        .hero-in-3 { animation: fadeUp 0.7s 0.3s ease both; }
-        .card-hover:hover { transform:translateY(-3px); box-shadow:0 16px 40px rgba(11,26,43,0.1); }
-        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-        .faq-item:hover { background:#F7F9F8; }
-        @media(max-width:768px){
-          .hide-mobile { display:none!important; }
-          .grid-2 { grid-template-columns:1fr!important; }
-          .grid-3 { grid-template-columns:1fr!important; }
-          .grid-4 { grid-template-columns:1fr 1fr!important; }
-          .hero-grid { grid-template-columns:1fr!important; }
-        }
-      `}</style>
-
-      {/* ── 1. NAVIGATION ─────────────────────────────────────────── */}
-      <nav style={{
-        position:"sticky", top:0, zIndex:200,
-        background: scrolled ? "rgba(255,255,255,0.97)" : "#ffffff",
-        borderBottom:`1px solid ${scrolled ? "#e5eaf0" : "transparent"}`,
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-        transition:"all 0.25s",
-        padding:"0 32px",
-      }}>
-        <div style={{ maxWidth:1160, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:64 }}>
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased selection:bg-[#0E6163] selection:text-white">
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 1. STICKY NAVIGATION BAR                                    */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <header
+        className={`sticky top-0 z-50 transition-all duration-200 ${
+          scrolled
+            ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200"
+            : "bg-white border-b border-slate-100"
+        }`}
+      >
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <a href="/" style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{
-              width:34, height:34, borderRadius:9,
-              background:"linear-gradient(135deg,#0E6163,#1D9E75)",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow:"0 2px 8px rgba(14,97,99,0.3)",
-            }}>
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="10" width="3" height="8" rx="1" fill="rgba(255,255,255,0.6)"/>
-                <rect x="7" y="6"  width="3" height="12" rx="1" fill="rgba(255,255,255,0.8)"/>
-                <rect x="12" y="2" width="3" height="16" rx="1" fill="#fff"/>
-                <path d="M2 12 L7 8 L12 4 L17 2" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                <circle cx="17" cy="2" r="1.5" fill="#fff"/>
-              </svg>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0E6163] to-emerald-600 flex items-center justify-center text-white font-black text-lg shadow-sm group-hover:shadow transition-shadow">
+              F
             </div>
             <div>
-              <div style={{ fontSize:16, fontWeight:700, letterSpacing:"-0.3px", lineHeight:1, color:"#0B1A2B" }}>
-                Finance<span style={{ color:"#0E6163" }}>Hub</span>
+              <div className="text-base font-extrabold tracking-tight leading-none text-[#0F172A]">
+                Finance<span className="text-[#0E6163]">Hub</span>
               </div>
-              <div style={{ fontSize:9, fontWeight:600, color:"#a0aec0", letterSpacing:"0.08em", textTransform:"uppercase", lineHeight:1 }}>
+              <div className="text-[9px] font-bold tracking-widest uppercase text-slate-400 leading-none mt-0.5">
                 of India
               </div>
             </div>
-          </a>
+          </Link>
 
-          {/* Nav links */}
-          <div className="hide-mobile" style={{ display:"flex", gap:32, fontSize:14, fontWeight:500, color:"#526173" }}>
-            {[["Tracks","#tracks"],["Finance Lab","#lab"],["Library","#library"],["AI Mentor","#ai"],["Pricing","#pricing"]].map(([l,h]) => (
-              <a key={l} href={h} style={{ color:"#526173", transition:"color 0.15s" }}
-                onMouseEnter={e=>(e.currentTarget.style.color="#0B1A2B")}
-                onMouseLeave={e=>(e.currentTarget.style.color="#526173")}>{l}</a>
-            ))}
-          </div>
+          {/* Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-7 text-xs font-semibold text-slate-600">
+            <Link href="/explore" className="hover:text-[#0E6163] transition-colors">
+              Curriculum Tracks
+            </Link>
+            <Link href="/practice" className="hover:text-[#0E6163] transition-colors">
+              Finance Labs
+            </Link>
+            <Link href="/ai-tutor" className="hover:text-[#0E6163] transition-colors">
+              AI Mentor
+            </Link>
+            <Link href="/library" className="hover:text-[#0E6163] transition-colors">
+              Library
+            </Link>
+            <a href="#pricing" className="hover:text-[#0E6163] transition-colors">
+              Pricing
+            </a>
+          </nav>
 
-          {/* CTAs */}
-          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <a href="/login" className="hide-mobile" style={{ padding:"7px 16px", fontSize:13, fontWeight:500, color:"#526173", border:"1px solid #e5eaf0", borderRadius:8, background:"transparent" }}>
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className="hidden sm:inline-block px-4 py-2 text-xs font-bold text-slate-700 hover:text-[#0E6163] transition-colors"
+            >
               Log in
-            </a>
-            <a href="/signup" style={{ padding:"8px 18px", fontSize:13, fontWeight:600, background:"#0B1A2B", color:"#fff", borderRadius:8, border:"none" }}>
-              Start free
-            </a>
+            </Link>
+            <Link
+              href="/signup"
+              className="px-4 sm:px-5 py-2.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all"
+            >
+              Start Free →
+            </Link>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="md:hidden p-2 text-slate-600 hover:text-slate-900"
+              aria-label="Toggle navigation menu"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
-      </nav>
 
-      {/* ── 2. HERO ───────────────────────────────────────────────── */}
-      <section style={{ ...S.white, padding:"80px 0 0", overflow:"hidden" }}>
-        <div style={{ ...S.container }}>
-          {/* Badge */}
-          <div className="hero-in" style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#F0F9F7", border:"1px solid #B7E4D8", borderRadius:20, padding:"5px 14px", fontSize:12, fontWeight:600, color:"#0E6163", marginBottom:28 }}>
-            <span style={{ width:6, height:6, borderRadius:"50%", background:"#1D9E75", display:"inline-block" }}/>
-            Free to start · Built for India · No credit card needed
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-slate-200 bg-white px-4 py-4 space-y-2 text-sm font-semibold">
+            <Link
+              href="/explore"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-slate-700 hover:text-[#0E6163]"
+            >
+              Curriculum Tracks
+            </Link>
+            <Link
+              href="/practice"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-slate-700 hover:text-[#0E6163]"
+            >
+              Finance Labs
+            </Link>
+            <Link
+              href="/ai-tutor"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-slate-700 hover:text-[#0E6163]"
+            >
+              AI Mentor
+            </Link>
+            <Link
+              href="/library"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-slate-700 hover:text-[#0E6163]"
+            >
+              Library &amp; Resources
+            </Link>
+            <a
+              href="#pricing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-slate-700 hover:text-[#0E6163]"
+            >
+              Pricing
+            </a>
+            <div className="pt-2 border-t border-slate-100 flex gap-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 text-center py-2.5 rounded-lg border border-slate-200 text-xs font-bold"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 text-center py-2.5 rounded-lg bg-[#0E6163] text-white text-xs font-bold"
+              >
+                Start Free
+              </Link>
+            </div>
           </div>
+        )}
+      </header>
 
-          {/* Two-column hero */}
-          <div className="hero-grid" style={{ display:"grid", gridTemplateColumns:"1fr 420px", gap:48, alignItems:"flex-start" }}>
-            <div>
-              <h1 className="hero-in-2" style={{
-                fontFamily:"'Playfair Display', serif",
-                fontSize:"clamp(44px,5.5vw,72px)",
-                fontWeight:800,
-                lineHeight:1.05,
-                letterSpacing:"-2.5px",
-                color:"#0B1A2B",
-                margin:"0 0 24px",
-              }}>
-                Master Finance.<br/>
-                <span style={{ color:"#0E6163" }}>Shape Your Future.</span>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 2. HERO SECTION WITH DYNAMIC PLATFORM PREVIEW MOCKUP        */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden bg-white border-b border-slate-200/60">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
+            {/* Left Content Column */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Eyebrow Pill */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-xs font-bold tracking-wide">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Built for India · 100% Free Core Access · RBI &amp; SEBI Aligned</span>
+              </div>
+
+              {/* Main Headline */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] text-[#0F172A]">
+                Master Finance.
+                <br />
+                <span className="text-[#0E6163]">Shape Your Future.</span>
               </h1>
 
-              <p className="hero-in-2" style={{ fontSize:18, color:"#526173", lineHeight:1.75, margin:"0 0 36px", maxWidth:520 }}>
-                Learn personal finance, investing, trading, corporate finance, crypto and forex — through structured lessons, AI-powered guidance, interactive simulators and curated resources. In Hindi and English.
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl">
+                Learn personal finance, investing, taxation, trading, and business valuation through structured lessons, frontier AI guidance, and 15 interactive simulators. In Hindi &amp; English.
               </p>
 
-              <div className="hero-in-3" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:40 }}>
-                <a href="/signup" style={{
-                  padding:"13px 28px", fontSize:15, fontWeight:600,
-                  background:"#0E6163", color:"#fff",
-                  borderRadius:10, border:"none",
-                  boxShadow:"0 4px 16px rgba(14,97,99,0.3)",
-                }}>
-                  Start Learning Free →
-                </a>
-                <a href="/explore" style={{
-                  padding:"13px 28px", fontSize:15, fontWeight:500,
-                  background:"transparent", color:"#0B1A2B",
-                  borderRadius:10, border:"1.5px solid #d1dbe6",
-                }}>
-                  Explore Curriculum
-                </a>
+              {/* CTAs */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                <Link
+                  href="/signup"
+                  className="px-6 py-3.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  <span>Start Learning Free</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/explore"
+                  className="px-6 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold text-sm rounded-xl border border-slate-200 transition-colors"
+                >
+                  Explore 8 Tracks
+                </Link>
               </div>
 
-              {/* Capability chips */}
-              <div className="hero-in-3" style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:40 }}>
-                {["Learn","Watch","Read","Practice","Simulate","Ask AI","Earn Certificates","Track Progress"].map(c => (
-                  <span key={c} style={{ fontSize:12, fontWeight:500, color:"#526173", background:"#F7F9F8", border:"1px solid #e5eaf0", borderRadius:20, padding:"4px 12px" }}>{c}</span>
-                ))}
+              {/* Trust Badges */}
+              <div className="pt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs font-semibold text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                  <span>No credit card required</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                  <span>320+ Modular lessons</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                  <span>LinkedIn verifiable certificates</span>
+                </div>
               </div>
             </div>
 
-            {/* Stats panel */}
-            <div className="hero-in-3 hide-mobile" style={{
-              background:"#F7F9F8",
-              border:"1px solid #e5eaf0",
-              borderRadius:20,
-              padding:32,
-              marginTop:8,
-            }}>
-              <div style={{ fontSize:13, fontWeight:600, color:"#0E6163", marginBottom:20 }}>Platform at a glance</div>
-              {[
-                { val:"320+",  label:"Published lessons",          icon:"📖" },
-                { val:"8",     label:"Learning tracks",            icon:"🗺️" },
-                { val:"9",     label:"Finance simulators",         icon:"🧮" },
-                { val:"82",    label:"Curated video playlists",    icon:"▶️" },
-                { val:"50+",   label:"AI questions answered daily",icon:"🤖" },
-                { val:"13",    label:"Hindi lessons",              icon:"🇮🇳" },
-                { val:"5",     label:"League tiers (Bronze→Master)",icon:"🏆" },
-                { val:"Free",  label:"Core content, always",       icon:"✅" },
-              ].map(s => (
-                <div key={s.label} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:"1px solid #eef0f2" }}>
-                  <span style={{ fontSize:18, width:28, textAlign:"center" }}>{s.icon}</span>
-                  <div>
-                    <div style={{ fontSize:18, fontWeight:700, color:"#0B1A2B", lineHeight:1 }}>{s.val}</div>
-                    <div style={{ fontSize:12, color:"#718096", marginTop:2 }}>{s.label}</div>
+            {/* Right Interactive Product Mockup */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative mx-auto max-w-md lg:max-w-none">
+                {/* Background Ambient Glow */}
+                <div className="absolute -inset-2 bg-gradient-to-tr from-emerald-100/70 via-teal-50 to-blue-100/70 rounded-3xl blur-xl opacity-70 -z-10" />
+
+                {/* Main Glass Workspace Card */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 space-y-4">
+                  {/* Browser-style Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+                      FinanceHub Workspace
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                      LIVE
+                    </span>
+                  </div>
+
+                  {/* Active Track Progress Card */}
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-[#0E6163] uppercase tracking-wider text-[10px]">
+                        Active Curriculum
+                      </span>
+                      <span className="font-bold text-slate-700">73 Lessons</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-extrabold text-[#0F172A]">
+                          Personal Finance Mastery
+                        </h4>
+                        <p className="text-xs text-slate-500">Level 1: Money Fundamentals</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-full border-2 border-emerald-500 flex items-center justify-center text-xs font-bold text-emerald-600 bg-white">
+                        24%
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 w-[24%]" />
+                    </div>
+                  </div>
+
+                  {/* Mini SIP Compounding Interactive Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border border-emerald-100/80 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-emerald-800 text-[11px] flex items-center gap-1">
+                        <span>📈</span> SIP Compounding Visualizer
+                      </span>
+                      <span className="text-[11px] font-semibold text-emerald-700">₹5,000 / mo</span>
+                    </div>
+                    <div className="flex items-baseline justify-between pt-1">
+                      <div>
+                        <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                          Expected 20-Yr Corpus
+                        </div>
+                        <div className="text-xl font-extrabold text-[#0F172A] tracking-tight">
+                          ₹49.95 Lakhs
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                          Total Invested
+                        </div>
+                        <div className="text-xs font-bold text-slate-700">₹12.00 Lakhs</div>
+                      </div>
+                    </div>
+                    {/* Sparkline curve */}
+                    <div className="h-6 w-full pt-1 flex items-end gap-1">
+                      {[15, 20, 24, 32, 45, 60, 80, 100].map((h, i) => (
+                        <div
+                          key={i}
+                          style={{ height: `${h}%` }}
+                          className="flex-1 bg-emerald-400/80 rounded-t"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Gamification Strip: Streak & Verified Badge */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 flex items-center gap-2">
+                      <span className="text-base">🔥</span>
+                      <div>
+                        <div className="text-xs font-extrabold text-amber-900">7-Day Streak</div>
+                        <div className="text-[10px] font-semibold text-amber-700">+350 XP Gained</div>
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 flex items-center gap-2">
+                      <span className="text-base">🏅</span>
+                      <div>
+                        <div className="text-xs font-extrabold text-indigo-900">Certified</div>
+                        <div className="text-[10px] font-semibold text-indigo-700">Unique Credential ID</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Stats bar — mobile visible */}
-          <div style={{
-            display:"grid", gridTemplateColumns:"repeat(4,1fr)",
-            borderTop:"1px solid #e5eaf0", marginTop:16,
-          }}>
-            {[
-              { val:"320+", label:"Lessons" },
-              { val:"8",    label:"Tracks" },
-              { val:"9",    label:"Simulators" },
-              { val:"Free", label:"Core content" },
-            ].map((s,i) => (
-              <div key={s.label} style={{
-                padding:"20px 16px", textAlign:"center",
-                borderRight: i<3 ? "1px solid #e5eaf0" : "none",
-              }}>
-                <div style={{ fontSize:24, fontWeight:700, color:"#0B1A2B", letterSpacing:"-0.5px" }}>{s.val}</div>
-                <div style={{ fontSize:12, color:"#8a9ab0", marginTop:3 }}>{s.label}</div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── 3. WHO IT'S FOR ───────────────────────────────────────── */}
-      <section id="who" style={S.soft}>
-        <div style={S.container}>
-          <span style={S.eyebrow}>Who it is for</span>
-          <h2 style={S.h2}>Finance knowledge for every stage of life</h2>
-          <p style={{ ...S.body, marginBottom:40 }}>
-            Whether you&apos;re just starting out or deep in advanced markets — FinanceHub has a structured path for you.
-          </p>
-
-          {/* Audience tabs */}
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:24 }}>
-            {AUDIENCES.map((a,i) => (
-              <button key={i} onClick={() => setActiveAudience(i)}
-                style={{
-                  padding:"9px 18px", fontSize:13, fontWeight: activeAudience===i ? 600 : 400,
-                  borderRadius:20, border: activeAudience===i ? "1.5px solid #0E6163" : "1px solid #d1dbe6",
-                  background: activeAudience===i ? "#F0F9F7" : "#ffffff",
-                  color: activeAudience===i ? "#0E6163" : "#526173",
-                  transition:"all 0.15s",
-                }}>
-                {a.icon} {a.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Active audience card */}
-          <div style={{
-            background:"#ffffff", border:"1px solid #e5eaf0",
-            borderRadius:16, padding:"28px 32px",
-            display:"flex", gap:24, alignItems:"flex-start", flexWrap:"wrap",
-          }}>
-            <div style={{ fontSize:48 }}>{AUDIENCES[activeAudience].icon}</div>
-            <div style={{ flex:1, minWidth:240 }}>
-              <div style={{ fontSize:20, fontWeight:700, color:"#0B1A2B", marginBottom:8 }}>{AUDIENCES[activeAudience].label}</div>
-              <div style={{ fontSize:15, color:"#526173", lineHeight:1.7, marginBottom:16 }}>{AUDIENCES[activeAudience].desc}</div>
-              <div style={{ display:"flex", gap:16, fontSize:13, color:"#718096" }}>
-                <span>📚 {AUDIENCES[activeAudience].lessons} lessons</span>
-                <span>🗺️ {AUDIENCES[activeAudience].track}</span>
-              </div>
-            </div>
-            <a href="/explore" style={{
-              padding:"10px 20px", background:"#0E6163", color:"#fff",
-              borderRadius:9, fontSize:13, fontWeight:600, flexShrink:0,
-              alignSelf:"center",
-            }}>
-              See curriculum →
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. WHY FINANCEHUB ─────────────────────────────────────── */}
-      <section style={S.white}>
-        <div style={S.container}>
-          <span style={S.eyebrow}>Why FinanceHub</span>
-          <h2 style={S.h2}>Built differently. For a reason.</h2>
-          <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24, marginTop:40 }}>
-            {[
-              { title:"Simple",      icon:"✦", desc:"Complex finance explained in plain language with India-specific examples — not textbook jargon." },
-              { title:"Practical",   icon:"✦", desc:"Learn by doing. Simulators, quizzes, notes, case studies and AI exercises that apply knowledge." },
-              { title:"Visual",      icon:"✦", desc:"Videos, charts, knowledge maps and interactive diagrams — because some things need to be seen." },
-              { title:"Structured",  icon:"✦", desc:"Always know what to learn next. Clear tracks, levels, prerequisites and adaptive recommendations." },
-              { title:"Trusted",     icon:"✦", desc:"Every lesson cites RBI, SEBI, AMFI or NSE. No opinions masquerading as facts." },
-              { title:"For India",   icon:"✦", desc:"₹ examples, Indian tax law, SEBI regulations, RBI policy — built from the ground up for India." },
-            ].map((w,i) => (
-              <div key={i} className="card-hover" style={{
-                background:"#ffffff", border:"1px solid #e5eaf0",
-                borderRadius:14, padding:"28px 24px",
-              }}>
-                <div style={{ fontSize:11, fontWeight:700, color:"#0E6163", letterSpacing:"0.1em", marginBottom:10 }}>0{i+1}</div>
-                <div style={{ fontSize:17, fontWeight:700, color:"#0B1A2B", marginBottom:10 }}>{w.title}</div>
-                <div style={{ fontSize:14, color:"#526173", lineHeight:1.7 }}>{w.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. EIGHT LEARNING TRACKS ──────────────────────────────── */}
-      <section id="tracks" style={S.soft}>
-        <div style={S.container}>
-          <span style={S.eyebrow}>Learning Tracks</span>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:40, gap:20, flexWrap:"wrap" }}>
-            <div>
-              <h2 style={{ ...S.h2, margin:0 }}>Eight tracks.<br/>One complete finance education.</h2>
-            </div>
-            <a href="/explore" style={{ fontSize:14, fontWeight:600, color:"#0E6163", flexShrink:0 }}>View all tracks →</a>
-          </div>
-
-          <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
-            {TRACKS.map((t,i) => (
-              <a key={i} href={`/tracks/${t.slug}`} className="card-hover" style={{
-                display:"block",
-                background:"#ffffff", border:"1px solid #e5eaf0",
-                borderRadius:14, overflow:"hidden",
-                textDecoration:"none",
-              }}>
-                {/* Accent top */}
-                <div style={{ height:4, background:t.color }} />
-                <div style={{ padding:"20px 18px" }}>
-                  {/* Icon + code */}
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-                    <span style={{ fontSize:26 }}>{t.icon}</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:t.color, background:t.bg, padding:"2px 8px", borderRadius:8, letterSpacing:"0.05em" }}>{t.code}</span>
-                  </div>
-                  <div style={{ fontSize:15, fontWeight:700, color:"#0B1A2B", marginBottom:8, lineHeight:1.3 }}>{t.name}</div>
-                  <div style={{ fontSize:12, color:"#526173", lineHeight:1.6, marginBottom:14 }}>{t.desc}</div>
-                  <div style={{ display:"flex", gap:12, fontSize:11, color:"#8a9ab0", marginBottom:16 }}>
-                    <span>📖 {t.lessons} lessons</span>
-                    <span>🎯 {t.quizzes} quizzes</span>
-                  </div>
-                  <div style={{ fontSize:11, fontWeight:600, color:t.color }}>{t.level}</div>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 3. TRUST & STATS STRIP                                      */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="bg-white py-10 border-b border-slate-200">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {TRUST_STATS.map((s, idx) => (
+              <div
+                key={idx}
+                className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 text-center space-y-1"
+              >
+                <div className="text-3xl sm:text-4xl font-black text-[#0F172A] tracking-tight">
+                  {s.val}
                 </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. COMPLETE PLATFORM FEATURES ────────────────────────── */}
-      <section style={S.navy}>
-        <div style={S.container}>
-          <span style={{ ...S.eyebrow, color:"#4ECDC4" }}>Everything you need</span>
-          <h2 style={S.h2w}>One platform.<br/>The complete finance learning system.</h2>
-          <p style={{ ...S.bodyw, marginBottom:48 }}>
-            Not just lessons. A complete ecosystem built around how people actually learn and retain financial knowledge.
-          </p>
-
-          <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:20 }}>
-            {FEATURES.map((f,i) => (
-              <div key={i} className="card-hover" style={{
-                background:"rgba(255,255,255,0.05)",
-                border:"1px solid rgba(255,255,255,0.1)",
-                borderRadius:14, padding:"24px 20px",
-              }}>
-                <div style={{ fontSize:28, marginBottom:14 }}>{f.icon}</div>
-                <div style={{ fontSize:15, fontWeight:700, color:"#ffffff", marginBottom:8 }}>{f.name}</div>
-                <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)", lineHeight:1.7, marginBottom:14 }}>{f.desc}</div>
-                <div style={{ fontSize:11, fontWeight:600, color:"#4ECDC4" }}>{f.stat}</div>
+                <div className="text-xs font-bold text-slate-800">{s.label}</div>
+                <div className="text-[11px] text-slate-500 font-medium">{s.sub}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 7. FINANCE LAB ────────────────────────────────────────── */}
-      <section id="lab" style={S.teal}>
-        <div style={S.container}>
-          <span style={S.eyebrow}>Finance Lab</span>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:40, gap:20, flexWrap:"wrap" }}>
-            <div>
-              <h2 style={{ ...S.h2, margin:0 }}>Don&apos;t just learn finance.<br/>Experience it.</h2>
-              <p style={{ fontSize:16, color:"#526173", margin:"12px 0 0" }}>9 interactive simulators. Simulated money. Zero risk. Real insight.</p>
-            </div>
-            <a href="/practice" style={{ fontSize:14, fontWeight:600, color:"#0E6163", flexShrink:0 }}>Explore Finance Lab →</a>
-          </div>
-
-          <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
-            {SIMULATORS.map((s,i) => (
-              <a key={i} href="/practice" className="card-hover" style={{
-                display:"flex", alignItems:"flex-start", gap:14,
-                background:"#ffffff", border:"1px solid #e5eaf0",
-                borderRadius:12, padding:"18px 16px",
-                textDecoration:"none",
-              }}>
-                <div style={{
-                  width:40, height:40, borderRadius:10, flexShrink:0,
-                  background:`${s.color}15`,
-                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:20,
-                }}>
-                  {s.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize:14, fontWeight:600, color:"#0B1A2B", marginBottom:4 }}>{s.name}</div>
-                  <div style={{ fontSize:12, color:"#718096", lineHeight:1.5 }}>{s.desc}</div>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          <div style={{ textAlign:"center", marginTop:32, fontSize:13, color:"#718096" }}>
-            Simulated only — no real money involved
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8. LIBRARY & RESOURCES ───────────────────────────────── */}
-      <section id="library" style={S.white}>
-        <div style={S.container}>
-          <span style={S.eyebrow}>Library & Resources</span>
-          <h2 style={S.h2}>More than just lessons</h2>
-          <p style={{ ...S.body }}>Videos, books, research, PDFs and guides — organised and curated by FinanceHub.</p>
-
-          <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:20 }}>
-            {[
-              { icon:"▶️", title:"Video Library",    desc:"82 curated YouTube playlists from India's trusted finance educators — organised by track and topic.", count:"82 playlists",   color:"#B91C1C", href:"/library" },
-              { icon:"📚", title:"Book Library",      desc:"30+ classic and modern finance books with summaries, key takeaways and chapter notes.",              count:"30+ books",      color:"#854F0B", href:"/library" },
-              { icon:"📄", title:"PDFs & Guides",     desc:"FinanceHub-created study sheets, cheat sheets, formula guides and downloadable notes.",               count:"Download free",  color:"#0E6163", href:"/library" },
-              { icon:"🗞️", title:"Research & Reports",desc:"RBI circulars, SEBI guidelines, AMFI data and institutional research — all in one place.",            count:"Official sources", color:"#185FA5", href:"/library" },
-            ].map((r,i) => (
-              <a key={i} href={r.href} className="card-hover" style={{
-                display:"block",
-                background:"#ffffff", border:"1px solid #e5eaf0",
-                borderRadius:14, padding:"24px 20px",
-                textDecoration:"none",
-              }}>
-                <div style={{ fontSize:32, marginBottom:14 }}>{r.icon}</div>
-                <div style={{ fontSize:15, fontWeight:700, color:"#0B1A2B", marginBottom:8 }}>{r.title}</div>
-                <div style={{ fontSize:13, color:"#526173", lineHeight:1.7, marginBottom:14 }}>{r.desc}</div>
-                <div style={{ fontSize:12, fontWeight:600, color:r.color }}>{r.count}</div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 9. AI MENTOR ─────────────────────────────────────────── */}
-      <section id="ai" style={S.soft}>
-        <div style={S.container}>
-          <div className="hero-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center" }}>
-            {/* Left */}
-            <div>
-              <span style={S.eyebrow}>AI Mentor</span>
-              <h2 style={S.h2}>Your finance questions<br/>don&apos;t need to wait.</h2>
-              <p style={{ fontSize:16, color:"#526173", lineHeight:1.75, marginBottom:24 }}>
-                Ask FinanceHub AI to explain a concept, quiz you, simplify a complex topic or guide you through your learning path — with India-specific context and cited sources.
-              </p>
-              <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:28 }}>
-                {[
-                  "Explain compound interest with a ₹5,000 SIP example",
-                  "What is the difference between ELSS and PPF?",
-                  "How does the new income tax regime compare for ₹12 lakh salary?",
-                  "Quiz me on personal finance basics",
-                ].map(q => (
-                  <div key={q} style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", background:"#ffffff", border:"1px solid #e5eaf0", borderRadius:9, fontSize:13, color:"#526173" }}>
-                    <span style={{ color:"#0E6163", fontSize:14 }}>→</span> {q}
-                  </div>
-                ))}
-              </div>
-              <a href="/ai-tutor" style={{
-                display:"inline-flex", alignItems:"center", gap:8,
-                padding:"12px 24px", background:"#0B1A2B", color:"#fff",
-                borderRadius:10, fontSize:14, fontWeight:600,
-              }}>
-                🤖 Meet FinanceHub AI →
-              </a>
-              <div style={{ fontSize:12, color:"#8a9ab0", marginTop:12 }}>5 free questions/day · No sign-in required to try</div>
-            </div>
-
-            {/* Right — chat mockup */}
-            <div style={{
-              background:"#0B1A2B", borderRadius:20,
-              padding:24, boxShadow:"0 24px 60px rgba(11,26,43,0.15)",
-            }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20, paddingBottom:16, borderBottom:"1px solid rgba(255,255,255,0.1)" }}>
-                <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#0E6163,#1D9E75)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🤖</div>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:600, color:"#fff" }}>FinanceHub AI Mentor</div>
-                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.4)" }}>India-specific · Source-cited · Safe</div>
-                </div>
-                <div style={{ marginLeft:"auto", fontSize:11, background:"#1D9E75", color:"#fff", padding:"2px 8px", borderRadius:10, fontWeight:600 }}>5/5 free</div>
-              </div>
-              {[
-                { role:"user", msg:"What is a SIP and how does compound interest work?" },
-                { role:"ai",   msg:"A SIP (Systematic Investment Plan) lets you invest a fixed amount monthly into a mutual fund. The magic is compound interest — your returns earn returns.\n\nExample: ₹5,000/month at 12% p.a. for 20 years = ₹49.9 lakh. You invested just ₹12 lakh.\n\n[Source: AMFI India — amfiindia.com]" },
-              ].map((m,i) => (
-                <div key={i} style={{ marginBottom:12, display:"flex", flexDirection: m.role==="user" ? "row-reverse" : "row", gap:8 }}>
-                  <div style={{
-                    maxWidth:"85%", padding:"10px 14px",
-                    background: m.role==="user" ? "#0E6163" : "rgba(255,255,255,0.07)",
-                    borderRadius: m.role==="user" ? "12px 2px 12px 12px" : "2px 12px 12px 12px",
-                    fontSize:13, color: m.role==="user" ? "#fff" : "rgba(255,255,255,0.8)",
-                    lineHeight:1.6, whiteSpace:"pre-line",
-                  }}>
-                    {m.msg}
-                  </div>
-                </div>
-              ))}
-              <div style={{ display:"flex", gap:8, marginTop:16 }}>
-                <div style={{ flex:1, background:"rgba(255,255,255,0.07)", borderRadius:9, padding:"10px 14px", fontSize:13, color:"rgba(255,255,255,0.3)" }}>Ask anything about finance…</div>
-                <div style={{ width:36, height:36, background:"#0E6163", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>→</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 10. PERSONALISED PATH (QUIZ) ─────────────────────────── */}
-      <section id="quiz" style={S.white}>
-        <div style={S.container}>
-          <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center" }}>
-            <span style={S.eyebrow}>Personalised Path</span>
-            <h2 style={S.h2}>Not sure where to start?</h2>
-            <p style={{ fontSize:16, color:"#526173", marginBottom:40 }}>
-              Answer 3 quick questions. FinanceHub builds your exact starting path.
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 4. CHOOSE YOUR STAGE (5 PERSONAS SHOWCASE)                  */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 bg-[#F8FAFC]">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+              Personalized Learning Paths
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
+              Finance Knowledge for Every Stage of Life
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600">
+              Whether you are managing your first salary, analyzing equity balance sheets, or launching a startup—select your profile to begin.
             </p>
+          </div>
 
-            <div style={{ background:"#F7F9F8", border:"1px solid #e5eaf0", borderRadius:20, padding:36, textAlign:"left" }}>
-              {!quizDone ? (
-                <>
-                  {/* Progress */}
-                  <div style={{ display:"flex", gap:6, marginBottom:28 }}>
-                    {QUIZ_STEPS.map((_,i) => (
-                      <div key={i} style={{ flex:1, height:3, borderRadius:2, background: i<=quizStep ? "#0E6163" : "#e5eaf0", transition:"background 0.3s" }} />
-                    ))}
+          {/* 5-Column Responsive Persona Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {PERSONAS.map((p, idx) => {
+              const Icon = p.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-[#0E6163] hover:shadow-lg transition-all flex flex-col justify-between group"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
+                        style={{ backgroundColor: `${p.color}15`, color: p.color }}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                        {p.badge}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        {p.label}
+                      </div>
+                      <h3 className="text-base font-bold text-[#0F172A] mt-1 leading-snug">
+                        {p.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">{p.desc}</p>
                   </div>
-                  <div style={{ fontSize:12, color:"#8a9ab0", marginBottom:8 }}>Question {quizStep+1} of {QUIZ_STEPS.length}</div>
-                  <div style={{ fontSize:18, fontWeight:600, color:"#0B1A2B", marginBottom:20 }}>{QUIZ_STEPS[quizStep].q}</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                    {QUIZ_STEPS[quizStep].opts.map((opt,i) => (
-                      <button key={i} onClick={() => handleAnswer(QUIZ_STEPS[quizStep].key, opt.val)}
-                        style={{
-                          padding:"12px 16px", fontSize:14, textAlign:"left",
-                          border:"1.5px solid #e5eaf0", borderRadius:10,
-                          background:"#ffffff", color:"#0B1A2B", fontWeight:500,
-                          transition:"all 0.15s",
-                        }}
-                        onMouseEnter={e=>{ e.currentTarget.style.borderColor="#0E6163"; e.currentTarget.style.background="#F0F9F7"; }}
-                        onMouseLeave={e=>{ e.currentTarget.style.borderColor="#e5eaf0"; e.currentTarget.style.background="#ffffff"; }}>
-                        {opt.label}
-                      </button>
-                    ))}
+
+                  <div className="pt-6 mt-6 border-t border-slate-100">
+                    <Link
+                      href={`/tracks/${p.trackSlug}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold transition-colors"
+                      style={{ color: p.color }}
+                    >
+                      <span>Start Track ({p.track})</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                   </div>
-                </>
-              ) : (
-                <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:"#0E6163", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:12 }}>Your recommended path</div>
-                  <div style={{ fontSize:22, fontWeight:700, color:"#0B1A2B", marginBottom:6 }}>{path.track}</div>
-                  <div style={{ fontSize:14, color:"#0E6163", fontWeight:600, marginBottom:14 }}>Starting level: {path.level}</div>
-                  <p style={{ fontSize:14, color:"#526173", lineHeight:1.7, marginBottom:24 }}>{path.desc}</p>
-                  <div style={{ display:"flex", gap:10 }}>
-                    <a href="/signup" style={{ flex:1, display:"block", textAlign:"center", padding:"12px", background:"#0E6163", color:"#fff", borderRadius:10, fontSize:14, fontWeight:600 }}>
-                      Start this path — it&apos;s free
-                    </a>
-                    <button onClick={() => { setQuizStep(0); setAnswers({}); setQuizDone(false); }}
-                      style={{ padding:"12px 18px", fontSize:13, background:"#fff", border:"1px solid #d1dbe6", borderRadius:10, color:"#526173" }}>
-                      Retake
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 5. THE 4 PILLARS OF FINANCEHUB                              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 bg-white border-y border-slate-200/70">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+              The Core Engine
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
+              One Platform. The Complete Finance Learning System.
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600">
+              Engineered around how individuals actually absorb, test, and retain financial wisdom.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {PILLARS.map((pil, idx) => {
+              const Icon = pil.icon;
+              return (
+                <div
+                  key={idx}
+                  className="p-8 rounded-3xl border border-slate-200 bg-[#F8FAFC] hover:bg-white hover:border-[#0E6163] hover:shadow-md transition-all flex flex-col sm:flex-row items-start gap-6"
+                >
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                    style={{ backgroundColor: `${pil.color}15`, color: pil.color }}
+                  >
+                    <Icon className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider"
+                        style={{ backgroundColor: `${pil.color}15`, color: pil.color }}
+                      >
+                        {pil.badge}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-[#0F172A]">{pil.title}</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">{pil.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 6. EIGHT LEARNING TRACKS                                    */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section id="tracks" className="py-20 sm:py-28 bg-[#F8FAFC]">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+                Comprehensive Curriculum
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
+                Eight Tracks. One Complete Finance Education.
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+                Start at your own pace and progress from core concepts to advanced financial modeling.
+              </p>
+            </div>
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 hover:border-[#0E6163] hover:text-[#0E6163] shadow-sm transition-all"
+            >
+              <span>Explore All 320+ Lessons</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {TRACKS.map((t) => (
+              <Link
+                key={t.slug}
+                href={`/tracks/${t.slug}`}
+                className="bg-white rounded-2xl border border-slate-200 hover:border-[#0E6163] hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group"
+              >
+                {/* Color Accent Bar */}
+                <div className="h-1.5 w-full" style={{ backgroundColor: t.color }} />
+
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl">{t.icon}</span>
+                    <span
+                      className="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider"
+                      style={{ backgroundColor: `${t.color}15`, color: t.color }}
+                    >
+                      {t.code}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0F172A] group-hover:text-[#0E6163] transition-colors">
+                      {t.name}
+                    </h3>
+                    <div className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                      {t.level}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
+                    {t.desc}
+                  </p>
+                </div>
+
+                <div className="px-6 py-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-semibold">
+                  <span>📖 {t.lessons} Lessons</span>
+                  <span>🎯 {t.quizzes} Quizzes</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 7. INTERACTIVE FINANCE LABS SHOWCASE                        */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 bg-white border-t border-slate-200">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
+            <div className="space-y-2">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+                Practical Simulation
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
+                Don&apos;t Just Read Finance. Model It.
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 max-w-xl">
+                15 interactive financial calculators and simulated trading environments designed for Indian tax codes and market conditions.
+              </p>
+            </div>
+            <Link
+              href="/practice"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0E6163] text-white text-xs font-bold hover:bg-[#0A4A4C] shadow-sm transition-all"
+            >
+              <span>Explore All 15 Labs</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HERO_LABS.map((lab) => (
+              <div
+                key={lab.code}
+                className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:border-[#0E6163] hover:shadow-md transition-all group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      style={{ backgroundColor: `${lab.color}15` }}
+                    >
+                      {lab.icon}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      ⏱ {lab.duration}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span
+                      className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded"
+                      style={{ backgroundColor: `${lab.color}15`, color: lab.color }}
+                    >
+                      {lab.tag}
+                    </span>
+                    <h3 className="text-base font-bold text-[#0F172A] mt-2 group-hover:text-[#0E6163] transition-colors leading-snug">
+                      {lab.title}
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed">{lab.desc}</p>
+                </div>
+
+                <div className="pt-5 mt-5 border-t border-slate-100">
+                  <Link
+                    href={lab.href}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-opacity group-hover:opacity-90"
+                    style={{ backgroundColor: lab.color }}
+                  >
+                    <span>Launch Calculator</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Banner for all 15 labs */}
+          <div className="mt-10 p-6 sm:p-8 rounded-3xl bg-[#F8FAFC] border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <h4 className="text-base font-bold text-[#0F172A]">
+                Looking for Retirement, Net Worth, FIRE, or Paper Trading?
+              </h4>
+              <p className="text-xs text-slate-600 mt-1">
+                Browse our complete suite of 15 tools with live search, category filtering, and instant scenario modeling.
+              </p>
+            </div>
+            <Link
+              href="/practice"
+              className="px-6 py-3 bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-sm transition-colors"
+            >
+              Open Complete Labs Suite →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 8. FRONTIER AI MENTOR TERMINAL (THE DARK SHOWCASE)          */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section id="ai" className="py-20 sm:py-28 bg-[#0A1628] text-white overflow-hidden relative">
+        {/* Glow backdrop */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            {/* Left Prompt Column */}
+            <div className="lg:col-span-6 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Frontier AI Finance Mentor</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                Your Finance Doubts
+                <br />
+                <span className="text-emerald-400">Answered Instantly.</span>
+              </h2>
+
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-lg">
+                Ask anything about compounding, income tax regimes, mutual funds, or derivatives. Get clear, step-by-step breakdowns citing official Indian regulatory sources.
+              </p>
+
+              {/* Sample Prompts */}
+              <div className="space-y-2.5 pt-2">
+                {[
+                  "Explain compound interest with a ₹5,000 monthly SIP example",
+                  "Old vs New Tax Regime: Which saves more for ₹12 Lakh salary?",
+                  "What is the difference between ELSS mutual funds and PPF?",
+                ].map((prompt, i) => (
+                  <Link
+                    key={i}
+                    href={`/ai-tutor?prompt=${encodeURIComponent(prompt)}`}
+                    className="p-3.5 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500 hover:bg-white/10 transition-all flex items-center justify-between text-xs text-slate-300 group"
+                  >
+                    <span>💡 &ldquo;{prompt}&rdquo;</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-1 transition-transform flex-shrink-0 ml-2" />
+                  </Link>
+                ))}
+              </div>
+
+              <div className="pt-2">
+                <Link
+                  href="/ai-tutor"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+                >
+                  <Brain className="w-4 h-4" />
+                  <span>Launch AI Mentor Full Screen</span>
+                </Link>
+                <div className="text-[11px] text-slate-400 mt-2">
+                  5 free questions daily · No sign-in required to try
+                </div>
+              </div>
+            </div>
+
+            {/* Right Chat Terminal Preview */}
+            <div className="lg:col-span-6">
+              <div className="bg-[#131B2E] rounded-3xl border border-slate-700/80 shadow-2xl p-6 space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0E6163] to-emerald-500 flex items-center justify-center text-lg">
+                      🤖
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-white">FinanceHub AI Mentor</div>
+                      <div className="text-[11px] text-emerald-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Online · Verified RBI / SEBI Sources</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    5/5 FREE
+                  </span>
+                </div>
+
+                {/* Dialog Bubble 1 */}
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] p-3.5 rounded-2xl rounded-tr-sm bg-[#0E6163] text-white text-xs leading-relaxed">
+                    How does a ₹5,000 monthly SIP grow over 20 years at 12% CAGR?
+                  </div>
+                </div>
+
+                {/* Dialog Bubble 2 */}
+                <div className="flex justify-start">
+                  <div className="max-w-[90%] p-4 rounded-2xl rounded-tl-sm bg-slate-800/80 border border-slate-700 text-slate-200 text-xs leading-relaxed space-y-2">
+                    <p>
+                      Here is the exact mathematical breakdown of compound interest over 20 years:
+                    </p>
+                    <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 font-mono text-[11px] space-y-1">
+                      <div className="text-slate-400">Total Invested: <span className="text-white font-bold">₹12,00,000</span></div>
+                      <div className="text-slate-400">Estimated Wealth Gain: <span className="text-emerald-400 font-bold">₹37,95,740</span></div>
+                      <div className="text-slate-400">Total Expected Corpus: <span className="text-emerald-300 font-black">₹49,95,740</span></div>
+                    </div>
+                    <p className="text-[11px] text-slate-400 pt-1">
+                      The magic occurs because your investment returns generate their own returns in the final decade.
+                    </p>
+                    <div className="pt-1 text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <span>📎 Source: AMFI India &amp; Compound Interest Theorem</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input simulator bar */}
+                <div className="pt-2">
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-400">
+                    <span className="flex-1 pl-2">Ask any question on taxes, SIPs, or stocks…</span>
+                    <button className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">
+                      Send
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 11. PRICING ──────────────────────────────────────────── */}
-      <section id="pricing" style={S.soft}>
-        <div style={S.container}>
-          <div style={{ textAlign:"center", marginBottom:56 }}>
-            <span style={S.eyebrow}>Pricing</span>
-            <h2 style={S.h2}>Start free. Upgrade when ready.</h2>
-            <p style={{ fontSize:16, color:"#526173" }}>Core content is always free. Premium unlocks the full depth.</p>
-          </div>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 9. ONBOARDING QUIZ (PERSONALIZED STARTING PATH)             */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 bg-[#F8FAFC]">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6 text-center">
+          <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+            Guided Onboarding
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A] mt-2 mb-3">
+            Not Sure Where to Start?
+          </h2>
+          <p className="text-sm text-slate-600 mb-10">
+            Answer 3 quick questions. FinanceHub will build your tailored starting path.
+          </p>
 
-          <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, maxWidth:960, margin:"0 auto", alignItems:"start" }}>
-            {[
-              {
-                name:"Free", price:"₹0", period:"forever",
-                badge:null,
-                features:[
-                  "100+ beginner lessons (all tracks)",
-                  "5 AI Mentor questions per day",
-                  "SIP, EMI and Tax simulators",
-                  "Community Q&A access",
-                  "Progress tracking and streaks",
-                  "Quiz practice (3 per track)",
-                ],
-                cta:"Start Free", ctaStyle:{ background:"#ffffff", color:"#0B1A2B", border:"1.5px solid #d1dbe6" },
-                href:"/signup",
-              },
-              {
-                name:"Pro", price:"₹499", period:"/month",
-                badge:"Recommended",
-                features:[
-                  "All 320+ lessons across every track",
-                  "Unlimited AI Mentor questions",
-                  "All 9 Finance Lab simulators",
-                  "PDF downloads and offline notes",
-                  "Verified certificates on completion",
-                  "Weekly leagues and leaderboard",
-                  "Video library (82 playlists)",
-                  "Priority support",
-                ],
-                cta:"Start 7-day Trial", ctaStyle:{ background:"#0E6163", color:"#ffffff", border:"none" },
-                href:"/signup?plan=pro",
-              },
-              {
-                name:"Expert", price:"₹999", period:"/month",
-                badge:null,
-                features:[
-                  "Everything in Pro",
-                  "Advanced Trading track",
-                  "Corporate Finance & Founder track",
-                  "Forex and Crypto paper trading",
-                  "Career preparation module",
-                  "Premium labs (advanced simulators)",
-                  "200 AI questions per day",
-                  "1-on-1 AI-guided study sessions",
-                ],
-                cta:"Start 7-day Trial", ctaStyle:{ background:"#0B1A2B", color:"#ffffff", border:"none" },
-                href:"/signup?plan=expert",
-              },
-            ].map((p,i) => (
-              <div key={i} style={{
-                background:"#ffffff",
-                border: i===1 ? "2px solid #0E6163" : "1px solid #e5eaf0",
-                borderRadius:16, padding:"28px 24px",
-                position:"relative",
-                boxShadow: i===1 ? "0 8px 32px rgba(14,97,99,0.12)" : "none",
-              }}>
-                {p.badge && (
-                  <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", background:"#0E6163", color:"#fff", fontSize:11, fontWeight:700, padding:"4px 14px", borderRadius:20, whiteSpace:"nowrap" }}>
-                    {p.badge}
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm text-left">
+            {!quizComplete ? (
+              <div className="space-y-6">
+                {/* Progress bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-400">
+                    <span>STEP {quizStep + 1} OF {QUIZ_STEPS.length}</span>
+                    <span>{Math.round(((quizStep + 1) / QUIZ_STEPS.length) * 100)}%</span>
                   </div>
-                )}
-                <div style={{ fontSize:15, fontWeight:700, color:"#0B1A2B", marginBottom:8 }}>{p.name}</div>
-                <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:20 }}>
-                  <span style={{ fontSize:32, fontWeight:800, color:"#0B1A2B", letterSpacing:"-1px" }}>{p.price}</span>
-                  <span style={{ fontSize:14, color:"#8a9ab0" }}>{p.period}</span>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#0E6163] transition-all duration-200"
+                      style={{ width: `${((quizStep + 1) / QUIZ_STEPS.length) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <div style={{ borderTop:"1px solid #f0f0f0", paddingTop:20, marginBottom:24 }}>
-                  {p.features.map((f,j) => (
-                    <div key={j} style={{ display:"flex", gap:10, marginBottom:10, fontSize:13, color:"#526173", alignItems:"flex-start" }}>
-                      <span style={{ color:"#0E6163", fontWeight:700, flexShrink:0, marginTop:1 }}>✓</span>
-                      {f}
-                    </div>
+
+                <h3 className="text-lg font-bold text-[#0F172A]">
+                  {QUIZ_STEPS[quizStep].q}
+                </h3>
+
+                <div className="space-y-2.5">
+                  {QUIZ_STEPS[quizStep].opts.map((opt, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleQuizAnswer(QUIZ_STEPS[quizStep].key, opt.val)}
+                      className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-[#0E6163] hover:bg-emerald-50/40 text-xs sm:text-sm font-semibold text-slate-800 transition-all flex items-center justify-between group"
+                    >
+                      <span>{opt.label}</span>
+                      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0E6163] group-hover:translate-x-1 transition-transform" />
+                    </button>
                   ))}
                 </div>
-                <a href={p.href} style={{
-                  display:"block", width:"100%", textAlign:"center",
-                  padding:"12px", fontSize:14, fontWeight:600,
-                  borderRadius:9, ...p.ctaStyle,
-                  boxSizing:"border-box",
-                }}>
-                  {p.cta}
-                </a>
               </div>
-            ))}
-          </div>
-
-          <div style={{ textAlign:"center", marginTop:28, fontSize:13, color:"#8a9ab0", display:"flex", gap:24, justifyContent:"center", flexWrap:"wrap" }}>
-            <span>💳 No credit card for free plan</span>
-            <span>🔒 Secure payments via Razorpay & Stripe</span>
-            <span>💰 7-day money-back guarantee</span>
-            <span>❌ Cancel anytime</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 12. FAQ ──────────────────────────────────────────────── */}
-      <section style={S.white}>
-        <div style={S.container}>
-          <div style={{ maxWidth:720, margin:"0 auto" }}>
-            <span style={S.eyebrow}>FAQ</span>
-            <h2 style={S.h2}>Frequently asked questions</h2>
-
-            {FAQS.map((faq,i) => (
-              <div key={i} className="faq-item" style={{
-                borderBottom:"1px solid #e5eaf0",
-                padding:"0",
-                cursor:"pointer",
-                borderRadius: i===0 ? "12px 12px 0 0" : i===FAQS.length-1 ? "0 0 12px 12px" : 0,
-                transition:"background 0.15s",
-              }}
-                onClick={() => setOpenFaq(openFaq===i ? null : i)}
-              >
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"18px 20px" }}>
-                  <span style={{ fontSize:15, fontWeight:600, color:"#0B1A2B" }}>{faq.q}</span>
-                  <span style={{ fontSize:18, color:"#0E6163", transition:"transform 0.2s", transform: openFaq===i ? "rotate(45deg)" : "rotate(0)" }}>+</span>
+            ) : (
+              <div className="space-y-6 text-center sm:text-left">
+                <div className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
+                  🎯 Tailored Learning Recommendation
                 </div>
-                {openFaq===i && (
-                  <div style={{ padding:"0 20px 18px", fontSize:14, color:"#526173", lineHeight:1.75 }}>
-                    {faq.a}
+
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-2xl flex items-center justify-center flex-shrink-0">
+                    {recommendedPath.icon}
                   </div>
-                )}
+                  <div>
+                    <h3 className="text-xl font-bold text-[#0F172A]">
+                      {recommendedPath.track}
+                    </h3>
+                    <p className="text-xs font-semibold text-[#0E6163]">
+                      Recommended Starting Point: {recommendedPath.level}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {recommendedPath.desc}
+                </p>
+
+                <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    href={`/tracks/${recommendedPath.trackSlug}`}
+                    className="flex-1 py-3.5 px-6 rounded-xl bg-[#0E6163] text-white text-center text-xs font-bold shadow-md hover:bg-[#0A4A4C] transition-colors"
+                  >
+                    Start This Path (Free) →
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setQuizStep(0);
+                      setQuizAnswers({});
+                      setQuizComplete(false);
+                    }}
+                    className="py-3.5 px-5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Retake Quiz
+                  </button>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
 
-      {/* ── 13. FINAL CTA ────────────────────────────────────────── */}
-      <section style={{ ...S.navy, padding:"120px 0" }}>
-        <div style={{ ...S.container, textAlign:"center" }}>
-          <span style={{ ...S.eyebrow, color:"#4ECDC4", display:"block", textAlign:"center" }}>Ready to start</span>
-          <h2 style={{
-            fontFamily:"'Playfair Display', serif",
-            fontSize:"clamp(36px,4.5vw,58px)",
-            fontWeight:800, lineHeight:1.1, letterSpacing:"-1.5px",
-            color:"#ffffff", margin:"0 0 20px",
-          }}>
-            Your financial education<br/>starts today.
-          </h2>
-          <p style={{ fontSize:18, color:"rgba(255,255,255,0.55)", maxWidth:480, margin:"0 auto 40px", lineHeight:1.75 }}>
-            One concept. One lesson. One better financial decision at a time.
-          </p>
-          <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap" }}>
-            <a href="/signup" style={{
-              padding:"14px 32px", fontSize:15, fontWeight:700,
-              background:"#1D9E75", color:"#fff",
-              borderRadius:10, border:"none",
-              boxShadow:"0 4px 20px rgba(29,158,117,0.3)",
-            }}>
-              Start Learning Free →
-            </a>
-            <a href="/explore" style={{
-              padding:"14px 32px", fontSize:15, fontWeight:500,
-              background:"rgba(255,255,255,0.08)", color:"#fff",
-              borderRadius:10, border:"1px solid rgba(255,255,255,0.15)",
-            }}>
-              Explore Curriculum
-            </a>
-          </div>
-          <div style={{ fontSize:13, color:"rgba(255,255,255,0.35)", marginTop:20 }}>
-            No prior knowledge required · Free forever · No credit card
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 10. PRICING SECTION (MONTHLY / YEARLY TOGGLE)               */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section id="pricing" className="py-20 sm:py-28 bg-white border-t border-slate-200">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-xl mx-auto mb-14 space-y-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+              Simple &amp; Transparent
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0F172A]">
+              Start Free. Upgrade When Ready.
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600">
+              Core education is always 100% free. Premium plans unlock complete career depth and unrestricted AI access.
+            </p>
+
+            {/* Toggle */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 mt-4">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle("yearly")}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  billingCycle === "yearly"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <span>Yearly</span>
+                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                  SAVE 17%
+                </span>
+              </button>
+            </div>
           </div>
 
-          {/* Social links */}
-          <div style={{ display:"flex", alignItems:"center", gap:12, marginTop:28, justifyContent:"center" }}>
-            <span style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>Follow us</span>
-            {/* X */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+            {/* Free Plan */}
+            <div className="p-8 rounded-3xl border border-slate-200 bg-white flex flex-col justify-between">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Free Tier</h3>
+                  <p className="text-xs text-slate-500 mt-1">Perfect for getting started</p>
+                </div>
+
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-[#0F172A]">₹0</span>
+                  <span className="text-xs text-slate-400 font-bold">/ forever</span>
+                </div>
+
+                <ul className="space-y-3 text-xs text-slate-600 font-medium">
+                  {[
+                    "100+ beginner lessons across all tracks",
+                    "5 AI Mentor queries daily",
+                    "Basic simulators (SIP, EMI, Tax)",
+                    "Quiz practice with instant scoring",
+                    "Streaks & weekly league leaderboard",
+                  ].map((feat, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-8">
+                <Link
+                  href="/signup"
+                  className="block w-full py-3 text-center rounded-xl border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+                >
+                  Start Free
+                </Link>
+              </div>
+            </div>
+
+            {/* Pro Plan (Most Popular Elevated) */}
+            <div className="p-8 rounded-3xl border-2 border-[#0E6163] bg-white shadow-xl flex flex-col justify-between relative transform md:-translate-y-2">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#0E6163] text-white text-[10px] font-black uppercase tracking-wider shadow">
+                MOST POPULAR
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Pro Plan</h3>
+                  <p className="text-xs text-slate-500 mt-1">For serious learners and investors</p>
+                </div>
+
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-[#0F172A]">
+                    {billingCycle === "monthly" ? "₹499" : "₹4,990"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-bold">
+                    {billingCycle === "monthly" ? "/ month" : "/ year"}
+                  </span>
+                </div>
+
+                <ul className="space-y-3 text-xs text-slate-700 font-medium">
+                  {[
+                    "All 320+ lessons across 8 tracks",
+                    "Unlimited AI Mentor queries",
+                    "All 15 interactive simulators & labs",
+                    "Downloadable lesson PDF study notes",
+                    "Verified certificates on completion",
+                    "Curated video library (82 playlists)",
+                    "Priority community support",
+                  ].map((feat, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-8">
+                <Link
+                  href="/signup?plan=pro"
+                  className="block w-full py-3.5 text-center rounded-xl bg-[#0E6163] hover:bg-[#0A4A4C] text-white text-xs font-bold shadow-md transition-all"
+                >
+                  Start 7-Day Free Trial
+                </Link>
+              </div>
+            </div>
+
+            {/* Expert Plan */}
+            <div className="p-8 rounded-3xl border border-slate-200 bg-white flex flex-col justify-between">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Expert Tier</h3>
+                  <p className="text-xs text-slate-500 mt-1">For traders, analysts &amp; founders</p>
+                </div>
+
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-[#0F172A]">
+                    {billingCycle === "monthly" ? "₹999" : "₹9,990"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-bold">
+                    {billingCycle === "monthly" ? "/ month" : "/ year"}
+                  </span>
+                </div>
+
+                <ul className="space-y-3 text-xs text-slate-600 font-medium">
+                  {[
+                    "Everything included in Pro",
+                    "Advanced paper trading terminals",
+                    "Startup valuation & cap table models",
+                    "Career roadmap & resume guidance",
+                    "Priority 1-on-1 AI study sessions",
+                  ].map((feat, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-8">
+                <Link
+                  href="/signup?plan=expert"
+                  className="block w-full py-3 text-center rounded-xl border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-colors"
+                >
+                  Start Expert Trial
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 11. FAQ ACCORDION                                           */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-28 bg-[#F8FAFC]">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 space-y-2">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[#0E6163]">
+              Got Questions?
+            </span>
+            <h2 className="text-3xl font-black tracking-tight text-[#0F172A]">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {FAQS.map((faq, i) => {
+              const isOpen = openFaq === i;
+              return (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-slate-200 bg-white overflow-hidden transition-colors"
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    className="w-full text-left p-5 flex items-center justify-between gap-4 font-bold text-sm text-[#0F172A]"
+                  >
+                    <span>{faq.q}</span>
+                    <span
+                      className={`text-lg text-[#0E6163] transition-transform duration-200 ${
+                        isOpen ? "rotate-45" : ""
+                      }`}
+                    >
+                      +
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 12. FINAL CONVERSION CTA BANNER                             */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <section className="py-20 sm:py-24 bg-[#0A1628] text-white text-center">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 space-y-6">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
+            <span>🚀 Start Your Journey Today</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight max-w-2xl mx-auto leading-tight">
+            Your Financial Education Starts With One Step.
+          </h2>
+
+          <p className="text-sm sm:text-base text-slate-300 max-w-md mx-auto">
+            Build true compounding confidence. Master money, investing, and markets without financial risk.
+          </p>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/signup"
+              className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
+            >
+              <span>Start Learning Free Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/explore"
+              className="px-8 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-sm rounded-xl border border-white/20 transition-colors"
+            >
+              Browse All Courses
+            </Link>
+          </div>
+
+          {/* Social Follow Links */}
+          <div className="pt-8 flex items-center justify-center gap-4 text-xs text-slate-400">
+            <span>Connect with us:</span>
             <a
               href="https://x.com/polymerhub_"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Follow @polymerhub_ on X"
-              style={{
-                display:"flex", alignItems:"center", gap:7,
-                padding:"8px 14px",
-                background:"rgba(255,255,255,0.07)",
-                border:"1px solid rgba(255,255,255,0.12)",
-                borderRadius:20, textDecoration:"none",
-                transition:"all 0.18s",
-              }}
-              onMouseEnter={e=>{
-                e.currentTarget.style.background="rgba(255,255,255,0.15)";
-                e.currentTarget.style.borderColor="rgba(255,255,255,0.25)";
-              }}
-              onMouseLeave={e=>{
-                e.currentTarget.style.background="rgba(255,255,255,0.07)";
-                e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
-              }}
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-              </svg>
-              <span style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)" }}>@polymerhub_</span>
+              @polymerhub_ on X
             </a>
-            {/* LinkedIn */}
             <a
               href="https://www.linkedin.com/in/lpk-naidu-3414153b2"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Connect on LinkedIn"
-              style={{
-                display:"flex", alignItems:"center", gap:7,
-                padding:"8px 14px",
-                background:"rgba(255,255,255,0.07)",
-                border:"1px solid rgba(255,255,255,0.12)",
-                borderRadius:20, textDecoration:"none",
-                transition:"all 0.18s",
-              }}
-              onMouseEnter={e=>{
-                e.currentTarget.style.background="#0A66C2";
-                e.currentTarget.style.borderColor="#0A66C2";
-              }}
-              onMouseLeave={e=>{
-                e.currentTarget.style.background="rgba(255,255,255,0.07)";
-                e.currentTarget.style.borderColor="rgba(255,255,255,0.12)";
-              }}
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              <span style={{ fontSize:12, fontWeight:600, color:"rgba(255,255,255,0.7)" }}>LinkedIn</span>
+              LinkedIn
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────── */}
-      <footer style={{ background:"#060E18", padding:"64px 0 32px" }}>
-        <div style={S.container}>
-          {/* Top grid */}
-          <div className="grid-4" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:40, marginBottom:56 }}>
-            {/* Brand */}
-            <div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
-                <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#0E6163,#1D9E75)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <rect x="2" y="10" width="3" height="8" rx="1" fill="rgba(255,255,255,0.6)"/>
-                    <rect x="7" y="6"  width="3" height="12" rx="1" fill="rgba(255,255,255,0.8)"/>
-                    <rect x="12" y="2" width="3" height="16" rx="1" fill="#fff"/>
-                  </svg>
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* 13. MASSIVE WORLD-CLASS FOOTER                              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <footer className="bg-[#060E18] text-slate-400 py-16 border-t border-slate-800">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+            {/* Brand Column */}
+            <div className="col-span-2 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0E6163] to-emerald-600 flex items-center justify-center text-white font-black text-sm">
+                  F
                 </div>
-                <div>
-                  <div style={{ fontSize:15, fontWeight:700, color:"#fff" }}>Finance<span style={{ color:"#1D9E75" }}>Hub</span></div>
-                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", letterSpacing:"0.08em", textTransform:"uppercase" }}>of India</div>
-                </div>
+                <span className="text-lg font-bold text-white">FinanceHub of India</span>
               </div>
-              <p style={{ fontSize:13, color:"rgba(255,255,255,0.4)", lineHeight:1.75, maxWidth:240 }}>
-                Master finance. Build confidence. Shape your future. Built in India for every learner.
+              <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
+                India&apos;s financial education platform. Dedicated to building economic literacy across personal finance, investing, taxation, and markets.
               </p>
-              <div style={{ marginTop:20, fontSize:11, color:"rgba(255,255,255,0.25)", lineHeight:1.6 }}>
-                🇮🇳 Built in India. Designed for the world.
+              <div className="text-[11px] text-slate-500">
+                🇮🇳 Designed &amp; engineered in India for global learners.
               </div>
             </div>
 
-            {/* Learn */}
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Learn</div>
-              {["Personal Finance","Trading & Markets","Corporate Finance","Crypto & DeFi","Forex & Currencies","Technical Analysis","Behavioral Finance","हिंदी Finance"].map(l => (
-                <a key={l} href="/explore" style={{ display:"block", fontSize:13, color:"rgba(255,255,255,0.5)", marginBottom:10, transition:"color 0.15s" }}
-                  onMouseEnter={e=>(e.currentTarget.style.color="#fff")}
-                  onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{l}</a>
-              ))}
+            {/* Curriculum Links */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                Curriculum
+              </h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <Link href="/tracks/personal-finance" className="hover:text-white">
+                    Personal Finance
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tracks/trading-markets" className="hover:text-white">
+                    Trading &amp; Markets
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tracks/corporate-finance" className="hover:text-white">
+                    Corporate Finance
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tracks/technical-analysis" className="hover:text-white">
+                    Technical Analysis
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/tracks/hindi" className="hover:text-white">
+                    हिंदी Finance
+                  </Link>
+                </li>
+              </ul>
             </div>
 
-            {/* Platform */}
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Platform</div>
-              {[["Finance Lab","/practice"],["AI Mentor","/ai-tutor"],["Video Library","/library"],["Book Library","/library"],["Knowledge Map","/knowledge-map"],["Glossary","/glossary"],["Leaderboard","/leaderboard"],["Certificates","/certificates"],["Daily Review","/review"]].map(([l,h]) => (
-                <a key={l} href={h} style={{ display:"block", fontSize:13, color:"rgba(255,255,255,0.5)", marginBottom:10, transition:"color 0.15s" }}
-                  onMouseEnter={e=>(e.currentTarget.style.color="#fff")}
-                  onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{l}</a>
-              ))}
+            {/* Tools & Labs */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                Tools &amp; Labs
+              </h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <Link href="/practice" className="hover:text-white">
+                    15 Finance Labs
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/practice/sip" className="hover:text-white">
+                    SIP Calculator
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/practice/emi" className="hover:text-white">
+                    Loan EMI Calculator
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/practice/tax" className="hover:text-white">
+                    Tax Comparison FY 24-25
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/practice/trading" className="hover:text-white">
+                    Paper Trading Game
+                  </Link>
+                </li>
+              </ul>
             </div>
 
-            {/* Legal */}
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,0.3)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:16 }}>Legal</div>
-              {[["Privacy Policy","/legal/privacy"],["Terms of Service","/legal/terms"],["Disclaimer","/legal/disclaimer"],["Refund Policy","/legal/refund"],["Contact","mailto:hello@financehub.in"],["Pricing","/pricing"]].map(([l,h]) => (
-                <a key={l} href={h} style={{ display:"block", fontSize:13, color:"rgba(255,255,255,0.5)", marginBottom:10, transition:"color 0.15s" }}
-                  onMouseEnter={e=>(e.currentTarget.style.color="#fff")}
-                  onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.5)")}>{l}</a>
-              ))}
+            {/* Platform & Legal */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                Legal &amp; Info
+              </h4>
+              <ul className="space-y-2 text-xs">
+                <li>
+                  <Link href="/legal/privacy" className="hover:text-white">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/terms" className="hover:text-white">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/disclaimer" className="hover:text-white">
+                    SEBI Disclaimer
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/refund" className="hover:text-white">
+                    Refund Policy
+                  </Link>
+                </li>
+                <li>
+                  <a href="mailto:hello@financehub.in" className="hover:text-white">
+                    Contact Team
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Bottom bar */}
-          <div style={{ borderTop:"1px solid rgba(255,255,255,0.07)", paddingTop:28, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>
-              © 2026 FinanceHub of India. All content is educational only — not investment advice.
+          {/* Bottom Disclaimers */}
+          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+            <div>
+              © 2026 FinanceHub of India. All rights reserved.
             </div>
-            <div style={{ display:"flex", gap:20 }}>
-              {[["Privacy","/legal/privacy"],["Terms","/legal/terms"],["Disclaimer","/legal/disclaimer"]].map(([l,h]) => (
-                <a key={l} href={h} style={{ fontSize:12, color:"rgba(255,255,255,0.25)", transition:"color 0.15s" }}
-                  onMouseEnter={e=>(e.currentTarget.style.color="rgba(255,255,255,0.6)")}
-                  onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,255,255,0.25)")}>{l}</a>
-              ))}
+            <div>
+              Educational content only · Not SEBI-registered financial advice.
             </div>
           </div>
         </div>
