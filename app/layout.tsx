@@ -11,6 +11,7 @@ import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components
 import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import FeedbackButton from "@/components/ui/FeedbackButton";
+import "./globals.css";
 
 // ─── Fonts ───────────────────────────────────────────────────
 const inter = Inter({
