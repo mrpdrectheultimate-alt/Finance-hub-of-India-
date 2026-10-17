@@ -42,14 +42,99 @@ type Lesson = {
 
 type QuizQuestion = {
   id: string;
-  question: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct: "a" | "b" | "c" | "d";
+  quiz_id: string;
+  question_text: string;
+  options: string[];
+  correct_index: number;
   explanation: string;
+  order_index?: number;
 };
+
+function extractOptions(rawOptions: any, rawQ: any): string[] {
+  let list: string[] = [];
+
+  if (Array.isArray(rawOptions)) {
+    list = rawOptions.map((opt: any) => {
+      if (typeof opt === "string") return opt;
+      if (opt && typeof opt === "object") {
+        return opt.text || opt.label || opt.value || opt.option || JSON.stringify(opt);
+      }
+      return String(opt);
+    });
+  } else if (typeof rawOptions === "string" && rawOptions.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(rawOptions);
+      if (Array.isArray(parsed)) {
+        list = parsed.map((opt: any) =>
+          typeof opt === "string" ? opt : (opt?.text || opt?.label || String(opt))
+        );
+      }
+    } catch {
+      // not JSON array
+    }
+  } else if (rawOptions && typeof rawOptions === "object") {
+    list = Object.values(rawOptions).map((v) => String(v));
+  }
+
+  // Fallback to separate columns option_a, option_b, option_c, option_d
+  if (list.length === 0) {
+    if (rawQ.option_a) list.push(String(rawQ.option_a));
+    if (rawQ.option_b) list.push(String(rawQ.option_b));
+    if (rawQ.option_c) list.push(String(rawQ.option_c));
+    if (rawQ.option_d) list.push(String(rawQ.option_d));
+  }
+
+  return list.map((opt) =>
+    opt
+      .replace(/â€”/g, "—")
+      .replace(/â€“/g, "–")
+      .replace(/â€™/g, "'")
+      .replace(/â€œ/g, '"')
+      .replace(/â€\x9d/g, '"')
+      .trim()
+  );
+}
+
+function extractCorrectIndex(rawCorrect: any, rawCorrectIndex: any, optionsCount: number): number {
+  if (typeof rawCorrectIndex === "number" && !isNaN(rawCorrectIndex)) {
+    return rawCorrectIndex;
+  }
+  if (typeof rawCorrect === "number" && !isNaN(rawCorrect)) {
+    return rawCorrect;
+  }
+  if (typeof rawCorrect === "string") {
+    const trimmed = rawCorrect.toLowerCase().trim();
+    if (trimmed === "a" || trimmed === "0") return 0;
+    if (trimmed === "b" || trimmed === "1") return 1;
+    if (trimmed === "c" || trimmed === "2") return 2;
+    if (trimmed === "d" || trimmed === "3") return 3;
+    const parsed = parseInt(trimmed, 10);
+    if (!isNaN(parsed) && parsed >= 0) return parsed;
+  }
+  return 0;
+}
+
+function extractQuestionText(raw: any, index: number): string {
+  const text = raw.question_text || raw.question || raw.title || raw.text || `Question ${index + 1}`;
+  return String(text)
+    .replace(/â€”/g, "—")
+    .replace(/â€“/g, "–")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€\x9d/g, '"')
+    .trim();
+}
+
+function extractExplanation(raw: any): string {
+  const text = raw.explanation || raw.explain || raw.rationale || "";
+  return String(text)
+    .replace(/â€”/g, "—")
+    .replace(/â€“/g, "–")
+    .replace(/â€™/g, "'")
+    .replace(/â€œ/g, '"')
+    .replace(/â€\x9d/g, '"')
+    .trim();
+}
 
 type Tab = "lesson" | "quiz" | "notes" | "ai" | "community";
 type ReadingTheme = "light" | "sepia" | "dark";
@@ -334,7 +419,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
   const [note, setNote] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizDone, setQuizDone] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
   const [xpToast, setXpToast] = useState<{
@@ -475,21 +560,35 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
       // Fetch Quizzes
       const { data: quizRes } = await (supabase as any)
         .from("quizzes")
-        .select("id")
+        .select("id, title, passing_score")
         .eq("lesson_id", lessonData.id);
 
       const quizIds = (quizRes || []).map((q: any) => q.id);
 
-      const { data: quiz } =
+      const { data: rawQuiz } =
         quizIds.length > 0
           ? await (supabase as any)
               .from("quiz_questions")
               .select("*")
               .in("quiz_id", quizIds)
-              .limit(5)
+              .order("order_index", { ascending: true })
+              .limit(10)
           : { data: [] };
 
-      setQuestions(quiz || []);
+      const normalizedQuestions: QuizQuestion[] = (rawQuiz || []).map((q: any, i: number) => {
+        const options = extractOptions(q.options, q);
+        return {
+          id: q.id || `q-${i}`,
+          quiz_id: q.quiz_id || "",
+          question_text: extractQuestionText(q, i),
+          options,
+          correct_index: extractCorrectIndex(q.correct, q.correct_index, options.length),
+          explanation: extractExplanation(q),
+          order_index: q.order_index ?? i,
+        };
+      });
+
+      setQuestions(normalizedQuestions);
       setLoading(false);
     })();
   }, [params.slug]);
@@ -570,11 +669,31 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
     if (!questions.length) return;
     let correct = 0;
     questions.forEach((q) => {
-      if (quizAnswers[q.id] === q.correct) correct++;
+      if (quizAnswers[q.id] === q.correct_index) correct++;
     });
     const score = Math.round((correct / questions.length) * 100);
+    const passed = score >= 70;
     setQuizScore(score);
     setQuizDone(true);
+
+    const primaryQuizId = questions[0]?.quiz_id;
+    if (primaryQuizId && user && lesson) {
+      try {
+        await fetch("/api/submit-quiz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: lesson.id,
+            quizId: primaryQuizId,
+            score,
+            passed,
+          }),
+        });
+      } catch (e) {
+        console.error("submit-quiz error:", e);
+      }
+    }
+
     await completeLesson(true);
   };
 
@@ -1350,53 +1469,83 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
 
                       <div className="space-y-4 text-left mb-8">
                         {questions.map((q, idx) => {
-                          const userChoice = quizAnswers[q.id];
-                          const isCorrect = userChoice === q.correct;
-                          const optionMap: Record<string, string> = {
-                            a: q.option_a,
-                            b: q.option_b,
-                            c: q.option_c,
-                            d: q.option_d,
-                          };
+                          const userChoiceIdx = quizAnswers[q.id];
+                          const isCorrect = userChoiceIdx === q.correct_index;
+                          const userOptionText =
+                            typeof userChoiceIdx === "number"
+                              ? q.options[userChoiceIdx] || "No answer"
+                              : "No answer";
+                          const correctOptionText =
+                            q.options[q.correct_index] || "";
+                          const userLetter =
+                            typeof userChoiceIdx === "number"
+                              ? String.fromCharCode(65 + userChoiceIdx)
+                              : "-";
+                          const correctLetter = String.fromCharCode(
+                            65 + q.correct_index
+                          );
 
                           return (
                             <div
                               key={q.id}
-                              className="p-4 rounded-2xl border"
+                              className="p-5 rounded-2xl border"
                               style={{
                                 backgroundColor: isCorrect
-                                  ? "rgba(16, 185, 129, 0.08)"
-                                  : "rgba(239, 68, 68, 0.08)",
+                                  ? "rgba(16, 185, 129, 0.06)"
+                                  : "rgba(239, 68, 68, 0.06)",
                                 borderColor: isCorrect
                                   ? "rgba(16, 185, 129, 0.3)"
                                   : "rgba(239, 68, 68, 0.3)",
                               }}
                             >
                               <div
-                                className="text-sm font-bold mb-2"
+                                className="text-sm sm:text-base font-bold mb-2 flex items-start gap-2.5"
                                 style={{ color: themeStyles.textPrimary }}
                               >
-                                {idx + 1}. {q.question}
+                                <span
+                                  className="text-xs px-2.5 py-0.5 rounded font-mono font-bold shrink-0 mt-0.5"
+                                  style={{ background: themeStyles.tagBg }}
+                                >
+                                  Q{idx + 1}
+                                </span>
+                                <span className="leading-snug">{q.question_text}</span>
                               </div>
                               <div
-                                className="text-xs font-semibold mb-2"
+                                className="text-xs sm:text-sm font-semibold mb-2 ml-9"
                                 style={{
                                   color: isCorrect ? "#059669" : "#DC2626",
                                 }}
                               >
-                                {isCorrect
-                                  ? "✅ Correct"
-                                  : `❌ You chose: ${
-                                      optionMap[userChoice] || "No answer"
-                                    }. Correct answer: ${optionMap[q.correct]}`}
+                                {isCorrect ? (
+                                  <span>
+                                    ✅ Correct: Option {correctLetter} — {correctOptionText}
+                                  </span>
+                                ) : (
+                                  <span>
+                                    ❌ You chose: Option {userLetter} ({userOptionText}) · Correct answer: Option {correctLetter} ({correctOptionText})
+                                  </span>
+                                )}
                               </div>
                               {q.explanation && (
-                                <p
-                                  className="text-xs leading-relaxed"
-                                  style={{ color: themeStyles.textMuted }}
+                                <div
+                                  className="text-xs sm:text-sm leading-relaxed p-3.5 rounded-xl ml-9 mt-3 flex items-start gap-2.5"
+                                  style={{
+                                    background: themeStyles.blockquoteBg,
+                                    color: themeStyles.textSecondary,
+                                    borderLeft: `3px solid ${themeStyles.accent}`,
+                                  }}
                                 >
-                                  💡 {q.explanation}
-                                </p>
+                                  <span className="shrink-0 text-base">💡</span>
+                                  <div>
+                                    <strong
+                                      className="block font-semibold mb-0.5"
+                                      style={{ color: themeStyles.textPrimary }}
+                                    >
+                                      Explanation:
+                                    </strong>
+                                    {q.explanation}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           );
@@ -1438,83 +1587,109 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                           borderColor: themeStyles.cardBorder,
                         }}
                       >
-                        <span>
+                        <span className="font-semibold">
                           {questions.length} Question{questions.length !== 1 ? "s" : ""} · Pass mark: 70%
                         </span>
-                        <span className="text-emerald-600 font-bold">+25 XP on Passing</span>
+                        <span className="text-emerald-600 font-bold flex items-center gap-1">
+                          <span>⭐</span> +25 XP on Passing
+                        </span>
                       </div>
 
                       <div className="space-y-6">
-                        {questions.map((q, idx) => {
-                          const opts = [
-                            { key: "a", text: q.option_a },
-                            { key: "b", text: q.option_b },
-                            { key: "c", text: q.option_c },
-                            { key: "d", text: q.option_d },
-                          ].filter((o) => o.text);
-
-                          return (
-                            <div key={q.id}>
-                              <div
-                                className="text-sm sm:text-base font-bold mb-3"
-                                style={{ color: themeStyles.textPrimary }}
+                        {questions.map((q, idx) => (
+                          <div
+                            key={q.id}
+                            className="p-5 sm:p-6 rounded-2xl border transition-all"
+                            style={{
+                              borderColor: themeStyles.cardBorder,
+                              background: themeStyles.cardBg,
+                            }}
+                          >
+                            <div className="flex items-center gap-2 mb-3">
+                              <span
+                                className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full font-mono"
+                                style={{
+                                  background: themeStyles.tagBg,
+                                  color: themeStyles.accent,
+                                }}
                               >
-                                {idx + 1}. {q.question}
-                              </div>
-                              <div className="space-y-2">
-                                {opts.map((opt) => {
-                                  const isSelected = quizAnswers[q.id] === opt.key;
-                                  return (
-                                    <button
-                                      key={opt.key}
-                                      onClick={() =>
-                                        setQuizAnswers((prev) => ({
-                                          ...prev,
-                                          [q.id]: opt.key,
-                                        }))
-                                      }
-                                      className="w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition-all flex items-center gap-3"
+                                Question {idx + 1} of {questions.length}
+                              </span>
+                            </div>
+
+                            <h4
+                              className="text-sm sm:text-base font-bold mb-4 leading-snug"
+                              style={{ color: themeStyles.textPrimary }}
+                            >
+                              {q.question_text}
+                            </h4>
+
+                            <div className="space-y-2.5">
+                              {q.options.map((optText, optIdx) => {
+                                const isSelected = quizAnswers[q.id] === optIdx;
+                                const letter = String.fromCharCode(65 + optIdx);
+
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    onClick={() =>
+                                      setQuizAnswers((prev) => ({
+                                        ...prev,
+                                        [q.id]: optIdx,
+                                      }))
+                                    }
+                                    className="w-full text-left p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm font-medium transition-all flex items-center gap-3.5 group hover:border-[#0E6163]/50"
+                                    style={{
+                                      borderColor: isSelected
+                                        ? themeStyles.accent
+                                        : themeStyles.cardBorder,
+                                      backgroundColor: isSelected
+                                        ? themeStyles.blockquoteBg
+                                        : themeStyles.cardBg,
+                                      color: themeStyles.textPrimary,
+                                      boxShadow: isSelected
+                                        ? "0 2px 8px rgba(14,97,99,0.12)"
+                                        : "none",
+                                    }}
+                                  >
+                                    <span
+                                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 transition-colors"
                                       style={{
                                         borderColor: isSelected
                                           ? themeStyles.accent
                                           : themeStyles.cardBorder,
                                         backgroundColor: isSelected
-                                          ? themeStyles.blockquoteBg
-                                          : themeStyles.cardBg,
-                                        color: themeStyles.textPrimary,
+                                          ? themeStyles.accent
+                                          : "transparent",
+                                        color: isSelected
+                                          ? "#fff"
+                                          : themeStyles.textMuted,
                                       }}
                                     >
-                                      <span
-                                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border"
-                                        style={{
-                                          borderColor: isSelected
-                                            ? themeStyles.accent
-                                            : themeStyles.cardBorder,
-                                          backgroundColor: isSelected
-                                            ? themeStyles.accent
-                                            : "transparent",
-                                          color: isSelected ? "#fff" : themeStyles.textMuted,
-                                        }}
-                                      >
-                                        {opt.key.toUpperCase()}
-                                      </span>
-                                      <span className="flex-1">{opt.text}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                                      {letter}
+                                    </span>
+                                    <span className="flex-1 leading-snug">
+                                      {optText}
+                                    </span>
+                                  </button>
+                                );
+                              })}
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
 
                       <button
                         onClick={submitQuiz}
-                        disabled={Object.keys(quizAnswers).length < questions.length}
-                        className="w-full mt-8 py-3.5 rounded-xl text-sm font-bold text-white transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={
+                          Object.keys(quizAnswers).length < questions.length
+                        }
+                        className="w-full mt-8 py-3.5 rounded-xl text-sm font-bold text-white transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95"
                         style={{ backgroundColor: themeStyles.accent }}
                       >
-                        Submit Quiz ({Object.keys(quizAnswers).length}/{questions.length} Answered)
+                        Submit Quiz ({Object.keys(quizAnswers).length}/
+                        {questions.length} Answered)
                       </button>
                     </div>
                   )}
