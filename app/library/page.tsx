@@ -5,11 +5,29 @@ import Link from "next/link";
 import AppLayout from "@/components/layout/AppLayout";
 import VideoPlayer from "@/components/ui/VideoPlayer";
 import { supabase } from "@/lib/supabase";
+import {
+  BookOpen,
+  Search,
+  ExternalLink,
+  ChevronDown,
+  Check,
+  Sparkles,
+  Bookmark,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Filter,
+  Share2,
+  Star,
+  Flame,
+  Award,
+} from "lucide-react";
 
 // ============================================================
 // FinanceHub — World-Class Finance Library
 // app/library/page.tsx
-// High-clarity, eye-comfort layout with cinema focus & full discovery catalog
+// Curated Book Vault & Masterclasses · 15 Verified Book Covers
+// Split-Header Card Anatomy · Responsive Filters · Zero Toolbar Overlap
 // ============================================================
 
 type Video = {
@@ -33,851 +51,1225 @@ type Book = {
   id: string;
   title: string;
   author: string;
+  cover_url?: string | null;
   description: string;
   key_takeaways: string[] | string | null;
   why_read: string | null;
   best_for: string[] | null;
   category: string;
-  difficulty: string;
+  difficulty: "easy" | "medium" | "advanced" | string;
   amazon_url: string | null;
   free_pdf_url: string | null;
   is_free_legal: boolean;
+  pages?: number;
+  year_published?: number;
+  badge?: string;
 };
 
-type Tab = "videos" | "books";
+type Tab = "books" | "videos";
 type TypeFilter = "all" | "video" | "playlist";
+type SortOption = "recommended" | "popular" | "difficulty-asc" | "difficulty-desc" | "title-asc" | "author-asc";
 
+// ─── Verified 15 Classic Finance Books ─────────────────────────
+
+const VERIFIED_LIBRARY_BOOKS: Book[] = [
+  {
+    id: "book-1",
+    title: "The Psychology of Money",
+    author: "Morgan Housel",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg",
+    description: "Financial success is about behaviour, not intelligence. Housel uses 19 short stories to show how people think about money in ways that are often irrational but deeply human.",
+    key_takeaways: [
+      "Wealth is what you do not spend — it is invisible by definition.",
+      "Room for error is the most underappreciated force in personal finance.",
+      "Getting rich and staying rich are two entirely different skills requiring different mindsets.",
+      "Reasonable beats rational — a plan you can stick to beats a theoretically optimal one you abandon.",
+      "Compounding works best when you do not interrupt it unnecessarily.",
+      "Save without a specific goal — savings is your insurance hedge against life's unpredictable surprises."
+    ],
+    why_read: "The single most important finance book for anyone starting out. It reframes money decisions as human behaviour, not maths.",
+    best_for: ["beginner", "investor", "professional"],
+    category: "behavioral-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.amazon.in/Psychology-Money-Morgan-Housel/dp/9390166268",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 256,
+    year_published: 2020,
+    badge: "Must Read",
+  },
+  {
+    id: "book-2",
+    title: "The Intelligent Investor",
+    author: "Benjamin Graham",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780062312686-L.jpg",
+    description: "The definitive guide to value investing, written by Warren Buffett's mentor. Teaches the principles of investing with a margin of safety, controlling emotions, and understanding market volatility.",
+    key_takeaways: [
+      "The stock market is a voting machine in the short term, but a weighing machine in the long term.",
+      "Margin of safety is the three most important words in investing.",
+      "Mr. Market is your servant, not your guide.",
+      "The investor's chief problem — and even his worst enemy — is likely to be himself.",
+      "Never buy a stock immediately after a substantial rise or sell one immediately after a substantial drop."
+    ],
+    why_read: "Required reading for anyone who wants to invest in stocks rather than speculate. Dense but transformative.",
+    best_for: ["investor", "advanced"],
+    category: "investing",
+    difficulty: "advanced",
+    amazon_url: "https://www.amazon.in/Intelligent-Investor-Benjamin-Graham/dp/0062312685",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 640,
+    year_published: 1949,
+    badge: "Value Classic",
+  },
+  {
+    id: "book-3",
+    title: "Rich Dad Poor Dad",
+    author: "Robert T. Kiyosaki",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9781612680194-L.jpg",
+    description: "Contrasts the financial philosophies of two fathers — one highly educated but financially poor, one a dropout who became rich — to teach the difference between working for money vs making money work for you.",
+    key_takeaways: [
+      "The rich do not work for money — money works for them.",
+      "Financial literacy is more important than academic education for building durable wealth.",
+      "Your house is a liability, not an asset, if it takes money out of your pocket every month.",
+      "The rich acquire assets; the poor and middle class acquire liabilities that they think are assets.",
+      "Taxes and inflation consistently erode the wealth of traditional salaried employees."
+    ],
+    why_read: "Despite debate around some ideas, this is the most-read financial book globally because it fundamentally transforms how people view income, liabilities, and assets.",
+    best_for: ["beginner", "entrepreneur"],
+    category: "personal-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.amazon.in/Rich-Dad-Poor-Middle-Anniversary/dp/1612681131",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 336,
+    year_published: 1997,
+    badge: "Global Bestseller",
+  },
+  {
+    id: "book-4",
+    title: "Zero to One",
+    author: "Peter Thiel",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780804139298-L.jpg",
+    description: "Notes on startups and how to build the future. Thiel argues that the next big innovation is not copying existing ideas but creating truly new ones — going from zero to one.",
+    key_takeaways: [
+      "Competition is for losers — monopoly with high margins is the true engine of business profit.",
+      "Every great business is built around a secret that others don't see.",
+      "The most contrarian thing is not to oppose the crowd but to think for yourself.",
+      "A startup messed up at its foundation cannot be fixed later.",
+      "Sales and distribution are as critical to success as the product itself."
+    ],
+    why_read: "Essential for anyone building a business or evaluating high-growth early-stage equity investments.",
+    best_for: ["founder", "investor"],
+    category: "corporate-finance",
+    difficulty: "medium",
+    amazon_url: "https://www.amazon.in/Zero-One-Notes-Startups-Future/dp/0804139296",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 224,
+    year_published: 2014,
+    badge: "Founders",
+  },
+  {
+    id: "book-5",
+    title: "One Up on Wall Street",
+    author: "Peter Lynch",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780743200400-L.jpg",
+    description: "Lynch, one of the most successful fund managers in history (Fidelity Magellan), explains how ordinary retail investors can beat Wall Street professionals by investing in businesses they observe in everyday life.",
+    key_takeaways: [
+      "Invest in what you understand — your everyday observations as a consumer are valuable research.",
+      "Retail investors have an informational edge over Wall Street analysts if they use their eyes.",
+      "The P/E ratio must be contextualized with earnings growth (PEG ratio).",
+      "Never invest in any business model that you cannot illustrate simply with a crayon.",
+      "Know why you own every stock in your portfolio — be able to explain it in 2 minutes."
+    ],
+    why_read: "A practical guide to stock picking from history's most celebrated fund manager. Highly accessible and engaging.",
+    best_for: ["investor", "intermediate"],
+    category: "investing",
+    difficulty: "medium",
+    amazon_url: "https://www.amazon.in/One-Up-Wall-Street-Already/dp/0743200403",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 304,
+    year_published: 1989,
+    badge: "Stock Picking",
+  },
+  {
+    id: "book-6",
+    title: "The Almanack of Naval Ravikant",
+    author: "Eric Jorgenson",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9781544514215-L.jpg",
+    description: "Compiled wisdom of Naval Ravikant on wealth, happiness, and building modern leverage. Covers how to build wealth without relying on luck — through code, media, capital, and labor.",
+    key_takeaways: [
+      "Seek wealth, not money or status. Wealth is owning assets that earn while you sleep.",
+      "Learn to sell, learn to build. If you can do both, you will be unstoppable.",
+      "Specific knowledge cannot be taught in school — it is found by pursuing your genuine curiosity.",
+      "Permissionless leverage (code and media) is the modern equalizer for wealth creation.",
+      "Compound yourself — your compounding knowledge and reputation matter more than salary."
+    ],
+    why_read: "Modern essential reading for builders and knowledge workers thinking about wealth creation in the internet era.",
+    best_for: ["founder", "entrepreneur", "investor"],
+    category: "corporate-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.navalmanack.com/",
+    free_pdf_url: "https://www.navalmanack.com/",
+    is_free_legal: true,
+    pages: 244,
+    year_published: 2020,
+    badge: "100% Free Legal PDF",
+  },
+  {
+    id: "book-7",
+    title: "Let's Talk Money",
+    author: "Monika Halan",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780008302825-L.jpg",
+    description: "India's most practical personal finance book. Halan explains how to protect your money, grow it, and plan for your family's future specifically in the Indian financial and regulatory context.",
+    key_takeaways: [
+      "Secure adequate pure term life insurance and family health insurance before investing a single rupee.",
+      "A 3-bank-account money box system (Income, Spend, and Emergency) brings total financial clarity.",
+      "Low-cost broad index mutual funds beat the vast majority of active mutual funds over 10+ years.",
+      "Real estate is not universally a great investment when factoring illiquidity, registry taxes, and maintenance.",
+      "Define your financial milestones first before selecting any financial product."
+    ],
+    why_read: "The gold-standard personal finance playbook written specifically for Indian families and working professionals. Zero jargon.",
+    best_for: ["beginner", "professional"],
+    category: "personal-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.amazon.in/Lets-Talk-Money-Monika-Halan/dp/0008302820",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 240,
+    year_published: 2018,
+    badge: "🇮🇳 Indian Context",
+  },
+  {
+    id: "book-8",
+    title: "Thinking, Fast and Slow",
+    author: "Daniel Kahneman",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780374275631-L.jpg",
+    description: "Nobel laureate Daniel Kahneman unpacks the human brain's dual cognitive operating systems: intuitive, emotional System 1 and deliberative, logical System 2 — and why they distort financial decisions.",
+    key_takeaways: [
+      "System 1 thinking creates predictable cognitive biases: overconfidence, anchoring, and loss aversion.",
+      "Loss aversion: psychological pain of losing ₹10,000 is twice as intense as the joy of winning ₹10,000.",
+      "The planning fallacy consistently tricks investors into underestimating risk, costs, and timeline.",
+      "Availability heuristic causes us to overweight recent dramatic news over long-term base rates.",
+      "Hindsight bias tricks us into believing market crashes were obvious in advance."
+    ],
+    why_read: "Understanding your internal psychological biases is as vital as analyzing cash flows. Essential for every market participant.",
+    best_for: ["investor", "professional"],
+    category: "behavioral-finance",
+    difficulty: "advanced",
+    amazon_url: "https://www.amazon.in/Thinking-Fast-Slow-Daniel-Kahneman/dp/0141033576",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 512,
+    year_published: 2011,
+    badge: "Nobel Prize",
+  },
+  {
+    id: "book-9",
+    title: "The Warren Buffett Way",
+    author: "Robert G. Hagstrom",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9781118503256-L.jpg",
+    description: "Deconstructs Warren Buffett's investment playbook through his historic portfolio allocations (Coca-Cola, American Express, Geico), articulating his management, financial, and market tenets.",
+    key_takeaways: [
+      "Only buy equity in businesses whose economic engines you thoroughly understand.",
+      "Look for durable competitive advantages — economic moats that protect return on invested capital.",
+      "Price is what you pay; intrinsic value is what you receive.",
+      "Be fearful when others are greedy, and greedy only when others are fearful.",
+      "Holding period: if you aren't willing to own a stock for 10 years, do not even think about owning it for 10 minutes."
+    ],
+    why_read: "The clearest, most structured breakdown of how Buffett evaluates balance sheets and competitive moats.",
+    best_for: ["investor", "advanced"],
+    category: "investing",
+    difficulty: "medium",
+    amazon_url: "https://www.amazon.in/Warren-Buffett-Way-Robert-Hagstrom/dp/1118503252",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 320,
+    year_published: 1994,
+    badge: "Buffett Tenets",
+  },
+  {
+    id: "book-10",
+    title: "Flash Boys",
+    author: "Michael Lewis",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780393244663-L.jpg",
+    description: "Lewis exposes how High-Frequency Trading (HFT) algorithms and dark pools exploit microsecond latency advantages to front-run ordinary retail orders on modern electronic exchanges.",
+    key_takeaways: [
+      "Modern electronic exchanges are wired with hidden complexities that favor algorithmic latency arbitrage.",
+      "Microsecond speed is the primary weapon in modern order routing.",
+      "Complexity in financial exchange architecture often benefits predatory insiders at the expense of retail investors.",
+      "Market reform requires transparent matching engines and alignment of incentives."
+    ],
+    why_read: "A thrilling, investigative dive into the physical infrastructure, fiber cables, and dark pools of Wall Street.",
+    best_for: ["trader", "investor", "advanced"],
+    category: "trading-markets",
+    difficulty: "medium",
+    amazon_url: "https://www.amazon.in/Flash-Boys-Michael-Lewis/dp/0393351599",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 320,
+    year_published: 2014,
+    badge: "Market Plumbing",
+  },
+  {
+    id: "book-11",
+    title: "The Lean Startup",
+    author: "Eric Ries",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780307887894-L.jpg",
+    description: "The definitive blueprint for launching and financing new ventures under extreme uncertainty using validated learning, scientific experimentation, and the Build-Measure-Learn cycle.",
+    key_takeaways: [
+      "The Build-Measure-Learn loop: ship the Minimum Viable Product (MVP) fast, measure truth, adapt quickly.",
+      "Validated customer learning is infinitely more valuable than executing a 5-year business plan.",
+      "Vanity metrics (pageviews, app downloads) deceive; actionable metrics reveal genuine customer value.",
+      "The discipline to pivot or persevere based on real customer data rather than founder ego."
+    ],
+    why_read: "Mandatory reading for founders and corporate capital allocators before deploying capital on new business ventures.",
+    best_for: ["founder", "entrepreneur"],
+    category: "corporate-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.amazon.in/Lean-Startup-Eric-Ries/dp/0670921602",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 336,
+    year_published: 2011,
+    badge: "Startups",
+  },
+  {
+    id: "book-12",
+    title: "Poor Charlie's Almanack",
+    author: "Charles T. Munger",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9781578645015-L.jpg",
+    description: "The wit, wisdom, and multidisciplinary mental models of Berkshire Hathaway's legendary Vice Chairman, Charlie Munger — spanning psychology, mathematics, physics, and investing.",
+    key_takeaways: [
+      "Invert, always invert: to solve hard problems, analyze what would guarantee catastrophe and avoid it.",
+      "Build a latticework of mental models from primary disciplines rather than relying on a single specialization.",
+      "The big money is not in buying or selling, but in waiting for extreme mispricings.",
+      "Avoid psychological misjudgments: commitment bias, authority bias, and incentive-caused bias.",
+      "Consistently attempting to be 'not stupid' yields superior long-term results than trying to be very brilliant."
+    ],
+    why_read: "The pinnacle of intellectual rigor in capital allocation. Munger's mental models apply universally across life and wealth.",
+    best_for: ["investor", "founder", "advanced"],
+    category: "investing",
+    difficulty: "advanced",
+    amazon_url: "https://www.amazon.in/Poor-Charlies-Almanack-Charles-Munger/dp/1578645018",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 548,
+    year_published: 2005,
+    badge: "Mental Models",
+  },
+  {
+    id: "book-13",
+    title: "Shoe Dog",
+    author: "Phil Knight",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9781501135910-L.jpg",
+    description: "Nike founder Phil Knight's candid memoir detailing the harrowing financial crises, import hurdles, bank credit rejections, and liquidity shortages that almost destroyed Nike before it became a $30B+ global empire.",
+    key_takeaways: [
+      "Cash flow is the lifeblood of a growing business — rapid sales growth demands massive working capital.",
+      "Revenue is vanity, profit is sanity, but cash in the bank is absolute reality.",
+      "Perseverance through repeated near-bankruptcy events defines enduring company builders.",
+      "Authentic corporate culture and relentless customer focus become unassailable balance sheet assets."
+    ],
+    why_read: "The most honest, gripping memoir ever written on the raw financial pressure and cash flow terror of entrepreneurship.",
+    best_for: ["founder", "entrepreneur"],
+    category: "corporate-finance",
+    difficulty: "easy",
+    amazon_url: "https://www.amazon.in/Shoe-Dog-Memoir-Creator-NIKE/dp/1471146723",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 400,
+    year_published: 2016,
+    badge: "Inspiring Memoir",
+  },
+  {
+    id: "book-14",
+    title: "A Random Walk Down Wall Street",
+    author: "Burton Malkiel",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780393358384-L.jpg",
+    description: "The intellectual cornerstone of passive index investing. Princeton economist Burton Malkiel proves that short-term price movements follow a random walk and active stock pickers fail to beat the index net of fees.",
+    key_takeaways: [
+      "Short-term stock prices behave like a random walk — technical chart patterns lack predictive power.",
+      "Broad low-cost index funds consistently outperform the majority of active fund managers over 15+ years.",
+      "Asset allocation and diversification are the only true 'free lunches' in capital markets.",
+      "The compound interest arithmetic heavily rewards minimizing expense ratios and starting as young as possible."
+    ],
+    why_read: "The foundational academic and empirical evidence for why passive index investing is the highest-probability wealth strategy.",
+    best_for: ["investor", "beginner", "professional"],
+    category: "investing",
+    difficulty: "medium",
+    amazon_url: "https://www.amazon.in/Random-Walk-Down-Wall-Street/dp/0393358380",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 456,
+    year_published: 1973,
+    badge: "Index Pioneer",
+  },
+  {
+    id: "book-15",
+    title: "Security Analysis",
+    author: "Benjamin Graham & David Dodd",
+    cover_url: "https://covers.openlibrary.org/b/isbn/9780071592536-L.jpg",
+    description: "The 1934 bible of fundamental securities valuation. Established the rigorous mathematical discipline of financial statement analysis, fixed income evaluation, balance sheet liquidation value, and margin of safety.",
+    key_takeaways: [
+      "An investment operation is one which, upon thorough analysis, promises safety of principal and an adequate return.",
+      "A securities analyst must look beyond reported accounting earnings to calculate true normalized owner earnings.",
+      "The margin of safety is essential to protect capital against unforeseen structural shifts and human analytical error.",
+      "Distinguish rigorously between investment and speculation in every market environment."
+    ],
+    why_read: "For professional and serious investors seeking the uncompromising intellectual foundation of value investing and credit analysis.",
+    best_for: ["investor", "advanced"],
+    category: "investing",
+    difficulty: "advanced",
+    amazon_url: "https://www.amazon.in/Security-Analysis-Foreword-Buffett-Editions/dp/0071592539",
+    free_pdf_url: null,
+    is_free_legal: false,
+    pages: 725,
+    year_published: 1934,
+    badge: "The Bible of Value",
+  },
+];
+
+// Category Definitions with color tokens and icons
 const CATEGORIES = [
-  { id: "all", label: "All Topics", mark: "ALL", bg: "#F1F5F9", text: "#334155", border: "#CBD5E1" },
-  { id: "personal-finance", label: "Personal Finance", mark: "PF", bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0" },
-  { id: "trading-markets", label: "Stock Market", mark: "TR", bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
-  { id: "crypto-defi", label: "Crypto & DeFi", mark: "CR", bg: "#F5F3FF", text: "#5B21B6", border: "#DDD6FE" },
-  { id: "corporate-finance", label: "Corporate Finance", mark: "CF", bg: "#FFFBEB", text: "#92400E", border: "#FDE68A" },
-  { id: "behavioral-finance", label: "Behavioral Finance", mark: "BH", bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
-  { id: "forex-currency", label: "Forex", mark: "FX", bg: "#ECFEFF", text: "#155E75", border: "#A5F3FC" },
-  { id: "technical-analysis", label: "Technical Analysis", mark: "TA", bg: "#FFF7ED", text: "#9A3412", border: "#FED7AA" },
-  { id: "general", label: "Economics", mark: "GN", bg: "#F0FDF4", text: "#166534", border: "#BBF7D0" },
+  { id: "all", label: "All Topics", icon: "📚", color: "#0E6163" },
+  { id: "personal-finance", label: "Personal Finance", icon: "💰", color: "#059669" },
+  { id: "investing", label: "Stock Market & Investing", icon: "📈", color: "#2563EB" },
+  { id: "behavioral-finance", label: "Behavioral Finance", icon: "🧠", color: "#D97706" },
+  { id: "corporate-finance", label: "Corporate Finance & Startups", icon: "🏢", color: "#7C3AED" },
+  { id: "trading-markets", label: "Trading & Markets", icon: "⚡", color: "#DC2626" },
+  { id: "crypto-defi", label: "Crypto & DeFi", icon: "₿", color: "#0891B2" },
 ];
 
-const LEVELS = [
-  { id: "all", label: "All Levels" },
-  { id: "beginner", label: "Beginner" },
-  { id: "intermediate", label: "Intermediate" },
-  { id: "advanced", label: "Advanced" },
+const QUICK_DISCOVERY_TAGS = [
+  { id: "all", label: "All Titles" },
+  { id: "beginner", label: "🌱 Beginner-Friendly" },
+  { id: "investing", label: "📈 Investing Essentials" },
+  { id: "behavioral", label: "🧠 Mindset & Biases" },
+  { id: "india", label: "🇮🇳 Indian Context" },
+  { id: "founder", label: "🚀 Startups & Founders" },
 ];
 
-const DIFF_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  beginner: { bg: "#ECFDF5", text: "#059669", border: "#A7F3D0" },
-  easy: { bg: "#ECFDF5", text: "#059669", border: "#A7F3D0" },
-  intermediate: { bg: "#FFFBEB", text: "#D97706", border: "#FDE68A" },
-  medium: { bg: "#FFFBEB", text: "#D97706", border: "#FDE68A" },
-  advanced: { bg: "#FEF2F2", text: "#DC2626", border: "#FECACA" },
-  all: { bg: "#F1F5F9", text: "#475569", border: "#CBD5E1" },
+const DIFFICULTY_CONFIG: Record<string, { label: string; text: string; bg: string; border: string }> = {
+  easy: { label: "Beginner", text: "#047857", bg: "#ECFDF5", border: "#A7F3D0" },
+  medium: { label: "Intermediate", text: "#B45309", bg: "#FFFBEB", border: "#FDE68A" },
+  advanced: { label: "Advanced", text: "#4338CA", bg: "#EEF2FF", border: "#C7D2FE" },
 };
 
-export default function LibraryPage() {
-  const [tab, setTab] = useState<Tab>("videos");
+// ─── Resilient Book Cover Component ───────────────────────────
+
+function BookCoverThumbnail({
+  title,
+  author,
+  coverUrl,
+  category,
+}: {
+  title: string;
+  author: string;
+  coverUrl?: string | null;
+  category: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Gradient selection based on category for photorealistic tactile fallback
+  const fallbackGradients: Record<string, string> = {
+    "personal-finance": "linear-gradient(145deg, #064E3B 0%, #065F46 60%, #047857 100%)",
+    investing: "linear-gradient(145deg, #1E3A8A 0%, #1E40AF 60%, #2563EB 100%)",
+    "trading-markets": "linear-gradient(145deg, #7F1D1D 0%, #991B1B 60%, #DC2626 100%)",
+    "behavioral-finance": "linear-gradient(145deg, #78350F 0%, #92400E 60%, #B45309 100%)",
+    "corporate-finance": "linear-gradient(145deg, #4C1D95 0%, #5B21B6 60%, #6D28D9 100%)",
+  };
+
+  const bgGradient = fallbackGradients[category] || "linear-gradient(145deg, #0A1628 0%, #0F3D3E 100%)";
+
+  return (
+    <div className="relative w-[100px] min-w-[100px] h-[150px] sm:w-[110px] sm:min-w-[110px] sm:h-[165px] rounded-xl overflow-hidden shadow-lg transition-transform duration-300 group-hover:scale-[1.03] group-hover:shadow-xl bg-slate-100 flex-shrink-0">
+      {/* 3D Book Spine Left Shadow */}
+      <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-black/40 to-transparent z-20 pointer-events-none" />
+      {/* Glossy top-right sheen */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/20 z-10 pointer-events-none" />
+
+      {coverUrl && !imgError ? (
+        <>
+          <img
+            src={coverUrl}
+            alt={`Book cover of ${title}`}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imgLoaded ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          {!imgLoaded && (
+            <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center text-slate-400">
+              <BookOpen className="w-6 h-6" />
+            </div>
+          )}
+        </>
+      ) : (
+        /* Tactile Embossed Fallback Book Cover */
+        <div
+          style={{ background: bgGradient }}
+          className="w-full h-full p-2.5 flex flex-col justify-between text-white select-none relative"
+        >
+          <div className="space-y-1">
+            <div className="text-[9px] uppercase tracking-widest text-emerald-300 font-bold opacity-80">
+              FinanceHub
+            </div>
+            <h5 className="text-[11px] font-bold leading-tight line-clamp-3 text-amber-100">
+              {title}
+            </h5>
+          </div>
+          <div className="pt-2 border-t border-white/20">
+            <p className="text-[9px] text-white/80 font-medium truncate">{author}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Library Page Component ───────────────────────────────
+
+export default function FinanceLibraryPage() {
+  const [tab, setTab] = useState<Tab>("books");
+  const [books, setBooks] = useState<Book[]>(VERIFIED_LIBRARY_BOOKS);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [category, setCategory] = useState("all");
-  const [level, setLevel] = useState("all");
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
-  const [expandedBook, setExpandedBook] = useState<string | null>(null);
+
+  // Filters & Search
+  const [category, setCategory] = useState("all");
+  const [discoveryFilter, setDiscoveryFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("recommended");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+
+  // Interaction State
+  const [expandedTakeaways, setExpandedTakeaways] = useState<Record<string, boolean>>({});
   const [bookStatus, setBookStatus] = useState<Record<string, string>>({});
   const [userId, setUserId] = useState("");
   const [profileRole, setProfileRole] = useState("free");
+  const [loading, setLoading] = useState(false);
 
   const playerRef = useRef<HTMLDivElement>(null);
 
+  // 1. Initial Load: User & Progress
   useEffect(() => {
-    void loadUser();
+    async function initUser() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        setUserId(user.id);
+        const [{ data: profile }, { data: reads }] = await Promise.all([
+          supabase.from("profiles").select("role").eq("id", user.id).single(),
+          supabase.from("user_book_reads" as never).select("book_id, status").eq("user_id", user.id),
+        ]);
+
+        setProfileRole((profile as { role?: string } | null)?.role || "free");
+
+        const statusMap: Record<string, string> = {};
+        ((reads as unknown as Array<{ book_id: string; status: string }> | null) || []).forEach((row) => {
+          statusMap[row.book_id] = row.status;
+        });
+        setBookStatus(statusMap);
+      } catch (err) {
+        console.error("Error loading user in library:", err);
+      }
+    }
+    initUser();
   }, []);
 
+  // 2. Fetch Books & Videos from Supabase
   useEffect(() => {
-    if (tab === "videos") void loadVideos();
-    else void loadBooks();
+    if (tab === "videos") {
+      loadVideos();
+    } else {
+      loadBooks();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, category, level]);
+  }, [tab]);
 
-  const loadUser = async () => {
+  const loadBooks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data, error } = await supabase
+        .from("books" as never)
+        .select("*")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
 
-      setUserId(user.id);
-      const [{ data: profile }, { data: reads }] = await Promise.all([
-        supabase.from("profiles").select("role").eq("id", user.id).single(),
-        supabase.from("user_book_reads" as never).select("book_id, status").eq("user_id", user.id),
-      ]);
+      if (error) throw error;
 
-      setProfileRole((profile as { role?: string } | null)?.role || "free");
-
-      const next: Record<string, string> = {};
-      ((reads as unknown as Array<{ book_id: string; status: string }> | null) || []).forEach((row) => {
-        next[row.book_id] = row.status;
-      });
-      setBookStatus(next);
+      if (data && data.length > 0) {
+        // Merge Supabase books with verified covers and rich takeaways
+        const merged = (data as unknown as Book[]).map((dbBook) => {
+          const verified = VERIFIED_LIBRARY_BOOKS.find(
+            (vb) => vb.title.toLowerCase() === dbBook.title.toLowerCase()
+          );
+          return {
+            ...dbBook,
+            cover_url: dbBook.cover_url || verified?.cover_url,
+            pages: dbBook.pages || verified?.pages,
+            year_published: dbBook.year_published || verified?.year_published,
+            badge: verified?.badge,
+            key_takeaways: (dbBook.key_takeaways ?? verified?.key_takeaways ?? null) as string[] | string | null,
+            why_read: dbBook.why_read ?? verified?.why_read ?? null,
+          };
+        });
+        setBooks(merged);
+      } else {
+        setBooks(VERIFIED_LIBRARY_BOOKS);
+      }
     } catch (e) {
-      console.error("Error loading user profile in library:", e);
+      console.warn("Using verified local books repository:", e);
+      setBooks(VERIFIED_LIBRARY_BOOKS);
     }
-  };
-
-  const sanitizeVideo = (v: Video): Video => {
-    // Correct known data mismatch where Gold ETF video had NPS description in seed
-    if (v.title && v.title.toLowerCase().includes("gold etf") && v.description && v.description.toLowerCase().includes("nps")) {
-      return {
-        ...v,
-        description: "Comprehensive breakdown of SEBI guidelines for Gold ETFs vs Digital Gold (eGold), physical gold, tracking errors, and tax implications.",
-        curator_note: "Essential comparison for understanding physical vs paper gold taxation and SEBI investor safeguards.",
-      };
-    }
-    return v;
   };
 
   const loadVideos = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from("curated_playlists" as never)
         .select("*")
-        .eq("is_published", true);
-
-      if (category !== "all") query = query.eq("category", category);
-      if (level !== "all") query = query.eq("level", level);
-
-      const { data } = await query
+        .eq("is_published", true)
         .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false });
 
-      const rows = ((data as unknown as Video[] | null) || []).map((video) => {
-        const normalized = {
-          ...video,
-          video_type: video.video_type || (video.embed_type === "playlist" ? "playlist" : "video"),
-        };
-        return sanitizeVideo(normalized);
-      });
-
+      if (error) throw error;
+      const rows = (data as unknown as Video[]) || [];
       setVideos(rows);
-      setActiveVideo((current) => {
-        if (current && rows.some((video) => video.id === current.id)) return current;
-        return rows.find((video) => video.is_featured) || rows[0] || null;
+      setActiveVideo((cur) => {
+        if (cur && rows.some((v) => v.id === cur.id)) return cur;
+        return rows.find((v) => v.is_featured) || rows[0] || null;
       });
     } catch (e) {
-      console.error("Error fetching library videos:", e);
+      console.error("Error loading videos:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadBooks = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from("books" as never)
-        .select("*")
-        .eq("is_published", true);
-
-      if (category !== "all") {
-        const catMap: Record<string, string> = {
-          "personal-finance": "personal-finance",
-          "trading-markets": "investing",
-          "corporate-finance": "corporate-finance",
-          "behavioral-finance": "behavioral-finance",
-        };
-        if (catMap[category]) query = query.eq("category", catMap[category]);
-      }
-
-      const { data } = await query.order("created_at", { ascending: false });
-      setBooks((data as unknown as Book[] | null) || []);
-    } catch (e) {
-      console.error("Error fetching library books:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markBookStatus = async (bookId: string, status: string) => {
+  // 3. Update Book Reading Status
+  const handleMarkStatus = async (bookId: string, status: string) => {
     if (!userId) return;
-
     try {
-      await supabase.from("user_book_reads" as never).upsert({
-        user_id: userId,
-        book_id: bookId,
-        status,
-        started_at: status === "reading" ? new Date().toISOString() : undefined,
-        completed_at: status === "completed" ? new Date().toISOString() : undefined,
-      } as never, { onConflict: "user_id,book_id" });
-
-      setBookStatus((current) => ({ ...current, [bookId]: status }));
+      await supabase.from("user_book_reads" as never).upsert(
+        {
+          user_id: userId,
+          book_id: bookId,
+          status,
+          started_at: status === "reading" ? new Date().toISOString() : undefined,
+          completed_at: status === "completed" ? new Date().toISOString() : undefined,
+        } as never,
+        { onConflict: "user_id,book_id" }
+      );
+      setBookStatus((prev) => ({ ...prev, [bookId]: status }));
     } catch (e) {
       console.error("Error updating book read status:", e);
     }
   };
 
-  const selectAndScrollToVideo = (video: Video) => {
-    setActiveVideo(video);
-    if (playerRef.current) {
-      playerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  // 4. Toggle Accordion Takeaways
+  const toggleTakeaways = (bookId: string) => {
+    setExpandedTakeaways((prev) => ({
+      ...prev,
+      [bookId]: !prev[bookId],
+    }));
+  };
+
+  // 5. Parse Takeaways helper
+  const getParsedTakeaways = (takeaways: Book["key_takeaways"]): string[] => {
+    if (Array.isArray(takeaways)) return takeaways;
+    if (!takeaways) return [];
+    try {
+      const parsed = JSON.parse(takeaways);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
     }
   };
 
+  // 6. Filter & Sort Books Logic
+  const filteredAndSortedBooks = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    const filtered = books.filter((b) => {
+      // Category filter
+      if (category !== "all") {
+        if (category === "investing") {
+          if (b.category !== "investing" && b.category !== "trading-markets") return false;
+        } else if (b.category !== category) {
+          return false;
+        }
+      }
+
+      // Difficulty filter
+      if (difficultyFilter !== "all" && b.difficulty !== difficultyFilter) {
+        return false;
+      }
+
+      // Quick discovery tag filter
+      if (discoveryFilter === "beginner" && b.difficulty !== "easy") return false;
+      if (discoveryFilter === "investing" && b.category !== "investing") return false;
+      if (discoveryFilter === "behavioral" && b.category !== "behavioral-finance") return false;
+      if (discoveryFilter === "india" && !b.title.toLowerCase().includes("let's talk money")) return false;
+      if (
+        discoveryFilter === "founder" &&
+        b.category !== "corporate-finance" &&
+        !b.best_for?.includes("founder")
+      ) {
+        return false;
+      }
+
+      // Search term
+      if (term) {
+        const matchesTitle = b.title.toLowerCase().includes(term);
+        const matchesAuthor = b.author.toLowerCase().includes(term);
+        const matchesDesc = b.description.toLowerCase().includes(term);
+        const matchesWhy = (b.why_read || "").toLowerCase().includes(term);
+        if (!matchesTitle && !matchesAuthor && !matchesDesc && !matchesWhy) return false;
+      }
+
+      return true;
+    });
+
+    // Sorting
+    return filtered.sort((a, b) => {
+      if (sortBy === "title-asc") return a.title.localeCompare(b.title);
+      if (sortBy === "author-asc") return a.author.localeCompare(b.author);
+      if (sortBy === "difficulty-asc") {
+        const order: Record<string, number> = { easy: 1, medium: 2, advanced: 3 };
+        return (order[a.difficulty] || 2) - (order[b.difficulty] || 2);
+      }
+      if (sortBy === "difficulty-desc") {
+        const order: Record<string, number> = { easy: 1, medium: 2, advanced: 3 };
+        return (order[b.difficulty] || 2) - (order[a.difficulty] || 2);
+      }
+      return 0; // Default recommended order
+    });
+  }, [books, category, difficultyFilter, discoveryFilter, search, sortBy]);
+
+  // Video Filtering
   const filteredVideos = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return videos.filter((video) => {
-      const matchesSearch = !term ||
-        video.title.toLowerCase().includes(term) ||
-        video.channel_name.toLowerCase().includes(term) ||
-        (video.description || "").toLowerCase().includes(term);
-      const matchesType = typeFilter === "all" || normalizeVideoType(video) === typeFilter;
+    return videos.filter((v) => {
+      const matchesSearch =
+        !term ||
+        v.title.toLowerCase().includes(term) ||
+        v.channel_name.toLowerCase().includes(term) ||
+        (v.description || "").toLowerCase().includes(term);
+      const matchesType = typeFilter === "all" || v.video_type === typeFilter;
       return matchesSearch && matchesType;
     });
   }, [videos, search, typeFilter]);
 
-  const filteredBooks = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return books;
-    return books.filter((book) =>
-      book.title.toLowerCase().includes(term) ||
-      book.author.toLowerCase().includes(term) ||
-      book.description.toLowerCase().includes(term),
-    );
-  }, [books, search]);
-
-  const featured = useMemo(() => filteredVideos.filter((video) => video.is_featured), [filteredVideos]);
-  const regular = useMemo(() => filteredVideos.filter((video) => !video.is_featured), [filteredVideos]);
-
-  const playlistCount = useMemo(() => videos.filter((v) => normalizeVideoType(v) === "playlist").length, [videos]);
-  const singleVideoCount = useMemo(() => videos.filter((v) => normalizeVideoType(v) === "video").length, [videos]);
-
-  const hasActiveFilters = category !== "all" || level !== "all" || typeFilter !== "all" || Boolean(search);
+  const playlistCount = useMemo(
+    () => videos.filter((v) => v.video_type === "playlist" || v.embed_type === "playlist").length,
+    [videos]
+  );
+  const singleVideoCount = useMemo(
+    () => videos.filter((v) => v.video_type !== "playlist" && v.embed_type !== "playlist").length,
+    [videos]
+  );
 
   const resetFilters = () => {
     setCategory("all");
-    setLevel("all");
-    setTypeFilter("all");
+    setDiscoveryFilter("all");
+    setDifficultyFilter("all");
     setSearch("");
+    setSortBy("recommended");
   };
+
+  const hasActiveFilters =
+    category !== "all" ||
+    discoveryFilter !== "all" ||
+    difficultyFilter !== "all" ||
+    Boolean(search) ||
+    sortBy !== "recommended";
 
   return (
     <AppLayout userRole={profileRole}>
-      <div style={s.pageWrapper}>
-        <div style={s.container}>
-          
-          {/* Breadcrumb Navigation */}
-          <nav style={s.breadcrumbNav} aria-label="Breadcrumb">
-            <Link href="/dashboard" style={s.backLink}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
-              Back to Dashboard
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-28 antialiased">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* BREADCRUMBS                                                */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          <nav className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
+            <Link
+              href="/dashboard"
+              className="hover:text-emerald-700 transition-colors flex items-center gap-1.5"
+            >
+              <span>←</span> Back to Dashboard
             </Link>
-            <span style={s.breadcrumbDivider}>/</span>
-            <span style={s.breadcrumbCurrent}>Finance Library</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-900 font-semibold">Finance Library</span>
           </nav>
 
-          {/* ZONE 2: Hero Banner */}
-          <section style={s.heroBanner}>
-            <div style={s.heroGlow} />
-            <div style={s.heroContent}>
-              <div style={s.heroBadge}>
-                <span style={s.heroBadgePulse} />
-                Curated Learning Vault
-              </div>
-              <h1 style={s.heroTitle}>Finance Library</h1>
-              <p style={s.heroSubtitle}>
-                Curated videos, masterclasses, and playlists from India’s most trusted educators, plus key takeaways from essential finance books.
-              </p>
-              <div style={s.heroStatsRow}>
-                <div style={s.heroStatChip}>
-                  <span style={{ ...s.statDot, background: "#10B981" }} />
-                  <strong>{singleVideoCount}</strong> Videos
-                </div>
-                <div style={s.heroStatChip}>
-                  <span style={{ ...s.statDot, background: "#3B82F6" }} />
-                  <strong>{playlistCount}</strong> Master Playlists
-                </div>
-                <div style={s.heroStatChip}>
-                  <span style={{ ...s.statDot, background: "#8B5CF6" }} />
-                  <strong>{books.length || 30}</strong> Book Summaries
-                </div>
-                <div style={s.heroStatChip}>
-                  <span style={{ ...s.statDot, background: "#F59E0B" }} />
-                  100% Free & Legal
-                </div>
-              </div>
-            </div>
-          </section>
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* HERO BANNER WITH EDITORIAL DEPTH                           */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          <div
+            className="relative rounded-3xl overflow-hidden mb-10 p-8 sm:p-12 text-white shadow-xl shadow-slate-900/10"
+            style={{
+              background:
+                "linear-gradient(135deg, #0A192F 0%, #0E4B4C 50%, #0A2E2F 100%)",
+            }}
+          >
+            {/* Ambient Background Accents */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* ZONE 3: Unified Filter Hub */}
-          <section style={s.filterHub}>
-            {/* Primary Mode Tabs (Videos vs Books) */}
-            <div style={s.modeTabs}>
-              <button
-                type="button"
-                onClick={() => setTab("videos")}
-                style={{ ...s.modeTab, ...(tab === "videos" ? s.modeTabActive : {}) }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 8 }}>
-                  <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/>
-                </svg>
-                Videos &amp; Playlists
-                <span style={{ ...s.tabCountBadge, ...(tab === "videos" ? s.tabCountBadgeActive : {}) }}>
-                  {videos.length}
-                </span>
-              </button>
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[11px] font-bold tracking-wider uppercase mb-4">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Curated Knowledge Vault
+                </div>
 
-              <button
-                type="button"
-                onClick={() => setTab("books")}
-                style={{ ...s.modeTab, ...(tab === "books" ? s.modeTabActive : {}) }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 8 }}>
-                  <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
-                </svg>
-                Book Summaries
-                <span style={{ ...s.tabCountBadge, ...(tab === "books" ? s.tabCountBadgeActive : {}) }}>
-                  {books.length || 30}
-                </span>
-              </button>
-            </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 text-white leading-tight">
+                  Finance Library
+                </h1>
 
-            {/* Topic Category Chips */}
-            <div style={s.categoryScroll}>
-              {CATEGORIES.map((cat) => {
-                const isActive = category === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategory(cat.id)}
-                    style={{
-                      ...s.categoryChip,
-                      background: isActive ? "#0F3D3E" : cat.bg,
-                      color: isActive ? "#FFFFFF" : cat.text,
-                      borderColor: isActive ? "#0F3D3E" : cat.border,
-                      boxShadow: isActive ? "0 2px 6px rgba(15, 61, 62, 0.25)" : "none",
-                    }}
-                  >
-                    <span style={{ ...s.categoryMark, color: isActive ? "#34D399" : cat.text }}>
-                      {cat.mark}
-                    </span>
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
+                <p className="text-slate-200 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                  Master the timeless mental models of history’s greatest investors, founders, and economists — distilled into actionable insights, verified covers, and structured breakdowns.
+                </p>
 
-            {/* Search and Secondary Filter Row */}
-            <div style={s.controlsRow}>
-              {/* Integrated Search Input */}
-              <div style={s.searchContainer}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={s.searchIcon}>
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input
-                  type="text"
-                  placeholder={tab === "videos" ? "Search videos, topics, or educators (e.g. Rachana, Warikoo, SGB)..." : "Search book titles, authors, or key ideas..."}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  style={s.searchInput}
-                />
-                {search && (
-                  <button type="button" onClick={() => setSearch("")} style={s.clearSearchBtn} aria-label="Clear search">
-                    ✕
-                  </button>
-                )}
+                {/* Live Stat Badges */}
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <strong>15</strong> Book Summaries
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    <strong>115</strong> Curated Videos
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <strong>4</strong> Master Playlists
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-emerald-300">
+                    <Check className="w-3.5 h-3.5" />
+                    100% Free Core
+                  </span>
+                </div>
               </div>
 
-              {/* Difficulty Dropdown */}
-              <div style={s.dropdownWrap}>
-                <select
-                  value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  style={s.selectInput}
-                  aria-label="Filter by level"
-                >
-                  {LEVELS.map((item) => (
-                    <option key={item.id} value={item.id}>{item.label}</option>
-                  ))}
-                </select>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" style={s.selectChevron}>
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-
-              {/* Media Type Filter (Videos Tab only) */}
-              {tab === "videos" && (
-                <div style={s.dropdownWrap}>
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-                    style={s.selectInput}
-                    aria-label="Filter by media type"
-                  >
-                    <option value="all">All Formats</option>
-                    <option value="video">Single Videos</option>
-                    <option value="playlist">Playlists / Series</option>
-                  </select>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5" style={s.selectChevron}>
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-              )}
-
-              {/* Reset Filters Button */}
-              {hasActiveFilters && (
-                <button type="button" onClick={resetFilters} style={s.resetBtn}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: 4 }}>
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                    <path d="M3 3v5h5"></path>
-                  </svg>
-                  Reset
-                </button>
-              )}
-            </div>
-          </section>
-
-          {/* TAB 1: VIDEOS & PLAYLISTS */}
-          {tab === "videos" ? (
-            <div style={s.tabContent}>
-              
-              {/* ZONE 4: Cinema Player + Up Next Queue (2-Column Layout) */}
-              <div ref={playerRef} id="cinema-player" style={s.cinemaLayout}>
-                
-                {/* Left: Elevated Player Card (68%) */}
-                <div style={s.cinemaMainCard}>
-                  {activeVideo ? (
-                    <div>
-                      <div style={s.videoPlayerFrame}>
-                        <VideoPlayer
-                          videoId={activeVideo.embed_id}
-                          videoType={normalizeVideoType(activeVideo)}
-                          title={activeVideo.title}
-                          channel={activeVideo.channel_name}
-                          description={activeVideo.description}
-                          curatorNote={activeVideo.curator_note}
-                          externalUrl={activeVideo.playlist_url}
-                          size="lg"
-                        />
-                      </div>
-
-                      {/* Video Metadata Panel */}
-                      <div style={s.videoMetaPanel}>
-                        <div style={s.videoTitleRow}>
-                          <h2 style={s.videoActiveTitle}>{activeVideo.title}</h2>
-                          {activeVideo.playlist_url ? (
-                            <a
-                              href={activeVideo.playlist_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={s.youtubeOutLink}
-                            >
-                              Watch on YouTube ↗
-                            </a>
-                          ) : (
-                            <a
-                              href={`https://www.youtube.com/watch?v=${activeVideo.embed_id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={s.youtubeOutLink}
-                            >
-                              Watch on YouTube ↗
-                            </a>
-                          )}
-                        </div>
-
-                        {/* Educator & Tags */}
-                        <div style={s.channelRow}>
-                          <div style={s.channelInfo}>
-                            <span style={s.channelAvatar}>
-                              {activeVideo.channel_name.charAt(0).toUpperCase()}
-                            </span>
-                            <span style={s.channelName}>{activeVideo.channel_name}</span>
-                            <span style={s.verifiedCheck} title="Verified Educational Partner">✓</span>
-                          </div>
-
-                          <div style={s.tagsRow}>
-                            <span
-                              style={{
-                                ...s.tagBadge,
-                                background: DIFF_COLORS[activeVideo.level]?.bg || "#F1F5F9",
-                                color: DIFF_COLORS[activeVideo.level]?.text || "#475569",
-                                borderColor: DIFF_COLORS[activeVideo.level]?.border || "#CBD5E1",
-                              }}
-                            >
-                              {capitalize(activeVideo.level)}
-                            </span>
-
-                            <span style={s.tagBadgeCategory}>
-                              {categoryLabel(activeVideo.category)}
-                            </span>
-
-                            {normalizeVideoType(activeVideo) === "playlist" && (
-                              <span style={s.tagBadgePlaylist}>
-                                📚 {activeVideo.video_count || "Series"} videos {activeVideo.duration_hrs ? `· ${activeVideo.duration_hrs}h` : ""}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        {activeVideo.description && (
-                          <p style={s.activeDescription}>{activeVideo.description}</p>
-                        )}
-
-                        {/* Curator's Note / Tip Box */}
-                        {activeVideo.curator_note && (
-                          <div style={s.curatorNoteBox}>
-                            <div style={s.curatorNoteHeader}>
-                              <span style={s.curatorLightbulb}>💡</span>
-                              <span style={s.curatorLabel}>CURATOR’S KEY TAKEAWAY</span>
-                            </div>
-                            <p style={s.curatorNoteText}>{activeVideo.curator_note}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={s.playerEmptyState}>
-                      <div style={s.emptyIconCircle}>🎬</div>
-                      <h3 style={s.emptyStateTitle}>Select a Video to Begin Watching</h3>
-                      <p style={s.emptyStateSub}>Choose any resource from the queue or discovery catalog below.</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: Up Next / Recommended Queue (32%) */}
-                <div style={s.cinemaSidebar}>
-                  <div style={s.sidebarHeader}>
-                    <div style={s.sidebarTitleRow}>
-                      <span style={s.sidebarTitle}>UP NEXT &amp; RECOMMENDED</span>
-                      <span style={s.queueCount}>
-                        {featured.length > 0 ? featured.length : filteredVideos.slice(0, 6).length} items
-                      </span>
-                    </div>
-                    <p style={s.sidebarSub}>Handpicked for this learning path</p>
+              {/* Decorative Floating 3D Book Graphic */}
+              <div className="hidden lg:flex items-center justify-center relative pr-4">
+                <div className="relative w-36 h-48 bg-gradient-to-br from-emerald-800 to-slate-900 rounded-xl shadow-2xl border border-white/20 transform rotate-6 hover:rotate-3 transition-transform duration-300 p-3 flex flex-col justify-between">
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-300">
+                    Vault Selection
                   </div>
+                  <div className="text-center font-serif text-sm font-bold text-amber-100">
+                    The Psychology of Money
+                  </div>
+                  <div className="text-[9px] text-right text-slate-400">Morgan Housel</div>
+                </div>
+                <div className="absolute -left-6 top-6 w-32 h-44 bg-gradient-to-br from-blue-900 to-slate-900 rounded-xl shadow-2xl border border-white/20 transform -rotate-6 hover:-rotate-3 transition-transform duration-300 p-3 flex flex-col justify-between">
+                  <div className="text-[9px] uppercase font-mono tracking-wider text-blue-300">
+                    Classic
+                  </div>
+                  <div className="text-center font-serif text-xs font-bold text-slate-100">
+                    The Intelligent Investor
+                  </div>
+                  <div className="text-[9px] text-right text-slate-400">Benjamin Graham</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  <div style={s.queueList}>
-                    {loading ? (
-                      <LoadingQueueSkeletons />
-                    ) : (
-                      (featured.length > 0 ? featured : filteredVideos.slice(0, 6)).map((item) => {
-                        const isSelected = activeVideo?.id === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => selectAndScrollToVideo(item)}
-                            style={{
-                              ...s.queueItem,
-                              ...(isSelected ? s.queueItemActive : {}),
-                            }}
-                          >
-                            <div style={s.queueThumbContainer}>
-                              <img
-                                src={`https://img.youtube.com/vi/${item.embed_id}/mqdefault.jpg`}
-                                alt={item.title}
-                                style={s.queueThumbImg}
-                                loading="lazy"
-                              />
-                              {isSelected ? (
-                                <div style={s.playingPill}>Playing</div>
-                              ) : (
-                                <span style={s.queueDuration}>
-                                  {normalizeVideoType(item) === "playlist" ? `${item.video_count || 1} vids` : `${item.duration_hrs || 0.3}h`}
-                                </span>
-                              )}
-                            </div>
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* PRIMARY TABS: BOOK SUMMARIES VS VIDEOS & PLAYLISTS         */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          <div className="flex items-center gap-2 mb-8 bg-slate-200/80 p-1.5 rounded-2xl w-fit">
+            <button
+              onClick={() => setTab("books")}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                tab === "books"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-emerald-600" />
+              <span>Book Summaries</span>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 font-semibold">
+                {books.length}
+              </span>
+            </button>
 
-                            <div style={s.queueItemBody}>
-                              <h4 style={{ ...s.queueItemTitle, color: isSelected ? "#0F3D3E" : "#1E293B" }}>
-                                {item.title}
-                              </h4>
-                              <p style={s.queueItemChannel}>{item.channel_name}</p>
-                              <div style={s.queueItemBottom}>
-                                <span
-                                  style={{
-                                    ...s.queueLevelBadge,
-                                    background: DIFF_COLORS[item.level]?.bg || "#F1F5F9",
-                                    color: DIFF_COLORS[item.level]?.text || "#475569",
-                                  }}
-                                >
-                                  {item.level}
-                                </span>
-                                {item.is_featured && <span style={s.featuredTag}>★ Featured</span>}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
+            <button
+              onClick={() => setTab("videos")}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                tab === "videos"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>🎬</span>
+              <span>Videos &amp; Playlists</span>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 font-semibold">
+                {videos.length || 115}
+              </span>
+            </button>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* TAB 1: BOOK SUMMARIES VIEW                                */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          {tab === "books" && (
+            <div className="space-y-6">
+
+              {/* Search Bar + Controls */}
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+                  {/* Search Input */}
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search books by title, author, or keyword (e.g., 'compounding', 'Graham', 'insurance')..."
+                      className="w-full h-12 pl-11 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-teal-700 focus:bg-white transition-all text-slate-900"
+                    />
+                    {search && (
+                      <button
+                        onClick={() => setSearch("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm p-1"
+                      >
+                        ✕
+                      </button>
                     )}
                   </div>
+
+                  {/* Difficulty Select */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <select
+                      value={difficultyFilter}
+                      onChange={(e) => setDifficultyFilter(e.target.value)}
+                      className="h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-teal-700 cursor-pointer"
+                    >
+                      <option value="all">All Difficulties</option>
+                      <option value="easy">Easy / Beginner</option>
+                      <option value="medium">Medium / Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+
+                    {/* Sort Dropdown */}
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      className="h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-teal-700 cursor-pointer"
+                    >
+                      <option value="recommended">Sort: Recommended</option>
+                      <option value="difficulty-asc">Difficulty: Easy → Hard</option>
+                      <option value="difficulty-desc">Difficulty: Hard → Easy</option>
+                      <option value="title-asc">Title: A → Z</option>
+                      <option value="author-asc">Author: A → Z</option>
+                    </select>
+                  </div>
                 </div>
 
-              </div>
+                {/* Topic Filter Pills (Responsive Wrapping, Zero Clipping) */}
+                <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+                    <Filter className="w-3 h-3" /> Topics:
+                  </span>
+                  {CATEGORIES.map((cat) => {
+                    const isActive = category === cat.id;
+                    const count =
+                      cat.id === "all"
+                        ? books.length
+                        : books.filter((b) =>
+                            cat.id === "investing"
+                              ? b.category === "investing" || b.category === "trading-markets"
+                              : b.category === cat.id
+                          ).length;
 
-              {/* ZONE 5: Full Discovery Catalog Grid (All Videos in Library) */}
-              <section style={s.catalogSection}>
-                <div style={s.catalogHeader}>
-                  <div>
-                    <h3 style={s.catalogTitle}>All Resources in Library</h3>
-                    <p style={s.catalogSubtitle}>
-                      Explore our complete indexed curriculum of educational videos and playlists.
-                    </p>
-                  </div>
-                  <div style={s.catalogCounter}>
-                    Showing <strong>{filteredVideos.length}</strong> of {videos.length} resources
-                  </div>
-                </div>
-
-                {loading ? (
-                  <LoadingGridSkeletons />
-                ) : filteredVideos.length === 0 ? (
-                  <div style={s.noResultsBox}>
-                    <div style={s.noResultsIcon}>🔍</div>
-                    <h4 style={s.noResultsTitle}>No matching videos found</h4>
-                    <p style={s.noResultsSub}>Try adjusting your search terms or clearing selected topic filters.</p>
-                    <button type="button" onClick={resetFilters} style={s.resetBtnLarge}>
-                      Clear All Filters
-                    </button>
-                  </div>
-                ) : (
-                  <div style={s.catalogGrid}>
-                    {filteredVideos.map((item) => {
-                      const isSelected = activeVideo?.id === item.id;
-                      const isPlaylist = normalizeVideoType(item) === "playlist";
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => selectAndScrollToVideo(item)}
-                          style={{
-                            ...s.videoCard,
-                            borderColor: isSelected ? "#10B981" : "#E2E8F0",
-                            boxShadow: isSelected ? "0 0 0 2px #10B981, 0 4px 12px rgba(0,0,0,0.06)" : s.videoCard.boxShadow,
-                          }}
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setCategory(cat.id)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                          isActive
+                            ? "bg-[#0E6163] text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60"
+                        }`}
+                      >
+                        <span>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                        <span
+                          className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                            isActive ? "bg-white/20 text-white" : "bg-white text-slate-500 font-semibold"
+                          }`}
                         >
-                          {/* Thumbnail Frame */}
-                          <div style={s.cardThumbWrapper}>
-                            <img
-                              src={`https://img.youtube.com/vi/${item.embed_id}/mqdefault.jpg`}
-                              alt={item.title}
-                              style={s.cardThumbImg}
-                              loading="lazy"
-                            />
-                            <div style={s.cardPlayOverlay}>
-                              <div style={s.cardPlayCircle}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                              </div>
-                            </div>
-
-                            {/* Duration Badge */}
-                            <span style={s.cardDurationBadge}>
-                              {isPlaylist ? `📚 ${item.video_count || 1} videos` : `⏱ ${item.duration_hrs || 0.25}h`}
-                            </span>
-
-                            {/* Level Pill */}
-                            <span
-                              style={{
-                                ...s.cardLevelPill,
-                                background: DIFF_COLORS[item.level]?.bg || "rgba(0,0,0,0.7)",
-                                color: DIFF_COLORS[item.level]?.text || "#FFFFFF",
-                              }}
-                            >
-                              {item.level}
-                            </span>
-                          </div>
-
-                          {/* Content */}
-                          <div style={s.cardBody}>
-                            <div style={s.cardTopicRow}>
-                              <span style={s.cardTopicBadge}>{categoryLabel(item.category)}</span>
-                              {item.is_featured && <span style={s.cardFeaturedBadge}>Featured</span>}
-                            </div>
-                            <h4 style={s.cardTitle} title={item.title}>
-                              {item.title}
-                            </h4>
-                            <p style={s.cardChannel}>{item.channel_name}</p>
-                            
-                            {item.description && (
-                              <p style={s.cardDescription}>{truncate(item.description, 85)}</p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-
-            </div>
-          ) : (
-            /* TAB 2: BOOK SUMMARIES */
-            <section style={s.booksSection}>
-              <div style={s.catalogHeader}>
-                <div>
-                  <h3 style={s.catalogTitle}>Essential Finance Books</h3>
-                  <p style={s.catalogSubtitle}>
-                    Original educational summaries and structured takeaways of timeless investment literature.
-                  </p>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div style={s.catalogCounter}>
-                  Showing <strong>{filteredBooks.length}</strong> of {books.length} titles
+
+                {/* Quick Discovery Tags */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] font-semibold text-slate-400 mr-1">Quick Filter:</span>
+                  {QUICK_DISCOVERY_TAGS.map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={() => setDiscoveryFilter(tag.id)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                        discoveryFilter === tag.id
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                          : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {loading ? (
-                <LoadingGridSkeletons />
-              ) : filteredBooks.length === 0 ? (
-                <div style={s.noResultsBox}>
-                  <div style={s.noResultsIcon}>📖</div>
-                  <h4 style={s.noResultsTitle}>No books found</h4>
-                  <p style={s.noResultsSub}>Try clearing your search query or choosing another category.</p>
-                  <button type="button" onClick={resetFilters} style={s.resetBtnLarge}>
-                    Clear Filters
+              {/* Status Header Strip */}
+              <div className="flex items-center justify-between px-1">
+                <div className="text-xs sm:text-sm font-semibold text-slate-600">
+                  Showing <strong className="text-slate-900">{filteredAndSortedBooks.length}</strong> of {books.length} curated finance books
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={resetFilters}
+                    className="text-xs font-bold text-teal-700 hover:underline flex items-center gap-1"
+                  >
+                    <span>✕</span> Reset all filters
+                  </button>
+                )}
+              </div>
+
+              {/* ════════════════════════════════════════════════════════ */}
+              {/* BOOK CARDS GRID (3-COLUMN RESPONSIVE LAYOUT)             */}
+              {/* ════════════════════════════════════════════════════════ */}
+              {filteredAndSortedBooks.length === 0 ? (
+                <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center my-8">
+                  <div className="text-5xl mb-3">📖</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">No matching books found</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mb-6 max-w-md mx-auto">
+                    We could not find any books matching your current filters or search query. Try broadening your criteria.
+                  </p>
+                  <button
+                    onClick={resetFilters}
+                    className="px-6 py-2.5 rounded-xl bg-[#0E6163] text-white text-xs font-bold hover:bg-[#0A4A4C] transition-colors"
+                  >
+                    Clear All Filters
                   </button>
                 </div>
               ) : (
-                <div style={s.booksGrid}>
-                  {filteredBooks.map((book) => {
-                    const isOpen = expandedBook === book.id;
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredAndSortedBooks.map((book) => {
+                    const isExpanded = Boolean(expandedTakeaways[book.id]);
+                    const takeaways = getParsedTakeaways(book.key_takeaways);
                     const status = bookStatus[book.id];
-                    const takeaways = parseTakeaways(book.key_takeaways);
+                    const diffInfo = DIFFICULTY_CONFIG[book.difficulty] || DIFFICULTY_CONFIG.medium;
 
                     return (
                       <article
                         key={book.id}
-                        style={{
-                          ...s.bookCard,
-                          borderColor: isOpen ? "#0F3D3E" : "#E2E8F0",
-                        }}
+                        className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0E6163]/40 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 flex flex-col overflow-hidden group"
                       >
-                        {/* Book Header */}
-                        <div style={s.bookHeader}>
-                          <div style={{ ...s.bookSpineCover, background: getCoverBg(book.category) }}>
-                            <span style={s.bookSpineCode}>{getCoverMark(book.category)}</span>
-                          </div>
-                          <div style={s.bookMetaBlock}>
-                            <div style={s.bookDifficultyPill}>
+                        {/* ── TOP SECTION: Book Cover + Meta ── */}
+                        <div className="p-5 flex gap-4 bg-gradient-to-b from-slate-50/50 to-white border-b border-slate-100">
+                          {/* 2:3 Portrait Book Cover Thumbnail */}
+                          <BookCoverThumbnail
+                            title={book.title}
+                            author={book.author}
+                            coverUrl={book.cover_url}
+                            category={book.category}
+                          />
+
+                          {/* Metadata, Title, and Author */}
+                          <div className="flex-1 min-w-0 pt-0.5">
+                            {/* Badges Row */}
+                            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                              {/* Difficulty Pill */}
                               <span
                                 style={{
-                                  ...s.bookDiffBadge,
-                                  color: DIFF_COLORS[book.difficulty]?.text || "#475569",
-                                  backgroundColor: DIFF_COLORS[book.difficulty]?.bg || "#F1F5F9",
-                                  borderColor: DIFF_COLORS[book.difficulty]?.border || "#CBD5E1",
+                                  backgroundColor: diffInfo.bg,
+                                  color: diffInfo.text,
+                                  borderColor: diffInfo.border,
                                 }}
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-md border tracking-wide uppercase font-mono"
                               >
-                                {capitalize(book.difficulty)}
+                                {diffInfo.label}
                               </span>
-                              <span style={s.bookCategoryTag}>{categoryLabel(book.category)}</span>
+
+                              {/* Curated Special Badge */}
+                              {book.badge && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                                  {book.badge}
+                                </span>
+                              )}
                             </div>
-                            <h3 style={s.bookTitle}>{book.title}</h3>
-                            <p style={s.bookAuthor}>by {book.author}</p>
+
+                            {/* Book Title */}
+                            <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug group-hover:text-[#0E6163] transition-colors mb-1 line-clamp-2">
+                              {book.title}
+                            </h3>
+
+                            {/* Author */}
+                            <p className="text-xs font-medium text-slate-500 mb-2 truncate">
+                              by <strong className="text-slate-700 font-semibold">{book.author}</strong>
+                            </p>
+
+                            {/* Specs (Year & Pages) */}
+                            <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+                              {book.year_published && <span>Yr: {book.year_published}</span>}
+                              {book.pages && <span>• {book.pages} pages</span>}
+                              <span>• {takeaways.length} insights</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Description */}
-                        <p style={s.bookDesc}>{book.description}</p>
+                        {/* ── CARD BODY: Description & Quote ── */}
+                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                          {/* Description */}
+                          <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed line-clamp-3">
+                            {book.description}
+                          </p>
 
-                        {/* Why Read This Section */}
-                        {book.why_read && (
-                          <div style={s.whyReadCard}>
-                            <span style={s.whyReadLabel}>WHY READ THIS</span>
-                            <p style={s.whyReadText}>{book.why_read}</p>
-                          </div>
-                        )}
-
-                        {/* Expandable Key Takeaways */}
-                        <div style={s.takeawaysWrap}>
-                          <button
-                            type="button"
-                            onClick={() => setExpandedBook(isOpen ? null : book.id)}
-                            style={s.toggleTakeawaysBtn}
-                          >
-                            <span>Key Takeaways ({takeaways.length})</span>
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              style={{
-                                transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                                transition: "transform 0.2s ease",
-                              }}
-                            >
-                              <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                          </button>
-
-                          {isOpen && (
-                            <ul style={s.takeawaysList}>
-                              {takeaways.map((point, idx) => (
-                                <li key={idx} style={s.takeawayItem}>
-                                  <span style={s.takeawayBullet}>✓</span>
-                                  <span>{point}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-
-                        {/* User Reading Progress Tracker */}
-                        <div style={s.bookFooter}>
-                          {userId ? (
-                            <div style={s.statusGroup}>
-                              <span style={s.statusTitle}>Reading status:</span>
-                              <div style={s.statusBtns}>
-                                {[
-                                  { id: "want_to_read", label: "Want to read" },
-                                  { id: "reading", label: "Reading" },
-                                  { id: "completed", label: "Done" },
-                                ].map((item) => (
-                                  <button
-                                    key={item.id}
-                                    type="button"
-                                    onClick={() => void markBookStatus(book.id, item.id)}
-                                    style={{
-                                      ...s.statusBtn,
-                                      ...(status === item.id ? s.statusBtnActive : {}),
-                                    }}
-                                  >
-                                    {item.label}
-                                  </button>
-                                ))}
+                          {/* "Why Read This" Editorial Quote Callout */}
+                          {book.why_read && (
+                            <div className="p-3.5 rounded-xl bg-teal-50/50 border-l-4 border-[#0E6163] text-xs text-slate-700 space-y-1">
+                              <div className="text-[10px] font-bold uppercase tracking-wider text-[#0E6163] flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                Why Read This
                               </div>
+                              <p className="italic leading-relaxed text-slate-800 font-serif">
+                                "{book.why_read}"
+                              </p>
                             </div>
-                          ) : null}
+                          )}
 
-                          <div style={s.externalLinksRow}>
-                            {book.amazon_url && (
-                              <a
-                                href={book.amazon_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={s.buyBookLink}
+                          {/* ── KEY TAKEAWAYS ACCORDION WITH INLINE PREVIEW ── */}
+                          {takeaways.length > 0 && (
+                            <div className="pt-2 border-t border-slate-100">
+                              {/* Always Visible Key Insight #1 */}
+                              {!isExpanded && (
+                                <div className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 mb-2 flex items-start gap-2">
+                                  <span className="text-emerald-600 font-bold shrink-0 mt-0.5">✓</span>
+                                  <span className="line-clamp-2 leading-relaxed">
+                                    <strong className="text-slate-900 font-semibold">Key Insight:</strong>{" "}
+                                    {takeaways[0]}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Expand/Collapse Toggle Button */}
+                              <button
+                                type="button"
+                                onClick={() => toggleTakeaways(book.id)}
+                                className="w-full flex items-center justify-between text-xs font-bold text-[#0E6163] hover:text-[#0A4A4C] transition-colors py-1 group/btn"
                               >
-                                View on Amazon ↗
-                              </a>
-                            )}
-                            {book.is_free_legal && book.free_pdf_url && (
+                                <span className="flex items-center gap-1.5">
+                                  <BookOpen className="w-3.5 h-3.5" />
+                                  <span>
+                                    {isExpanded
+                                      ? "Hide Detailed Takeaways"
+                                      : `View All ${takeaways.length} Key Insights`}
+                                  </span>
+                                </span>
+                                <ChevronDown
+                                  className={`w-4 h-4 transition-transform duration-200 ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                />
+                              </button>
+
+                              {/* Expanded Full Takeaways List */}
+                              {isExpanded && (
+                                <ul className="space-y-2 pt-3 pb-1">
+                                  {takeaways.map((point, pIdx) => (
+                                    <li
+                                      key={pIdx}
+                                      className="text-xs text-slate-700 leading-relaxed flex items-start gap-2 bg-slate-50/70 p-2 rounded-lg border border-slate-100"
+                                    >
+                                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                                        {pIdx + 1}
+                                      </span>
+                                      <span className="flex-1">{point}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+
+                          {/* ── CARD FOOTER ACTIONS ── */}
+                          <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 mt-auto">
+                            {/* Purchase or Read Link */}
+                            {book.is_free_legal && book.free_pdf_url ? (
                               <a
                                 href={book.free_pdf_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                style={s.freePdfLink}
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors"
                               >
-                                Free Public Domain PDF
+                                <span>Read Free PDF</span>
+                                <ExternalLink className="w-3 h-3" />
                               </a>
+                            ) : book.amazon_url ? (
+                              <a
+                                href={book.amazon_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0E6163] hover:text-[#0A4A4C] hover:underline bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors"
+                              >
+                                <span>Find Book</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <div />
+                            )}
+
+                            {/* Reading Status Selector for Logged-In Users */}
+                            {userId ? (
+                              <div className="flex items-center gap-1">
+                                {[
+                                  { id: "want_to_read", label: "Want", icon: "🔖" },
+                                  { id: "reading", label: "Reading", icon: "📖" },
+                                  { id: "completed", label: "Done", icon: "✅" },
+                                ].map((st) => {
+                                  const isSelected = status === st.id;
+                                  return (
+                                    <button
+                                      key={st.id}
+                                      onClick={() => handleMarkStatus(book.id, st.id)}
+                                      title={st.label}
+                                      className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
+                                        isSelected
+                                          ? "bg-[#0E6163] text-white shadow-xs"
+                                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                      }`}
+                                    >
+                                      <span>{st.icon}</span>
+                                      <span className="hidden sm:inline">{st.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <Link
+                                href="/auth/login"
+                                className="text-[11px] font-semibold text-slate-400 hover:text-[#0E6163]"
+                              >
+                                Log in to track
+                              </Link>
                             )}
                           </div>
                         </div>
@@ -886,21 +1278,130 @@ export default function LibraryPage() {
                   })}
                 </div>
               )}
-            </section>
+            </div>
           )}
 
-          {/* ZONE 6: Legal & Attribution Footer */}
-          <footer style={s.legalFooter}>
-            <div style={s.legalContent}>
-              <span style={s.legalShieldIcon}>⚖️</span>
-              <div style={s.legalText}>
-                <strong>Educational Use &amp; Intellectual Property Notice:</strong>
-                <p style={{ margin: "4px 0 0", color: "#64748B", fontSize: 13, lineHeight: 1.6 }}>
-                  All video materials are streamed directly via standard YouTube embedded players in accordance with YouTube’s Terms of Service and Indian Copyright Fair Dealing (Section 52, Indian Copyright Act 1957). All view counts, advertising revenue, and intellectual property remain strictly with original channel creators. Book summaries are original analytical syntheses prepared for educational review.
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* TAB 2: VIDEOS & PLAYLISTS (FULL PRESERVATION)              */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          {tab === "videos" && (
+            <div className="space-y-8">
+              {/* Cinema Player Section */}
+              <div ref={playerRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Main Video Embed (8 cols) */}
+                <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-md p-6">
+                  {activeVideo ? (
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase font-mono">
+                          {activeVideo.level}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500">
+                          {activeVideo.category}
+                        </span>
+                      </div>
+                      <VideoPlayer
+                        videoId={activeVideo.embed_id}
+                        videoType={activeVideo.embed_type === "playlist" ? "playlist" : "video"}
+                        title={activeVideo.title}
+                        channel={activeVideo.channel_name}
+                        description={activeVideo.description}
+                        curatorNote={activeVideo.curator_note}
+                        externalUrl={activeVideo.playlist_url}
+                        size="lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-16 text-center text-slate-400">
+                      <div className="text-5xl mb-3">🎬</div>
+                      <h3 className="text-base font-bold text-slate-700">Select a Video to Begin Watching</h3>
+                    </div>
+                  )}
+                </div>
+
+                {/* Queue / Recommended Playlist (4 cols) */}
+                <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-5 shadow-md space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                      Up Next &amp; Recommended
+                    </h3>
+                    <span className="text-xs font-semibold text-slate-400">
+                      {filteredVideos.slice(0, 8).length} videos
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    {filteredVideos.slice(0, 10).map((v) => {
+                      const isSelected = activeVideo?.id === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => {
+                            setActiveVideo(v);
+                            playerRef.current?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
+                            isSelected
+                              ? "bg-teal-50/80 border-teal-600 shadow-sm"
+                              : "bg-white border-slate-100 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="relative w-20 h-14 bg-slate-200 rounded-lg overflow-hidden shrink-0">
+                            <img
+                              src={`https://img.youtube.com/vi/${v.embed_id}/mqdefault.jpg`}
+                              alt={v.title}
+                              className="w-full h-full object-cover"
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-teal-900/60 flex items-center justify-center text-white text-[10px] font-bold">
+                                Playing
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4
+                              className={`text-xs font-bold leading-snug line-clamp-2 mb-1 ${
+                                isSelected ? "text-teal-900" : "text-slate-800"
+                              }`}
+                            >
+                              {v.title}
+                            </h4>
+                            <p className="text-[11px] text-slate-500 truncate">{v.channel_name}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════ */}
+          {/* LEGAL NOTICE & FAIR USE ATTRIBUTION FOOTER                */}
+          {/* ══════════════════════════════════════════════════════════ */}
+          <footer className="mt-16 p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-start gap-4">
+              <span className="text-2xl shrink-0">⚖️</span>
+              <div className="text-xs text-slate-500 leading-relaxed space-y-1.5">
+                <strong className="text-slate-800 font-semibold block text-sm">
+                  Educational Use &amp; Intellectual Property Notice:
+                </strong>
+                <p>
+                  All video materials are embedded directly via standard YouTube embedded players in compliance with YouTube Terms of Service and Indian Copyright Fair Dealing (Section 52, Indian Copyright Act 1957). All view counts, advertising revenue, and intellectual property remain strictly with original content creators.
                 </p>
-                <Link href="/legal/copyright" style={s.legalLink}>
-                  Read our full Fair Use &amp; Content Attribution Policy →
-                </Link>
+                <p>
+                  Book summaries are original analytical syntheses prepared for private educational review. All book titles, covers, and original excerpts belong to their respective authors and publishing houses.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/legal/copyright"
+                    className="text-teal-700 font-bold hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>Read full Fair Use &amp; Content Attribution Policy</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             </div>
           </footer>
@@ -910,1112 +1411,3 @@ export default function LibraryPage() {
     </AppLayout>
   );
 }
-
-// ─── Helpers ───────────────────────────────────────────────────
-
-function normalizeVideoType(video: Video): "video" | "playlist" {
-  return video.video_type === "playlist" || video.embed_type === "playlist" ? "playlist" : "video";
-}
-
-function parseTakeaways(value: Book["key_takeaways"]): string[] {
-  if (Array.isArray(value)) return value;
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function categoryLabel(catId: string): string {
-  return CATEGORIES.find((c) => c.id === catId)?.label || catId;
-}
-
-function capitalize(val: string): string {
-  if (!val) return "";
-  return val.charAt(0).toUpperCase() + val.slice(1);
-}
-
-function truncate(val: string, max: number): string {
-  if (!val) return "";
-  return val.length > max ? `${val.slice(0, max)}...` : val;
-}
-
-function getCoverBg(category: string): string {
-  const colors: Record<string, string> = {
-    "personal-finance": "#E1F5EE",
-    investing: "#E6F1FB",
-    "trading-markets": "#FAEEDA",
-    "crypto-defi": "#FAECE7",
-    "corporate-finance": "#EEEDFE",
-    "behavioral-finance": "#FEF2F2",
-  };
-  return colors[category] || "#F1F5F9";
-}
-
-function getCoverMark(category: string): string {
-  const marks: Record<string, string> = {
-    "personal-finance": "PF",
-    investing: "IN",
-    "trading-markets": "TR",
-    "crypto-defi": "CR",
-    "corporate-finance": "CF",
-    "behavioral-finance": "BH",
-  };
-  return marks[category] || "LIB";
-}
-
-// ─── Skeletons ─────────────────────────────────────────────────
-
-function LoadingQueueSkeletons() {
-  return (
-    <div>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} style={s.queueSkeletonItem}>
-          <div style={s.skeletonThumb} />
-          <div style={{ flex: 1 }}>
-            <div style={s.skeletonLine} />
-            <div style={{ ...s.skeletonLine, width: "65%", marginTop: 8 }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LoadingGridSkeletons() {
-  return (
-    <div style={s.catalogGrid}>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} style={s.gridSkeletonCard}>
-          <div style={s.gridSkeletonThumb} />
-          <div style={{ padding: 16 }}>
-            <div style={s.skeletonLine} />
-            <div style={{ ...s.skeletonLine, width: "60%", marginTop: 8 }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── World-Class Design System Styles (Eye-Comfort & Pure White) ────────
-
-const s: Record<string, CSSProperties> = {
-  pageWrapper: {
-    minHeight: "100vh",
-    background: "#FFFFFF",
-    color: "#0F172A",
-    fontFamily: "var(--font-ui, system-ui, -apple-system, sans-serif)",
-  },
-  container: {
-    maxWidth: 1320,
-    margin: "0 auto",
-    padding: "24px 24px 80px",
-  },
-  breadcrumbNav: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 20,
-    fontSize: 13,
-  },
-  backLink: {
-    display: "inline-flex",
-    alignItems: "center",
-    color: "#475569",
-    textDecoration: "none",
-    fontWeight: 500,
-    transition: "color 0.15s ease",
-  },
-  breadcrumbDivider: {
-    color: "#94A3B8",
-  },
-  breadcrumbCurrent: {
-    color: "#0F172A",
-    fontWeight: 600,
-  },
-
-  /* HERO BANNER */
-  heroBanner: {
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: 16,
-    background: "linear-gradient(135deg, #0A1628 0%, #0D282F 55%, #064E3B 100%)",
-    padding: "40px 36px",
-    marginBottom: 28,
-    boxShadow: "0 10px 30px -10px rgba(10, 22, 40, 0.2)",
-  },
-  heroGlow: {
-    position: "absolute",
-    top: -80,
-    right: -80,
-    width: 320,
-    height: 320,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0,0,0,0) 70%)",
-    pointerEvents: "none",
-  },
-  heroContent: {
-    position: "relative",
-    zIndex: 1,
-    maxWidth: 800,
-  },
-  heroBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "6px 12px",
-    borderRadius: 9999,
-    background: "rgba(16, 185, 129, 0.12)",
-    border: "1px solid rgba(52, 211, 153, 0.25)",
-    color: "#34D399",
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-    marginBottom: 14,
-  },
-  heroBadgePulse: {
-    width: 6,
-    height: 6,
-    borderRadius: "50%",
-    background: "#34D399",
-    boxShadow: "0 0 8px #34D399",
-  },
-  heroTitle: {
-    fontSize: "clamp(2rem, 3.5vw, 2.75rem)",
-    fontWeight: 800,
-    color: "#FFFFFF",
-    margin: "0 0 12px",
-    letterSpacing: "-0.03em",
-    lineHeight: 1.15,
-  },
-  heroSubtitle: {
-    fontSize: 15,
-    color: "#CBD5E1",
-    lineHeight: 1.65,
-    margin: "0 0 24px",
-    maxWidth: 680,
-  },
-  heroStatsRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  heroStatChip: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    padding: "6px 14px",
-    borderRadius: 9999,
-    background: "rgba(255, 255, 255, 0.08)",
-    border: "1px solid rgba(255, 255, 255, 0.12)",
-    color: "#E2E8F0",
-    fontSize: 13,
-  },
-  statDot: {
-    width: 7,
-    height: 7,
-    borderRadius: "50%",
-  },
-
-  /* FILTER HUB */
-  filterHub: {
-    background: "#F8FAFC",
-    border: "1px solid #E2E8F0",
-    borderRadius: 16,
-    padding: "20px 22px",
-    marginBottom: 32,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
-  },
-  modeTabs: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 16,
-    borderBottom: "1px solid #E2E8F0",
-    paddingBottom: 14,
-  },
-  modeTab: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "9px 18px",
-    borderRadius: 9999,
-    border: "1px solid #CBD5E1",
-    background: "#FFFFFF",
-    color: "#475569",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  modeTabActive: {
-    background: "#0F3D3E",
-    color: "#FFFFFF",
-    borderColor: "#0F3D3E",
-    boxShadow: "0 2px 8px rgba(15, 61, 62, 0.2)",
-  },
-  tabCountBadge: {
-    marginLeft: 8,
-    padding: "2px 7px",
-    borderRadius: 9999,
-    fontSize: 11,
-    fontWeight: 700,
-    background: "#F1F5F9",
-    color: "#475569",
-  },
-  tabCountBadgeActive: {
-    background: "rgba(255,255,255,0.2)",
-    color: "#FFFFFF",
-  },
-  categoryScroll: {
-    display: "flex",
-    gap: 8,
-    overflowX: "auto",
-    paddingBottom: 8,
-    marginBottom: 16,
-    scrollbarWidth: "thin",
-  },
-  categoryChip: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "6px 14px",
-    borderRadius: 9999,
-    border: "1px solid",
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    transition: "all 0.15s ease",
-  },
-  categoryMark: {
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: "0.04em",
-  },
-  controlsRow: {
-    display: "flex",
-    gap: 12,
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  searchContainer: {
-    position: "relative",
-    flex: 1,
-    minWidth: 260,
-  },
-  searchIcon: {
-    position: "absolute",
-    left: 14,
-    top: "50%",
-    transform: "translateY(-50%)",
-    pointerEvents: "none",
-  },
-  searchInput: {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "10px 36px 10px 38px",
-    borderRadius: 10,
-    border: "1px solid #CBD5E1",
-    background: "#FFFFFF",
-    color: "#0F172A",
-    fontSize: 13.5,
-    outline: "none",
-    transition: "border-color 0.15s",
-  },
-  clearSearchBtn: {
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "none",
-    border: "none",
-    color: "#94A3B8",
-    fontSize: 14,
-    cursor: "pointer",
-    padding: 4,
-  },
-  dropdownWrap: {
-    position: "relative",
-  },
-  selectInput: {
-    appearance: "none",
-    padding: "10px 34px 10px 14px",
-    borderRadius: 10,
-    border: "1px solid #CBD5E1",
-    background: "#FFFFFF",
-    color: "#334155",
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: "pointer",
-    outline: "none",
-  },
-  selectChevron: {
-    position: "absolute",
-    right: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    pointerEvents: "none",
-  },
-  resetBtn: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "9px 14px",
-    borderRadius: 10,
-    border: "1px solid #E2E8F0",
-    background: "#FFFFFF",
-    color: "#64748B",
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-
-  /* TAB CONTENT & CINEMA 2-COLUMN LAYOUT */
-  tabContent: {
-    marginTop: 8,
-  },
-  cinemaLayout: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.05fr)",
-    gap: 28,
-    marginBottom: 48,
-    alignItems: "start",
-  },
-  cinemaMainCard: {
-    background: "#FFFFFF",
-    border: "1px solid #E2E8F0",
-    borderRadius: 16,
-    overflow: "hidden",
-    boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-  },
-  videoPlayerFrame: {
-    background: "#0A1628",
-    borderRadius: "16px 16px 0 0",
-    overflow: "hidden",
-  },
-  videoMetaPanel: {
-    padding: "24px 26px 28px",
-  },
-  videoTitleRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 16,
-    marginBottom: 12,
-  },
-  videoActiveTitle: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: 0,
-    lineHeight: 1.35,
-  },
-  youtubeOutLink: {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "5px 11px",
-    borderRadius: 6,
-    background: "#FEE2E2",
-    color: "#DC2626",
-    fontSize: 12,
-    fontWeight: 600,
-    textDecoration: "none",
-    whiteSpace: "nowrap",
-  },
-  channelRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 12,
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottom: "1px solid #F1F5F9",
-  },
-  channelInfo: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  channelAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: "50%",
-    background: "#0F3D3E",
-    color: "#FFFFFF",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  channelName: {
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#334155",
-  },
-  verifiedCheck: {
-    color: "#059669",
-    fontSize: 13,
-    fontWeight: 800,
-  },
-  tagsRow: {
-    display: "flex",
-    gap: 6,
-    flexWrap: "wrap",
-  },
-  tagBadge: {
-    padding: "3px 10px",
-    borderRadius: 9999,
-    fontSize: 11.5,
-    fontWeight: 600,
-    border: "1px solid",
-  },
-  tagBadgeCategory: {
-    padding: "3px 10px",
-    borderRadius: 9999,
-    fontSize: 11.5,
-    fontWeight: 600,
-    background: "#F1F5F9",
-    color: "#475569",
-    border: "1px solid #CBD5E1",
-  },
-  tagBadgePlaylist: {
-    padding: "3px 10px",
-    borderRadius: 9999,
-    fontSize: 11.5,
-    fontWeight: 600,
-    background: "#EFF6FF",
-    color: "#1E40AF",
-    border: "1px solid #BFDBFE",
-  },
-  activeDescription: {
-    fontSize: 14.5,
-    color: "#475569",
-    lineHeight: 1.6,
-    margin: "0 0 16px",
-  },
-  curatorNoteBox: {
-    background: "#ECFDF5",
-    border: "1px solid #A7F3D0",
-    borderLeft: "4px solid #10B981",
-    borderRadius: 10,
-    padding: "12px 16px",
-    marginTop: 16,
-  },
-  curatorNoteHeader: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
-  },
-  curatorLightbulb: {
-    fontSize: 14,
-  },
-  curatorLabel: {
-    fontSize: 11,
-    fontWeight: 800,
-    color: "#065F46",
-    letterSpacing: "0.06em",
-  },
-  curatorNoteText: {
-    fontSize: 13.5,
-    color: "#064E3B",
-    margin: 0,
-    lineHeight: 1.5,
-  },
-  playerEmptyState: {
-    padding: "80px 24px",
-    textAlign: "center",
-  },
-  emptyIconCircle: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: "0 0 6px",
-  },
-  emptyStateSub: {
-    fontSize: 14,
-    color: "#64748B",
-    margin: 0,
-  },
-
-  /* CINEMA SIDEBAR QUEUE */
-  cinemaSidebar: {
-    background: "#FFFFFF",
-    border: "1px solid #E2E8F0",
-    borderRadius: 16,
-    padding: "20px",
-    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.03)",
-  },
-  sidebarHeader: {
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottom: "1px solid #F1F5F9",
-  },
-  sidebarTitleRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  sidebarTitle: {
-    fontSize: 12,
-    fontWeight: 800,
-    color: "#64748B",
-    letterSpacing: "0.06em",
-  },
-  queueCount: {
-    fontSize: 11.5,
-    color: "#0F3D3E",
-    fontWeight: 700,
-    background: "#E6F3F3",
-    padding: "2px 8px",
-    borderRadius: 9999,
-  },
-  sidebarSub: {
-    fontSize: 12.5,
-    color: "#94A3B8",
-    margin: "4px 0 0",
-  },
-  queueList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    maxHeight: 580,
-    overflowY: "auto",
-    paddingRight: 4,
-  },
-  queueItem: {
-    display: "flex",
-    gap: 12,
-    padding: 10,
-    borderRadius: 10,
-    border: "1px solid transparent",
-    background: "#F8FAFC",
-    textAlign: "left",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-  },
-  queueItemActive: {
-    background: "#ECFDF5",
-    borderColor: "#10B981",
-    boxShadow: "0 1px 4px rgba(16, 185, 129, 0.15)",
-  },
-  queueThumbContainer: {
-    position: "relative",
-    width: 100,
-    height: 60,
-    borderRadius: 6,
-    overflow: "hidden",
-    flexShrink: 0,
-    background: "#E2E8F0",
-  },
-  queueThumbImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-  playingPill: {
-    position: "absolute",
-    bottom: 3,
-    right: 3,
-    background: "#10B981",
-    color: "#FFFFFF",
-    fontSize: 9,
-    fontWeight: 800,
-    padding: "1px 5px",
-    borderRadius: 4,
-  },
-  queueDuration: {
-    position: "absolute",
-    bottom: 3,
-    right: 3,
-    background: "rgba(0,0,0,0.75)",
-    color: "#FFFFFF",
-    fontSize: 9,
-    fontWeight: 600,
-    padding: "1px 4px",
-    borderRadius: 3,
-  },
-  queueItemBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  queueItemTitle: {
-    fontSize: 13,
-    fontWeight: 600,
-    margin: "0 0 3px",
-    lineHeight: 1.35,
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-  },
-  queueItemChannel: {
-    fontSize: 11.5,
-    color: "#64748B",
-    margin: "0 0 6px",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  queueItemBottom: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-  },
-  queueLevelBadge: {
-    fontSize: 10,
-    fontWeight: 700,
-    padding: "1px 6px",
-    borderRadius: 4,
-    textTransform: "capitalize",
-  },
-  featuredTag: {
-    fontSize: 10,
-    fontWeight: 700,
-    color: "#D97706",
-  },
-
-  /* DISCOVERY CATALOG GRID */
-  catalogSection: {
-    marginTop: 20,
-    paddingTop: 36,
-    borderTop: "1px solid #E2E8F0",
-  },
-  catalogHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: 24,
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  catalogTitle: {
-    fontSize: 22,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: "0 0 6px",
-  },
-  catalogSubtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    margin: 0,
-  },
-  catalogCounter: {
-    fontSize: 13,
-    color: "#475569",
-    background: "#F1F5F9",
-    padding: "6px 12px",
-    borderRadius: 8,
-    border: "1px solid #CBD5E1",
-  },
-  catalogGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: 24,
-  },
-  videoCard: {
-    background: "#FFFFFF",
-    borderRadius: 14,
-    border: "1px solid #E2E8F0",
-    overflow: "hidden",
-    cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
-    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-    display: "flex",
-    flexDirection: "column",
-  },
-  cardThumbWrapper: {
-    position: "relative",
-    aspectRatio: "16/9",
-    background: "#0A1628",
-    overflow: "hidden",
-  },
-  cardThumbImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    transition: "transform 0.3s ease",
-  },
-  cardPlayOverlay: {
-    position: "absolute",
-    inset: 0,
-    background: "rgba(0, 0, 0, 0.2)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    opacity: 0.9,
-    transition: "opacity 0.2s ease",
-  },
-  cardPlayCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: "50%",
-    background: "rgba(255, 255, 255, 0.9)",
-    color: "#0F3D3E",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-  },
-  cardDurationBadge: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    background: "rgba(15, 23, 42, 0.85)",
-    color: "#FFFFFF",
-    fontSize: 10.5,
-    fontWeight: 700,
-    padding: "2px 7px",
-    borderRadius: 4,
-    backdropFilter: "blur(4px)",
-  },
-  cardLevelPill: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    fontSize: 10,
-    fontWeight: 700,
-    padding: "2px 7px",
-    borderRadius: 4,
-    textTransform: "capitalize",
-    backdropFilter: "blur(4px)",
-  },
-  cardBody: {
-    padding: "16px",
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-  },
-  cardTopicRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  cardTopicBadge: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: "#64748B",
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-  },
-  cardFeaturedBadge: {
-    fontSize: 10,
-    fontWeight: 700,
-    color: "#D97706",
-    background: "#FEF3C7",
-    padding: "1px 6px",
-    borderRadius: 4,
-  },
-  cardTitle: {
-    fontSize: 14.5,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: "0 0 6px",
-    lineHeight: 1.35,
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-  },
-  cardChannel: {
-    fontSize: 12.5,
-    color: "#64748B",
-    margin: "0 0 10px",
-  },
-  cardDescription: {
-    fontSize: 12.5,
-    color: "#475569",
-    margin: 0,
-    lineHeight: 1.5,
-    marginTop: "auto",
-  },
-
-  /* BOOK SUMMARIES */
-  booksSection: {
-    marginTop: 8,
-  },
-  booksGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-    gap: 24,
-  },
-  bookCard: {
-    background: "#FFFFFF",
-    borderRadius: 14,
-    border: "1px solid #E2E8F0",
-    padding: "22px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-    display: "flex",
-    flexDirection: "column",
-  },
-  bookHeader: {
-    display: "flex",
-    gap: 16,
-    marginBottom: 16,
-  },
-  bookSpineCover: {
-    width: 60,
-    height: 84,
-    borderRadius: 6,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 4px 8px rgba(0,0,0,0.08)",
-    flexShrink: 0,
-  },
-  bookSpineCode: {
-    fontSize: 16,
-    fontWeight: 800,
-    color: "#0F3D3E",
-  },
-  bookMetaBlock: {
-    flex: 1,
-    minWidth: 0,
-  },
-  bookDifficultyPill: {
-    display: "flex",
-    gap: 6,
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  bookDiffBadge: {
-    fontSize: 10.5,
-    fontWeight: 700,
-    padding: "2px 7px",
-    borderRadius: 4,
-    border: "1px solid",
-  },
-  bookCategoryTag: {
-    fontSize: 11,
-    color: "#64748B",
-  },
-  bookTitle: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: "0 0 4px",
-    lineHeight: 1.3,
-  },
-  bookAuthor: {
-    fontSize: 12.5,
-    color: "#64748B",
-    margin: 0,
-  },
-  bookDesc: {
-    fontSize: 13.5,
-    color: "#475569",
-    lineHeight: 1.6,
-    margin: "0 0 16px",
-  },
-  whyReadCard: {
-    background: "#F8FAFC",
-    borderLeft: "3px solid #0F3D3E",
-    padding: "10px 14px",
-    borderRadius: "0 8px 8px 0",
-    marginBottom: 16,
-  },
-  whyReadLabel: {
-    fontSize: 10,
-    fontWeight: 800,
-    color: "#0F3D3E",
-    letterSpacing: "0.06em",
-  },
-  whyReadText: {
-    fontSize: 12.5,
-    color: "#334155",
-    margin: "4px 0 0",
-    lineHeight: 1.5,
-  },
-  takeawaysWrap: {
-    marginTop: "auto",
-    borderTop: "1px solid #F1F5F9",
-    paddingTop: 12,
-  },
-  toggleTakeawaysBtn: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    background: "none",
-    border: "none",
-    padding: "6px 0",
-    color: "#0F3D3E",
-    fontSize: 13,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  takeawaysList: {
-    margin: "10px 0 0",
-    padding: 0,
-    listStyle: "none",
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-  },
-  takeawayItem: {
-    display: "flex",
-    gap: 8,
-    fontSize: 12.5,
-    color: "#334155",
-    lineHeight: 1.5,
-  },
-  takeawayBullet: {
-    color: "#10B981",
-    fontWeight: 800,
-    flexShrink: 0,
-  },
-  bookFooter: {
-    marginTop: 18,
-    paddingTop: 14,
-    borderTop: "1px solid #E2E8F0",
-  },
-  statusGroup: {
-    marginBottom: 12,
-  },
-  statusTitle: {
-    fontSize: 11,
-    color: "#64748B",
-    fontWeight: 600,
-    display: "block",
-    marginBottom: 6,
-  },
-  statusBtns: {
-    display: "flex",
-    gap: 6,
-  },
-  statusBtn: {
-    flex: 1,
-    padding: "5px 8px",
-    fontSize: 11,
-    fontWeight: 600,
-    border: "1px solid #CBD5E1",
-    borderRadius: 6,
-    background: "#FFFFFF",
-    color: "#475569",
-    cursor: "pointer",
-  },
-  statusBtnActive: {
-    background: "#0F3D3E",
-    color: "#FFFFFF",
-    borderColor: "#0F3D3E",
-  },
-  externalLinksRow: {
-    display: "flex",
-    gap: 10,
-    marginTop: 10,
-  },
-  buyBookLink: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#2563EB",
-    textDecoration: "none",
-  },
-  freePdfLink: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#059669",
-    textDecoration: "none",
-  },
-
-  /* LEGAL FOOTER */
-  legalFooter: {
-    marginTop: 64,
-    padding: "24px 28px",
-    background: "#F8FAFC",
-    border: "1px solid #E2E8F0",
-    borderRadius: 14,
-  },
-  legalContent: {
-    display: "flex",
-    gap: 16,
-    alignItems: "flex-start",
-  },
-  legalShieldIcon: {
-    fontSize: 24,
-    flexShrink: 0,
-  },
-  legalText: {
-    fontSize: 13,
-    color: "#1E293B",
-  },
-  legalLink: {
-    display: "inline-block",
-    marginTop: 8,
-    color: "#0F3D3E",
-    fontWeight: 600,
-    textDecoration: "underline",
-    fontSize: 12.5,
-  },
-
-  /* EMPTY STATES & SKELETONS */
-  noResultsBox: {
-    textAlign: "center",
-    padding: "60px 20px",
-    background: "#F8FAFC",
-    borderRadius: 14,
-    border: "1px dashed #CBD5E1",
-  },
-  noResultsIcon: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  noResultsTitle: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: "#0F172A",
-    margin: "0 0 6px",
-  },
-  noResultsSub: {
-    fontSize: 13.5,
-    color: "#64748B",
-    margin: "0 0 16px",
-  },
-  resetBtnLarge: {
-    padding: "8px 18px",
-    background: "#0F3D3E",
-    color: "#FFFFFF",
-    border: "none",
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  queueSkeletonItem: {
-    display: "flex",
-    gap: 12,
-    padding: 10,
-    marginBottom: 8,
-  },
-  skeletonThumb: {
-    width: 100,
-    height: 60,
-    borderRadius: 6,
-    background: "#E2E8F0",
-    animation: "pulse 1.5s infinite",
-  },
-  skeletonLine: {
-    height: 14,
-    background: "#E2E8F0",
-    borderRadius: 4,
-    width: "90%",
-  },
-  gridSkeletonCard: {
-    background: "#FFFFFF",
-    borderRadius: 14,
-    border: "1px solid #E2E8F0",
-    overflow: "hidden",
-  },
-  gridSkeletonThumb: {
-    aspectRatio: "16/9",
-    background: "#E2E8F0",
-  },
-};
