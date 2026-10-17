@@ -46,6 +46,7 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [portfolioId, setPortfolioId] = useState("");
   const [userId, setUserId] = useState("");
+  const [isGuest, setIsGuest] = useState(true);
   const [selected, setSelected] = useState("BTCUSDT");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
@@ -116,28 +117,65 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
     }
   }, [portfolioId]);
 
+  const loadGuestData = useCallback(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const storedPort = localStorage.getItem("crypto_demo_portfolio");
+      if (storedPort) {
+        setPortfolio(JSON.parse(storedPort));
+      } else {
+        const defaultPort: Portfolio = {
+          cash_balance: 100000,
+          realized_pnl: 0,
+          trades_count: 0,
+          wins_count: 0,
+        };
+        setPortfolio(defaultPort);
+        localStorage.setItem("crypto_demo_portfolio", JSON.stringify(defaultPort));
+      }
+
+      const storedOrders = localStorage.getItem("crypto_demo_orders");
+      if (storedOrders) {
+        const parsed: Order[] = JSON.parse(storedOrders);
+        setRecentOrders(parsed);
+        setHoldings(calculateHoldings(parsed));
+      }
+    } catch (e) {
+      console.warn("Error loading crypto guest storage:", e);
+    }
+  }, []);
+
   const loadUser = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (!user) {
+        setIsGuest(true);
+        loadGuestData();
+        setLoading(false);
+        return;
+      }
+
+      setUserId(user.id);
+      setIsGuest(false);
+      const { data: id } = await supabase.rpc("init_paper_portfolio" as never, {
+        p_user_id: user.id,
+        p_market_type: "crypto",
+      } as never);
+
+      if (typeof id === "string") {
+        setPortfolioId(id);
+        await loadPortfolio(id);
+      }
+    } catch (err) {
+      setIsGuest(true);
+      loadGuestData();
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setUserId(user.id);
-    const { data: id } = await supabase.rpc("init_paper_portfolio" as never, {
-      p_user_id: user.id,
-      p_market_type: "crypto",
-    } as never);
-
-    if (typeof id === "string") {
-      setPortfolioId(id);
-      await loadPortfolio(id);
-    }
-    setLoading(false);
-  }, [loadPortfolio]);
+  }, [loadPortfolio, loadGuestData]);
 
   useEffect(() => {
     void loadUser();
@@ -145,15 +183,53 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
 
   const buyAsset = async () => {
     const spendAmount = Number.parseFloat(amount);
-    if (!spendAmount || spendAmount <= 0 || !portfolioId || placing) return;
+    if (!spendAmount || spendAmount <= 0 || placing) return;
     if (spendAmount > (portfolio?.cash_balance || 0)) {
-      window.alert("Insufficient balance");
+      window.alert("Insufficient cash balance");
       return;
     }
 
     setPlacing(true);
     const price = prices[selected] || currentAsset.base;
     const quantity = Number((spendAmount / price).toFixed(8));
+
+    if (isGuest) {
+      const newOrder: Order = {
+        id: `demo-${Date.now()}`,
+        symbol: selected,
+        order_type: "buy",
+        quantity,
+        entry_price: price,
+        pnl: null,
+        status: "open",
+        opened_at: new Date().toISOString(),
+      };
+      const updatedOrders = [newOrder, ...recentOrders];
+      const updatedPort: Portfolio = {
+        cash_balance: Number(((portfolio?.cash_balance || 100000) - spendAmount).toFixed(2)),
+        realized_pnl: portfolio?.realized_pnl || 0,
+        trades_count: portfolio?.trades_count || 0,
+        wins_count: portfolio?.wins_count || 0,
+      };
+
+      setPortfolio(updatedPort);
+      setRecentOrders(updatedOrders);
+      setHoldings(calculateHoldings(updatedOrders));
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("crypto_demo_portfolio", JSON.stringify(updatedPort));
+          localStorage.setItem("crypto_demo_orders", JSON.stringify(updatedOrders));
+        } catch {}
+      }
+      setAmount("");
+      setPlacing(false);
+      return;
+    }
+
+    if (!portfolioId) {
+      setPlacing(false);
+      return;
+    }
 
     const { error } = await supabase.from("paper_orders" as never).insert({
       portfolio_id: portfolioId,
@@ -179,11 +255,72 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
   };
 
   const sellHolding = async (holding: CryptoHolding, sellPct: number) => {
-    if (!portfolioId || placing) return;
+    if (placing) return;
     const sellQty = holding.quantity * (sellPct / 100);
     const price = prices[holding.symbol] || holding.avgPrice;
 
     setPlacing(true);
+
+    if (isGuest) {
+      const openOrders = recentOrders.filter(
+        (o) => o.symbol === holding.symbol && o.status === "open" && o.order_type === "buy"
+      );
+      let remainingQty = sellQty;
+      let totalPnl = 0;
+      let newOrders = [...recentOrders];
+
+      for (const order of openOrders) {
+        if (remainingQty <= 0) break;
+        const closeQty = Math.min(order.quantity, remainingQty);
+        const pnl = (price - order.entry_price) * closeQty;
+        totalPnl += pnl;
+
+        if (closeQty >= order.quantity) {
+          newOrders = newOrders.map((o) => (o.id === order.id ? { ...o, status: "closed", pnl } : o));
+        } else {
+          newOrders = newOrders.map((o) =>
+            o.id === order.id ? { ...o, quantity: o.quantity - closeQty } : o
+          );
+          newOrders.unshift({
+            id: `demo-${Date.now()}`,
+            symbol: holding.symbol,
+            order_type: "sell",
+            quantity: closeQty,
+            entry_price: order.entry_price,
+            pnl: Number(pnl.toFixed(2)),
+            status: "closed",
+            opened_at: new Date().toISOString(),
+          });
+        }
+        remainingQty -= closeQty;
+      }
+
+      const totalReceived = sellQty * price;
+      const updatedPort: Portfolio = {
+        cash_balance: Number(((portfolio?.cash_balance || 0) + totalReceived).toFixed(2)),
+        realized_pnl: Number(((portfolio?.realized_pnl || 0) + totalPnl).toFixed(2)),
+        trades_count: (portfolio?.trades_count || 0) + 1,
+        wins_count: (portfolio?.wins_count || 0) + (totalPnl > 0 ? 1 : 0),
+      };
+
+      setPortfolio(updatedPort);
+      setRecentOrders(newOrders);
+      setHoldings(calculateHoldings(newOrders));
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("crypto_demo_portfolio", JSON.stringify(updatedPort));
+          localStorage.setItem("crypto_demo_orders", JSON.stringify(newOrders));
+        } catch {}
+      }
+      setPlacing(false);
+      return;
+    }
+
+    if (!portfolioId) {
+      setPlacing(false);
+      return;
+    }
+
     const { data: openOrders } = await supabase
       .from("paper_orders" as never)
       .select("*")
@@ -274,10 +411,14 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
 
       {loading ? (
         <div style={s.empty}>Loading crypto simulator...</div>
-      ) : !userId ? (
-        <div style={s.empty}>Log in to save your crypto paper trading portfolio.</div>
       ) : (
         <>
+          {isGuest && (
+            <div style={s.guestBanner}>
+              <span>✨ <strong>Demo Practice Mode:</strong> Practicing with ₹1,00,000 virtual cash. Trades are saved locally in your browser.</span>
+              <a href="/auth/login" style={s.guestLink}>Sign in to save portfolio →</a>
+            </div>
+          )}
           <div style={s.tickerBar}>
             {CRYPTO_ASSETS.map((asset) => {
               const price = prices[asset.symbol] || asset.base;
@@ -589,4 +730,6 @@ const s: Record<string, CSSProperties> = {
   historyPnl: { fontSize: 13, fontWeight: 700, fontFamily: "monospace" },
   historyTime: { fontSize: 10, color: "#888" },
   empty: { textAlign: "center", padding: 28, color: "#888", fontSize: 13 },
+  guestBanner: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: "#FFFBEB", borderBottom: "1px solid #FDE68A", fontSize: 12, color: "#92400E", flexWrap: "wrap", gap: 8 },
+  guestLink: { color: "#B45309", fontWeight: 700, textDecoration: "underline" },
 };
