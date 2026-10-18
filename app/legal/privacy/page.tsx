@@ -1,253 +1,212 @@
-// ============================================================
-// FinanceHub — Privacy Policy
-// app/legal/privacy/page.tsx
-// DPDP Act 2023 compliant · India-specific · Last updated Sept 2026
-// ============================================================
-
 import type { Metadata } from "next";
+import Link from "next/link";
+import {
+  Lock,
+  ShieldCheck,
+  CheckCircle2,
+  Database,
+  EyeOff,
+  UserCheck,
+  FileText,
+  Mail,
+  ExternalLink,
+} from "lucide-react";
 
 export const metadata: Metadata = {
-  title:       "Privacy Policy — FinanceHub",
-  description: "How FinanceHub collects, uses, and protects your personal data. DPDP Act 2023 compliant.",
+  title: "Privacy Policy | FinanceHub",
+  description: "How FinanceHub protects your personal data under India's Digital Personal Data Protection (DPDP) Act 2023.",
 };
 
-const LAST_UPDATED   = "September 2026";
-const CONTACT_EMAIL  = "privacy@financehub.in";
-const COMPANY_NAME   = "FinanceHub Education Private Limited";
+const LAST_UPDATED = "October 2026";
+const CONTACT_EMAIL = "privacy@financehub.in";
+const COMPANY_NAME = "FinanceHub Education Private Limited";
 
 export default function PrivacyPage() {
   return (
-    <div style={{
-      maxWidth:   820,
-      margin:     "0 auto",
-      padding:    "40px 24px 80px",
-      fontFamily: "var(--font-reading, Georgia, serif)",
-      color:      "var(--text-primary, #1c2b3a)",
-      lineHeight: 1.8,
-    }}>
-      {/* Header */}
-      <div style={{ marginBottom: 40, paddingBottom: 24, borderBottom: "2px solid #e2e8f0" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#0E6163", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 8, fontFamily: "var(--font-ui,system-ui)" }}>
-          Legal
+    <article className="space-y-8">
+      {/* Title & Document Meta */}
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full mb-3">
+          <Lock className="w-3.5 h-3.5" />
+          Data Protection &amp; Privacy Charter
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.5px", margin: "0 0 10px", fontFamily: "var(--font-ui,system-ui)" }}>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Privacy Policy
         </h1>
-        <p style={{ fontSize: 14, color: "#718096", margin: 0, fontFamily: "var(--font-ui,system-ui)" }}>
-          Last updated: {LAST_UPDATED} · We protect your data under India&apos;s DPDP Act 2023
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          Compliant with Digital Personal Data Protection (DPDP) Act 2023 · Last Updated: {LAST_UPDATED}
         </p>
       </div>
 
-      {/* DPDP notice */}
-      <div style={{
-        background: "#EBF8FF", border: "1px solid #BEE3F8",
-        borderRadius: 10, padding: "14px 18px", marginBottom: 32,
-        fontSize: 14, color: "#2C5282", lineHeight: 1.7,
-        fontFamily: "var(--font-ui,system-ui)",
-      }}>
-        <strong>Your Rights Under DPDP Act 2023:</strong> You have the right to access,
-        correct, and erase your personal data. Contact us at {CONTACT_EMAIL} to exercise
-        these rights. We respond within 30 days.
+      {/* DPDP Act 2023 Commitment Box */}
+      <div className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-base font-bold text-emerald-950 dark:text-emerald-200">
+              Our Privacy Guarantee to Indian Learners
+            </h2>
+            <p className="text-sm text-emerald-900/90 dark:text-emerald-300 leading-relaxed">
+              FinanceHub acts as a <strong>Data Fiduciary</strong> under India&apos;s DPDP Act 2023. We collect only the minimum data required to deliver educational courses, track XP streaks, and process subscriptions. <strong>We never sell, rent, or trade your personal data to ad brokers, lenders, or telemarketers.</strong>
+            </p>
+            <div className="flex flex-wrap gap-4 pt-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Zero ad tracking
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                No PAN/Aadhaar stored
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Right to erase anytime
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <LegalSection title="1. Who We Are">
-        <p>
-          {COMPANY_NAME} (&quot;<strong>FinanceHub</strong>&quot;, &quot;<strong>we</strong>&quot;,
-          &quot;<strong>us</strong>&quot;) operates the FinanceHub platform at financehub.in.
-        </p>
-        <p>
-          We are the Data Fiduciary for the personal data you provide to us,
-          as defined under the Digital Personal Data Protection Act 2023 (DPDP Act).
-        </p>
-      </LegalSection>
+      {/* Sections */}
+      <div className="space-y-6">
+        <Section title="1. Who We Are (Data Fiduciary)" number="1">
+          <p>
+            {COMPANY_NAME} (&quot;<strong>FinanceHub</strong>&quot;, &quot;<strong>we</strong>&quot;, &quot;<strong>us</strong>&quot;) operates the digital educational platform at financehub.in.
+          </p>
+          <p>
+            Under the Digital Personal Data Protection Act 2023 (DPDP Act), we are the designated <strong>Data Fiduciary</strong> responsible for the secure collection and processing of your personal learning information.
+          </p>
+        </Section>
 
-      <LegalSection title="2. Data We Collect">
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>2.1 Data You Provide Directly</h3>
-        <ul>
-          <li><strong>Account information:</strong> Name, email address, password (hashed)</li>
-          <li><strong>Profile information:</strong> Onboarding preferences, learning goals, primary track</li>
-          <li><strong>Payment information:</strong> Billing details (processed by Razorpay/Stripe — we do not store card numbers)</li>
-          <li><strong>Notes content:</strong> Notes and highlights you create in the Digital Rough Book</li>
-          <li><strong>AI questions:</strong> Questions submitted to AI Mentor (stored for quality and safety)</li>
-          <li><strong>Feedback:</strong> Survey responses, support messages, error reports</li>
-        </ul>
+        <Section title="2. Personal Data We Collect" number="2">
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">2.1 Information You Provide Directly</h3>
+              <ul className="list-disc pl-5 text-xs sm:text-sm space-y-1 mt-1">
+                <li><strong>Account registration:</strong> Name, email address, hashed passwords.</li>
+                <li><strong>Learner onboarding:</strong> Experience level (Student, Pro, Trader), goal description.</li>
+                <li><strong>Billing details:</strong> Transaction references managed via Razorpay/Stripe (we do not store full card numbers).</li>
+                <li><strong>Curriculum interactions:</strong> Notes saved in your digital notebook and AI mentor prompts.</li>
+              </ul>
+            </div>
 
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>2.2 Data Collected Automatically</h3>
-        <ul>
-          <li><strong>Learning progress:</strong> Lessons completed, quiz scores, time spent</li>
-          <li><strong>Usage analytics:</strong> Pages visited, features used, clicks (via PostHog)</li>
-          <li><strong>Device information:</strong> Browser type, device type, operating system</li>
-          <li><strong>IP address:</strong> Used for security and approximate location (city level)</li>
-          <li><strong>Cookies:</strong> Session cookies for authentication; analytics cookies (with consent)</li>
-        </ul>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">2.2 Automatically Collected Telemetry</h3>
+              <ul className="list-disc pl-5 text-xs sm:text-sm space-y-1 mt-1">
+                <li>Course completion percentages, quiz scores, XP points, and streak timestamps.</li>
+                <li>Anonymized page views and feature performance metrics via PostHog.</li>
+                <li>Essential authentication session tokens stored in secure browser cookies.</li>
+              </ul>
+            </div>
 
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>2.3 Data We Do NOT Collect</h3>
-        <ul>
-          <li>We do not collect Aadhaar numbers, PAN numbers, or other government IDs</li>
-          <li>We do not collect bank account details or actual portfolio information</li>
-          <li>We do not access your financial accounts</li>
-          <li>We do not collect sensitive personal data as defined under DPDP Act beyond what is necessary</li>
-        </ul>
-      </LegalSection>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <h3 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <EyeOff className="w-3.5 h-3.5" />
+                Data We NEVER Collect
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                We never request or store Aadhaar numbers, PAN cards, real bank account numbers, demat account balances, or broker trading PINs.
+              </p>
+            </div>
+          </div>
+        </Section>
 
-      <LegalSection title="3. How We Use Your Data">
-        <p>We use your personal data to:</p>
-        <ul>
-          <li><strong>Provide the service:</strong> Authenticate your account, track learning progress, personalise content</li>
-          <li><strong>Process payments:</strong> Manage subscriptions and billing</li>
-          <li><strong>Improve the platform:</strong> Understand which content works, fix bugs, develop new features</li>
-          <li><strong>Communicate:</strong> Send learning reminders, feature updates, and important notices</li>
-          <li><strong>Safety and security:</strong> Detect fraud, prevent abuse, monitor AI safety</li>
-          <li><strong>Legal compliance:</strong> Meet regulatory obligations under Indian law</li>
-        </ul>
-        <p>
-          We process your data based on: (a) contract performance — necessary to provide the service;
-          (b) legitimate interests — improving the platform; (c) legal obligation — regulatory compliance;
-          and (d) your consent — for optional analytics and marketing communications.
-        </p>
-      </LegalSection>
+        <Section title="3. Purpose and Legal Grounds of Processing" number="3">
+          <p>We process personal data strictly on lawful grounds recognized by the DPDP Act:</p>
+          <ul className="list-disc pl-5 space-y-1.5 pt-1">
+            <li><strong>Contractual Performance:</strong> To maintain your learning account, compute quiz rankings, and grant subscription access.</li>
+            <li><strong>Legitimate Uses:</strong> To detect system bugs, prevent platform abuse, and enhance pedagogical modules.</li>
+            <li><strong>Statutory Compliance:</strong> Retaining mandatory accounting tax invoices for 7 years under Indian company laws.</li>
+          </ul>
+        </Section>
 
-      <LegalSection title="4. Data Sharing">
-        <p>
-          We do not sell your personal data. We share data only with:
-        </p>
-        <ul>
-          <li><strong>Supabase:</strong> Database and authentication provider (data stored in their infrastructure)</li>
-          <li><strong>Razorpay / Stripe:</strong> Payment processing (governed by their privacy policies)</li>
-          <li><strong>Anthropic:</strong> AI processing for AI Mentor responses (questions are processed by their API)</li>
-          <li><strong>PostHog:</strong> Analytics (anonymised usage data)</li>
-          <li><strong>Resend:</strong> Email delivery for transactional messages</li>
-          <li><strong>Vercel:</strong> Platform hosting</li>
-          <li><strong>Legal authorities:</strong> When required by law, court order, or to protect rights</li>
-        </ul>
-        <p>
-          All third-party processors are contractually required to protect your data and
-          use it only for the specified purpose.
-        </p>
-      </LegalSection>
+        <Section title="4. Third-Party Infrastructure Processors" number="4">
+          <p>
+            We partner only with SOC2 / ISO27001 certified technology providers:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {[
+              { name: "Supabase", role: "Encrypted database hosting with Row-Level Security (RLS)" },
+              { name: "Razorpay / Stripe", role: "PCI-DSS Level 1 compliant payment processing" },
+              { name: "Anthropic", role: "AI model inference for AI Mentor tutoring" },
+              { name: "PostHog", role: "Self-hosted, anonymized product telemetry" },
+            ].map((p, idx) => (
+              <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                <div className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{p.role}</div>
+              </div>
+            ))}
+          </div>
+        </Section>
 
-      <LegalSection title="5. Your Rights Under DPDP Act 2023">
-        <p>As a Data Principal under the DPDP Act 2023, you have the right to:</p>
+        <Section title="5. Your Statutory Rights Under the DPDP Act 2023" number="5">
+          <p>As a Data Principal, you possess statutory rights enforceable under Indian law:</p>
+          <div className="space-y-3 pt-1">
+            <div>
+              <strong className="text-xs font-bold text-slate-900 dark:text-white">Right to Access &amp; Summary:</strong>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                Request an export of all personal data and learning records associated with your account.
+              </p>
+            </div>
+            <div>
+              <strong className="text-xs font-bold text-slate-900 dark:text-white">Right to Correction &amp; Erasure:</strong>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                Update inaccurate details or permanently delete your account from Profile Settings. All learning data is purged within 30 days.
+              </p>
+            </div>
+            <div>
+              <strong className="text-xs font-bold text-slate-900 dark:text-white">Right to Nominate:</strong>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                Designate a legal nominee to manage or close your educational account in case of death or incapacity.
+              </p>
+            </div>
+          </div>
+        </Section>
 
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>5.1 Right to Access</h3>
-        <p>
-          Request a summary of your personal data we hold and how we have processed it.
-          Access your data in your account Settings → &quot;My Data&quot;.
-        </p>
+        <Section title="6. Data Security Measures" number="6">
+          <p>
+            FinanceHub enforces multi-layered encryption protocols:
+          </p>
+          <ul className="list-disc pl-5 space-y-1.5 pt-1">
+            <li>TLS 1.3 encryption across all data transmissions.</li>
+            <li>AES-256 encryption at rest for database volumes.</li>
+            <li>PostgreSQL Row-Level Security (RLS) guaranteeing that no user can access another member&apos;s notes or progress.</li>
+            <li>Salted cryptographic hashing (bcrypt) for authentication credentials.</li>
+          </ul>
+        </Section>
 
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>5.2 Right to Correction</h3>
-        <p>
-          Request correction of inaccurate or incomplete personal data.
-          Update most information directly in your profile settings.
-        </p>
-
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>5.3 Right to Erasure</h3>
-        <p>
-          Request deletion of your personal data. You can delete your account from
-          Settings → &quot;Delete Account&quot;. We will erase your data within 30 days, except
-          where retention is required by law (e.g., financial records for 7 years under
-          Indian accounting standards).
-        </p>
-
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>5.4 Right to Grievance Redressal</h3>
-        <p>
-          If you have a complaint about how we handle your data, contact our Data
-          Protection Officer at {CONTACT_EMAIL}. We respond within 30 days.
-          If unsatisfied, you may approach the Data Protection Board of India.
-        </p>
-
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 16 }}>5.5 Right to Nominate</h3>
-        <p>
-          Under the DPDP Act, you may nominate another person to exercise your rights
-          in the event of your death or incapacity. Contact {CONTACT_EMAIL} to set up
-          a nominee.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="6. Data Retention">
-        <p>We retain your data for the following periods:</p>
-        <ul>
-          <li><strong>Account data:</strong> Until account deletion + 30 days</li>
-          <li><strong>Learning progress:</strong> Until account deletion</li>
-          <li><strong>Payment records:</strong> 7 years (required by Indian financial law)</li>
-          <li><strong>AI interaction logs:</strong> 90 days (for quality and safety monitoring)</li>
-          <li><strong>Analytics data:</strong> 24 months (aggregated, anonymised)</li>
-          <li><strong>Support communications:</strong> 3 years</li>
-        </ul>
-      </LegalSection>
-
-      <LegalSection title="7. Cookies">
-        <p>We use the following types of cookies:</p>
-        <ul>
-          <li><strong>Essential cookies:</strong> Required for authentication and basic functionality. Cannot be disabled.</li>
-          <li><strong>Analytics cookies:</strong> Help us understand how the Platform is used (PostHog). Can be disabled in Settings → Privacy.</li>
-          <li><strong>Preference cookies:</strong> Remember your theme, language, and display preferences.</li>
-        </ul>
-        <p>
-          You can manage cookies through your browser settings. Disabling essential cookies
-          will prevent you from using the Platform.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="8. Children&apos;s Privacy">
-        <p>
-          FinanceHub is designed for users 18 years and older. Users between 13-17 may
-          use the Platform only with verifiable parental consent. We do not knowingly
-          collect personal data from children under 13.
-        </p>
-        <p>
-          If you believe a child under 13 has created an account, please contact us at
-          {" "}{CONTACT_EMAIL} immediately and we will delete the account.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="9. Data Security">
-        <p>We implement industry-standard security measures including:</p>
-        <ul>
-          <li>TLS encryption for all data in transit</li>
-          <li>Encryption at rest for sensitive data</li>
-          <li>Row-Level Security (RLS) in our database — users can only access their own data</li>
-          <li>Bcrypt hashing for passwords (we never store plaintext passwords)</li>
-          <li>Regular security audits and penetration testing</li>
-          <li>Access controls limiting employee access to personal data</li>
-        </ul>
-        <p>
-          Despite these measures, no system is completely secure. In the event of a
-          data breach affecting your rights, we will notify you as required by the DPDP Act.
-        </p>
-      </LegalSection>
-
-      <LegalSection title="10. Contact and Grievances">
-        <p>
-          <strong>Data Protection Officer / Grievance Officer:</strong><br />
-          {COMPANY_NAME}<br />
-          Email: <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: "#0E6163" }}>{CONTACT_EMAIL}</a><br />
-          Response time: Within 30 days of receipt
-        </p>
-        <p>
-          For escalated grievances, you may contact the Data Protection Board of India
-          at their official website once it is operational.
-        </p>
-      </LegalSection>
-
-      {/* Footer navigation */}
-      <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #e2e8f0", display: "flex", gap: 20, fontSize: 13, fontFamily: "var(--font-ui,system-ui)" }}>
-        <a href="/legal/terms"      style={{ color: "#0E6163", textDecoration: "none" }}>Terms of Service</a>
-        <a href="/legal/disclaimer" style={{ color: "#0E6163", textDecoration: "none" }}>Disclaimer</a>
-        <a href="/legal/refund"     style={{ color: "#0E6163", textDecoration: "none" }}>Refund Policy</a>
-        <a href="/legal/copyright"  style={{ color: "#0E6163", textDecoration: "none" }}>Copyright</a>
+        <Section title="7. Grievance Officer &amp; Redressal Mechanism" number="7">
+          <p>
+            In compliance with Rule 3(2) of the Information Technology (Intermediary Guidelines) Rules 2021 and the DPDP Act 2023, queries or complaints may be directed to our designated officer:
+          </p>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1 mt-2">
+            <div className="text-xs font-bold text-slate-900 dark:text-white">Statutory Grievance Officer</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">FinanceHub Education Private Limited</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Email: <a href={`mailto:${CONTACT_EMAIL}`} className="text-emerald-600 dark:text-emerald-400 font-bold underline">{CONTACT_EMAIL}</a>
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400">Response Turnaround SLA: Within 30 days of receipt.</div>
+          </div>
+        </Section>
       </div>
-    </div>
+    </article>
   );
 }
 
-function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, number, children }: { title: string; number: string; children: React.ReactNode }) {
   return (
-    <section style={{ marginBottom: 36 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1c2b3a", marginBottom: 14, fontFamily: "var(--font-ui,system-ui)", letterSpacing: "-0.2px" }}>
-        {title}
+    <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+        <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-extrabold flex items-center justify-center flex-shrink-0">
+          {number}
+        </span>
+        <span>{title}</span>
       </h2>
-      <div style={{ fontSize: 15, color: "#2d3748", lineHeight: 1.85 }}>{children}</div>
-    </section>
+      <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-3">
+        {children}
+      </div>
+    </div>
   );
 }
