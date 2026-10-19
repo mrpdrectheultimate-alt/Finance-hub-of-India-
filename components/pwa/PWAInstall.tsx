@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 // ============================================================
 // FinanceHub — PWA Install Prompt + SW Registration
@@ -119,11 +120,15 @@ export function PWAInstallPrompt() {
         {/* App icon */}
         <div style={{
           width: 52, height: 52, borderRadius: 12, flexShrink: 0,
-          background: "linear-gradient(135deg, #0E6163, #1D9E75)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 28,
+          overflow: "hidden",
         }}>
-          📚
+          <Image
+            src="/app-icon-dark.png"
+            alt="FinanceHub"
+            width={52}
+            height={52}
+            style={{ width: 52, height: 52, objectFit: "cover" }}
+          />
         </div>
 
         <div style={{ flex: 1 }}>

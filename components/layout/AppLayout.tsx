@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ThemeToggle } from "@/components/ui/ThemeProvider";
@@ -108,8 +109,14 @@ export default function AppLayout({ children, userRole = "free", userName = "", 
       >
         <div style={s.logoWrap}>
           <Link href="/dashboard" style={s.logo}>
-            <div style={s.logoIcon}>F</div>
-            <span style={s.logoText}>FinanceHub</span>
+            <Image
+              src="/logo-horizontal-white.png"
+              alt="FinanceHub"
+              width={140}
+              height={30}
+              priority
+              style={{ height: 28, width: "auto", objectFit: "contain" }}
+            />
           </Link>
           {isMobile ? (
             <button onClick={() => setSidebarOpen(false)} style={s.closeBtn} type="button">
@@ -168,8 +175,14 @@ export default function AppLayout({ children, userRole = "free", userName = "", 
               Menu
             </button>
             <Link href="/dashboard" style={s.mobileLogoLink}>
-              <div style={s.mobileLogoIcon}>F</div>
-              <span style={s.mobileLogoText}>FinanceHub</span>
+              <Image
+                src="/logo-horizontal.png"
+                alt="FinanceHub"
+                width={130}
+                height={28}
+                priority
+                style={{ height: 26, width: "auto", objectFit: "contain" }}
+              />
             </Link>
             <ThemeToggle />
           </div>

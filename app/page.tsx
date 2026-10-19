@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   BookOpen,
   Calculator,
@@ -406,18 +407,15 @@ export default function HomePage() {
       >
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0E6163] to-emerald-600 flex items-center justify-center text-white font-black text-lg shadow-sm group-hover:shadow transition-shadow">
-              F
-            </div>
-            <div>
-              <div className="text-base font-extrabold tracking-tight leading-none text-[#0F172A]">
-                Finance<span className="text-[#0E6163]">Hub</span>
-              </div>
-              <div className="text-[9px] font-bold tracking-widest uppercase text-slate-400 leading-none mt-0.5">
-                of India
-              </div>
-            </div>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo-horizontal.png"
+              alt="FinanceHub"
+              width={160}
+              height={36}
+              priority
+              className="h-9 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -604,9 +602,18 @@ export default function HomePage() {
                       <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                     </div>
-                    <span className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">
-                      FinanceHub Workspace
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Image
+                        src="/logo-icon.png"
+                        alt="Emblem"
+                        width={16}
+                        height={16}
+                        className="w-3.5 h-3.5 object-contain"
+                      />
+                      <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase">
+                        FinanceHub Workspace
+                      </span>
+                    </div>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
                       LIVE
                     </span>
@@ -683,7 +690,13 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 flex items-center gap-2">
-                      <span className="text-base">🏅</span>
+                      <Image
+                        src="/brand-badge.png"
+                        alt="FinanceHub Certified"
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 object-contain"
+                      />
                       <div>
                         <div className="text-xs font-extrabold text-indigo-900">Certified</div>
                         <div className="text-[10px] font-semibold text-indigo-700">Unique Credential ID</div>
@@ -1066,8 +1079,14 @@ export default function HomePage() {
                 {/* Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-700">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0E6163] to-emerald-500 flex items-center justify-center text-lg">
-                      🤖
+                    <div className="w-10 h-10 rounded-full bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center p-1 overflow-hidden flex-shrink-0">
+                      <Image
+                        src="/brand-badge.png"
+                        alt="FinanceHub AI"
+                        width={36}
+                        height={36}
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                     <div>
                       <div className="text-sm font-bold text-white">FinanceHub AI Mentor</div>
@@ -1452,6 +1471,15 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#0A1628] text-white text-center">
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 space-y-6">
+          <div className="flex justify-center mb-1">
+            <Image
+              src="/brand-badge.png"
+              alt="FinanceHub Quality Seal"
+              width={72}
+              height={72}
+              className="w-16 h-16 object-contain drop-shadow-lg"
+            />
+          </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider">
             <span>🚀 Start Your Journey Today</span>
           </div>
@@ -1511,12 +1539,15 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
             {/* Brand Column */}
             <div className="col-span-2 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0E6163] to-emerald-600 flex items-center justify-center text-white font-black text-sm">
-                  F
-                </div>
-                <span className="text-lg font-bold text-white">FinanceHub of India</span>
-              </div>
+              <Link href="/" className="inline-block">
+                <Image
+                  src="/logo-horizontal-white.png"
+                  alt="FinanceHub"
+                  width={175}
+                  height={38}
+                  className="h-9 w-auto object-contain"
+                />
+              </Link>
               <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
                 India&apos;s financial education platform. Dedicated to building economic literacy across personal finance, investing, taxation, and markets.
               </p>
@@ -1620,9 +1651,9 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:hello@financehub.in" className="hover:text-white">
+                  <Link href="/contact" className="hover:text-white transition-colors">
                     Contact Team
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

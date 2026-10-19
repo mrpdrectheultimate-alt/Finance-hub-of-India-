@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 type Stats = {
@@ -86,11 +87,15 @@ export default function AdminDashboard() {
     <div style={s.page}>
       <aside style={s.sidebar}>
         <div style={s.sidebarLogo}>
-          <div style={s.logoMark}>F</div>
-          <div>
-            <div style={s.logoText}>FinanceHub</div>
-            <div style={s.adminTag}>Admin</div>
-          </div>
+          <Image
+            src="/logo-horizontal-white.png"
+            alt="FinanceHub"
+            width={125}
+            height={26}
+            priority
+            style={{ height: 24, width: "auto", objectFit: "contain" }}
+          />
+          <div style={s.adminTag}>Admin</div>
         </div>
         <nav style={s.nav}>
           {[

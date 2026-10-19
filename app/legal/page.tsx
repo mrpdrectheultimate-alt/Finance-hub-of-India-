@@ -12,6 +12,7 @@ import {
   Scale,
   Building,
   CheckCircle2,
+  Mail,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -68,6 +69,13 @@ const POLICIES = [
     icon: Copyright,
     badge: "Indian Copyright Act",
     desc: "Platform IP protections, Section 52 fair dealing educational review doctrine, and YouTube API compliance.",
+  },
+  {
+    title: "Official Contact & Support Team",
+    href: "/contact",
+    icon: Mail,
+    badge: "24h SLA",
+    desc: "Reach our Indian support desk, student helpdesk, grievance officer, and partnership team directly.",
   },
 ];
 

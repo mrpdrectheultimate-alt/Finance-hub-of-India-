@@ -47,408 +47,32 @@ type Video = {
   is_featured: boolean;
 };
 
-type Book = {
-  id: string;
-  title: string;
-  author: string;
-  cover_url?: string | null;
-  description: string;
-  key_takeaways: string[] | string | null;
-  why_read: string | null;
-  best_for: string[] | null;
-  category: string;
-  difficulty: "easy" | "medium" | "advanced" | string;
-  amazon_url: string | null;
-  free_pdf_url: string | null;
-  is_free_legal: boolean;
-  pages?: number;
-  year_published?: number;
-  badge?: string;
-};
+import { type Book, VERIFIED_LIBRARY_BOOKS } from "@/lib/booksData";
 
 type Tab = "books" | "videos";
 type TypeFilter = "all" | "video" | "playlist";
 type SortOption = "recommended" | "popular" | "difficulty-asc" | "difficulty-desc" | "title-asc" | "author-asc";
-
-// ─── Verified 15 Classic Finance Books ─────────────────────────
-
-const VERIFIED_LIBRARY_BOOKS: Book[] = [
-  {
-    id: "book-1",
-    title: "The Psychology of Money",
-    author: "Morgan Housel",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg",
-    description: "Financial success is about behaviour, not intelligence. Housel uses 19 short stories to show how people think about money in ways that are often irrational but deeply human.",
-    key_takeaways: [
-      "Wealth is what you do not spend — it is invisible by definition.",
-      "Room for error is the most underappreciated force in personal finance.",
-      "Getting rich and staying rich are two entirely different skills requiring different mindsets.",
-      "Reasonable beats rational — a plan you can stick to beats a theoretically optimal one you abandon.",
-      "Compounding works best when you do not interrupt it unnecessarily.",
-      "Save without a specific goal — savings is your insurance hedge against life's unpredictable surprises."
-    ],
-    why_read: "The single most important finance book for anyone starting out. It reframes money decisions as human behaviour, not maths.",
-    best_for: ["beginner", "investor", "professional"],
-    category: "behavioral-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.amazon.in/Psychology-Money-Morgan-Housel/dp/9390166268",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 256,
-    year_published: 2020,
-    badge: "Must Read",
-  },
-  {
-    id: "book-2",
-    title: "The Intelligent Investor",
-    author: "Benjamin Graham",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780062312686-L.jpg",
-    description: "The definitive guide to value investing, written by Warren Buffett's mentor. Teaches the principles of investing with a margin of safety, controlling emotions, and understanding market volatility.",
-    key_takeaways: [
-      "The stock market is a voting machine in the short term, but a weighing machine in the long term.",
-      "Margin of safety is the three most important words in investing.",
-      "Mr. Market is your servant, not your guide.",
-      "The investor's chief problem — and even his worst enemy — is likely to be himself.",
-      "Never buy a stock immediately after a substantial rise or sell one immediately after a substantial drop."
-    ],
-    why_read: "Required reading for anyone who wants to invest in stocks rather than speculate. Dense but transformative.",
-    best_for: ["investor", "advanced"],
-    category: "investing",
-    difficulty: "advanced",
-    amazon_url: "https://www.amazon.in/Intelligent-Investor-Benjamin-Graham/dp/0062312685",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 640,
-    year_published: 1949,
-    badge: "Value Classic",
-  },
-  {
-    id: "book-3",
-    title: "Rich Dad Poor Dad",
-    author: "Robert T. Kiyosaki",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9781612680194-L.jpg",
-    description: "Contrasts the financial philosophies of two fathers — one highly educated but financially poor, one a dropout who became rich — to teach the difference between working for money vs making money work for you.",
-    key_takeaways: [
-      "The rich do not work for money — money works for them.",
-      "Financial literacy is more important than academic education for building durable wealth.",
-      "Your house is a liability, not an asset, if it takes money out of your pocket every month.",
-      "The rich acquire assets; the poor and middle class acquire liabilities that they think are assets.",
-      "Taxes and inflation consistently erode the wealth of traditional salaried employees."
-    ],
-    why_read: "Despite debate around some ideas, this is the most-read financial book globally because it fundamentally transforms how people view income, liabilities, and assets.",
-    best_for: ["beginner", "entrepreneur"],
-    category: "personal-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.amazon.in/Rich-Dad-Poor-Middle-Anniversary/dp/1612681131",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 336,
-    year_published: 1997,
-    badge: "Global Bestseller",
-  },
-  {
-    id: "book-4",
-    title: "Zero to One",
-    author: "Peter Thiel",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780804139298-L.jpg",
-    description: "Notes on startups and how to build the future. Thiel argues that the next big innovation is not copying existing ideas but creating truly new ones — going from zero to one.",
-    key_takeaways: [
-      "Competition is for losers — monopoly with high margins is the true engine of business profit.",
-      "Every great business is built around a secret that others don't see.",
-      "The most contrarian thing is not to oppose the crowd but to think for yourself.",
-      "A startup messed up at its foundation cannot be fixed later.",
-      "Sales and distribution are as critical to success as the product itself."
-    ],
-    why_read: "Essential for anyone building a business or evaluating high-growth early-stage equity investments.",
-    best_for: ["founder", "investor"],
-    category: "corporate-finance",
-    difficulty: "medium",
-    amazon_url: "https://www.amazon.in/Zero-One-Notes-Startups-Future/dp/0804139296",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 224,
-    year_published: 2014,
-    badge: "Founders",
-  },
-  {
-    id: "book-5",
-    title: "One Up on Wall Street",
-    author: "Peter Lynch",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780743200400-L.jpg",
-    description: "Lynch, one of the most successful fund managers in history (Fidelity Magellan), explains how ordinary retail investors can beat Wall Street professionals by investing in businesses they observe in everyday life.",
-    key_takeaways: [
-      "Invest in what you understand — your everyday observations as a consumer are valuable research.",
-      "Retail investors have an informational edge over Wall Street analysts if they use their eyes.",
-      "The P/E ratio must be contextualized with earnings growth (PEG ratio).",
-      "Never invest in any business model that you cannot illustrate simply with a crayon.",
-      "Know why you own every stock in your portfolio — be able to explain it in 2 minutes."
-    ],
-    why_read: "A practical guide to stock picking from history's most celebrated fund manager. Highly accessible and engaging.",
-    best_for: ["investor", "intermediate"],
-    category: "investing",
-    difficulty: "medium",
-    amazon_url: "https://www.amazon.in/One-Up-Wall-Street-Already/dp/0743200403",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 304,
-    year_published: 1989,
-    badge: "Stock Picking",
-  },
-  {
-    id: "book-6",
-    title: "The Almanack of Naval Ravikant",
-    author: "Eric Jorgenson",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9781544514215-L.jpg",
-    description: "Compiled wisdom of Naval Ravikant on wealth, happiness, and building modern leverage. Covers how to build wealth without relying on luck — through code, media, capital, and labor.",
-    key_takeaways: [
-      "Seek wealth, not money or status. Wealth is owning assets that earn while you sleep.",
-      "Learn to sell, learn to build. If you can do both, you will be unstoppable.",
-      "Specific knowledge cannot be taught in school — it is found by pursuing your genuine curiosity.",
-      "Permissionless leverage (code and media) is the modern equalizer for wealth creation.",
-      "Compound yourself — your compounding knowledge and reputation matter more than salary."
-    ],
-    why_read: "Modern essential reading for builders and knowledge workers thinking about wealth creation in the internet era.",
-    best_for: ["founder", "entrepreneur", "investor"],
-    category: "corporate-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.navalmanack.com/",
-    free_pdf_url: "https://www.navalmanack.com/",
-    is_free_legal: true,
-    pages: 244,
-    year_published: 2020,
-    badge: "100% Free Legal PDF",
-  },
-  {
-    id: "book-7",
-    title: "Let's Talk Money",
-    author: "Monika Halan",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780008302825-L.jpg",
-    description: "India's most practical personal finance book. Halan explains how to protect your money, grow it, and plan for your family's future specifically in the Indian financial and regulatory context.",
-    key_takeaways: [
-      "Secure adequate pure term life insurance and family health insurance before investing a single rupee.",
-      "A 3-bank-account money box system (Income, Spend, and Emergency) brings total financial clarity.",
-      "Low-cost broad index mutual funds beat the vast majority of active mutual funds over 10+ years.",
-      "Real estate is not universally a great investment when factoring illiquidity, registry taxes, and maintenance.",
-      "Define your financial milestones first before selecting any financial product."
-    ],
-    why_read: "The gold-standard personal finance playbook written specifically for Indian families and working professionals. Zero jargon.",
-    best_for: ["beginner", "professional"],
-    category: "personal-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.amazon.in/Lets-Talk-Money-Monika-Halan/dp/0008302820",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 240,
-    year_published: 2018,
-    badge: "🇮🇳 Indian Context",
-  },
-  {
-    id: "book-8",
-    title: "Thinking, Fast and Slow",
-    author: "Daniel Kahneman",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780374275631-L.jpg",
-    description: "Nobel laureate Daniel Kahneman unpacks the human brain's dual cognitive operating systems: intuitive, emotional System 1 and deliberative, logical System 2 — and why they distort financial decisions.",
-    key_takeaways: [
-      "System 1 thinking creates predictable cognitive biases: overconfidence, anchoring, and loss aversion.",
-      "Loss aversion: psychological pain of losing ₹10,000 is twice as intense as the joy of winning ₹10,000.",
-      "The planning fallacy consistently tricks investors into underestimating risk, costs, and timeline.",
-      "Availability heuristic causes us to overweight recent dramatic news over long-term base rates.",
-      "Hindsight bias tricks us into believing market crashes were obvious in advance."
-    ],
-    why_read: "Understanding your internal psychological biases is as vital as analyzing cash flows. Essential for every market participant.",
-    best_for: ["investor", "professional"],
-    category: "behavioral-finance",
-    difficulty: "advanced",
-    amazon_url: "https://www.amazon.in/Thinking-Fast-Slow-Daniel-Kahneman/dp/0141033576",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 512,
-    year_published: 2011,
-    badge: "Nobel Prize",
-  },
-  {
-    id: "book-9",
-    title: "The Warren Buffett Way",
-    author: "Robert G. Hagstrom",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9781118503256-L.jpg",
-    description: "Deconstructs Warren Buffett's investment playbook through his historic portfolio allocations (Coca-Cola, American Express, Geico), articulating his management, financial, and market tenets.",
-    key_takeaways: [
-      "Only buy equity in businesses whose economic engines you thoroughly understand.",
-      "Look for durable competitive advantages — economic moats that protect return on invested capital.",
-      "Price is what you pay; intrinsic value is what you receive.",
-      "Be fearful when others are greedy, and greedy only when others are fearful.",
-      "Holding period: if you aren't willing to own a stock for 10 years, do not even think about owning it for 10 minutes."
-    ],
-    why_read: "The clearest, most structured breakdown of how Buffett evaluates balance sheets and competitive moats.",
-    best_for: ["investor", "advanced"],
-    category: "investing",
-    difficulty: "medium",
-    amazon_url: "https://www.amazon.in/Warren-Buffett-Way-Robert-Hagstrom/dp/1118503252",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 320,
-    year_published: 1994,
-    badge: "Buffett Tenets",
-  },
-  {
-    id: "book-10",
-    title: "Flash Boys",
-    author: "Michael Lewis",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780393244663-L.jpg",
-    description: "Lewis exposes how High-Frequency Trading (HFT) algorithms and dark pools exploit microsecond latency advantages to front-run ordinary retail orders on modern electronic exchanges.",
-    key_takeaways: [
-      "Modern electronic exchanges are wired with hidden complexities that favor algorithmic latency arbitrage.",
-      "Microsecond speed is the primary weapon in modern order routing.",
-      "Complexity in financial exchange architecture often benefits predatory insiders at the expense of retail investors.",
-      "Market reform requires transparent matching engines and alignment of incentives."
-    ],
-    why_read: "A thrilling, investigative dive into the physical infrastructure, fiber cables, and dark pools of Wall Street.",
-    best_for: ["trader", "investor", "advanced"],
-    category: "trading-markets",
-    difficulty: "medium",
-    amazon_url: "https://www.amazon.in/Flash-Boys-Michael-Lewis/dp/0393351599",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 320,
-    year_published: 2014,
-    badge: "Market Plumbing",
-  },
-  {
-    id: "book-11",
-    title: "The Lean Startup",
-    author: "Eric Ries",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780307887894-L.jpg",
-    description: "The definitive blueprint for launching and financing new ventures under extreme uncertainty using validated learning, scientific experimentation, and the Build-Measure-Learn cycle.",
-    key_takeaways: [
-      "The Build-Measure-Learn loop: ship the Minimum Viable Product (MVP) fast, measure truth, adapt quickly.",
-      "Validated customer learning is infinitely more valuable than executing a 5-year business plan.",
-      "Vanity metrics (pageviews, app downloads) deceive; actionable metrics reveal genuine customer value.",
-      "The discipline to pivot or persevere based on real customer data rather than founder ego."
-    ],
-    why_read: "Mandatory reading for founders and corporate capital allocators before deploying capital on new business ventures.",
-    best_for: ["founder", "entrepreneur"],
-    category: "corporate-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.amazon.in/Lean-Startup-Eric-Ries/dp/0670921602",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 336,
-    year_published: 2011,
-    badge: "Startups",
-  },
-  {
-    id: "book-12",
-    title: "Poor Charlie's Almanack",
-    author: "Charles T. Munger",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9781578645015-L.jpg",
-    description: "The wit, wisdom, and multidisciplinary mental models of Berkshire Hathaway's legendary Vice Chairman, Charlie Munger — spanning psychology, mathematics, physics, and investing.",
-    key_takeaways: [
-      "Invert, always invert: to solve hard problems, analyze what would guarantee catastrophe and avoid it.",
-      "Build a latticework of mental models from primary disciplines rather than relying on a single specialization.",
-      "The big money is not in buying or selling, but in waiting for extreme mispricings.",
-      "Avoid psychological misjudgments: commitment bias, authority bias, and incentive-caused bias.",
-      "Consistently attempting to be 'not stupid' yields superior long-term results than trying to be very brilliant."
-    ],
-    why_read: "The pinnacle of intellectual rigor in capital allocation. Munger's mental models apply universally across life and wealth.",
-    best_for: ["investor", "founder", "advanced"],
-    category: "investing",
-    difficulty: "advanced",
-    amazon_url: "https://www.amazon.in/Poor-Charlies-Almanack-Charles-Munger/dp/1578645018",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 548,
-    year_published: 2005,
-    badge: "Mental Models",
-  },
-  {
-    id: "book-13",
-    title: "Shoe Dog",
-    author: "Phil Knight",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9781501135910-L.jpg",
-    description: "Nike founder Phil Knight's candid memoir detailing the harrowing financial crises, import hurdles, bank credit rejections, and liquidity shortages that almost destroyed Nike before it became a $30B+ global empire.",
-    key_takeaways: [
-      "Cash flow is the lifeblood of a growing business — rapid sales growth demands massive working capital.",
-      "Revenue is vanity, profit is sanity, but cash in the bank is absolute reality.",
-      "Perseverance through repeated near-bankruptcy events defines enduring company builders.",
-      "Authentic corporate culture and relentless customer focus become unassailable balance sheet assets."
-    ],
-    why_read: "The most honest, gripping memoir ever written on the raw financial pressure and cash flow terror of entrepreneurship.",
-    best_for: ["founder", "entrepreneur"],
-    category: "corporate-finance",
-    difficulty: "easy",
-    amazon_url: "https://www.amazon.in/Shoe-Dog-Memoir-Creator-NIKE/dp/1471146723",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 400,
-    year_published: 2016,
-    badge: "Inspiring Memoir",
-  },
-  {
-    id: "book-14",
-    title: "A Random Walk Down Wall Street",
-    author: "Burton Malkiel",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780393358384-L.jpg",
-    description: "The intellectual cornerstone of passive index investing. Princeton economist Burton Malkiel proves that short-term price movements follow a random walk and active stock pickers fail to beat the index net of fees.",
-    key_takeaways: [
-      "Short-term stock prices behave like a random walk — technical chart patterns lack predictive power.",
-      "Broad low-cost index funds consistently outperform the majority of active fund managers over 15+ years.",
-      "Asset allocation and diversification are the only true 'free lunches' in capital markets.",
-      "The compound interest arithmetic heavily rewards minimizing expense ratios and starting as young as possible."
-    ],
-    why_read: "The foundational academic and empirical evidence for why passive index investing is the highest-probability wealth strategy.",
-    best_for: ["investor", "beginner", "professional"],
-    category: "investing",
-    difficulty: "medium",
-    amazon_url: "https://www.amazon.in/Random-Walk-Down-Wall-Street/dp/0393358380",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 456,
-    year_published: 1973,
-    badge: "Index Pioneer",
-  },
-  {
-    id: "book-15",
-    title: "Security Analysis",
-    author: "Benjamin Graham & David Dodd",
-    cover_url: "https://covers.openlibrary.org/b/isbn/9780071592536-L.jpg",
-    description: "The 1934 bible of fundamental securities valuation. Established the rigorous mathematical discipline of financial statement analysis, fixed income evaluation, balance sheet liquidation value, and margin of safety.",
-    key_takeaways: [
-      "An investment operation is one which, upon thorough analysis, promises safety of principal and an adequate return.",
-      "A securities analyst must look beyond reported accounting earnings to calculate true normalized owner earnings.",
-      "The margin of safety is essential to protect capital against unforeseen structural shifts and human analytical error.",
-      "Distinguish rigorously between investment and speculation in every market environment."
-    ],
-    why_read: "For professional and serious investors seeking the uncompromising intellectual foundation of value investing and credit analysis.",
-    best_for: ["investor", "advanced"],
-    category: "investing",
-    difficulty: "advanced",
-    amazon_url: "https://www.amazon.in/Security-Analysis-Foreword-Buffett-Editions/dp/0071592539",
-    free_pdf_url: null,
-    is_free_legal: false,
-    pages: 725,
-    year_published: 1934,
-    badge: "The Bible of Value",
-  },
-];
 
 // Category Definitions with color tokens and icons
 const CATEGORIES = [
   { id: "all", label: "All Topics", icon: "📚", color: "#0E6163" },
   { id: "personal-finance", label: "Personal Finance", icon: "💰", color: "#059669" },
   { id: "investing", label: "Stock Market & Investing", icon: "📈", color: "#2563EB" },
-  { id: "behavioral-finance", label: "Behavioral Finance", icon: "🧠", color: "#D97706" },
-  { id: "corporate-finance", label: "Corporate Finance & Startups", icon: "🏢", color: "#7C3AED" },
   { id: "trading-markets", label: "Trading & Markets", icon: "⚡", color: "#DC2626" },
-  { id: "crypto-defi", label: "Crypto & DeFi", icon: "₿", color: "#0891B2" },
+  { id: "corporate-finance", label: "Corporate Finance & Startups", icon: "🏢", color: "#7C3AED" },
+  { id: "behavioral-finance", label: "Behavioral Finance", icon: "🧠", color: "#D97706" },
+  { id: "crypto-defi", label: "Global Macro & Crypto", icon: "💱", color: "#0891B2" },
 ];
 
 const QUICK_DISCOVERY_TAGS = [
   { id: "all", label: "All Titles" },
   { id: "beginner", label: "🌱 Beginner-Friendly" },
   { id: "investing", label: "📈 Investing Essentials" },
+  { id: "trading", label: "⚡ Trading & Technicals" },
   { id: "behavioral", label: "🧠 Mindset & Biases" },
   { id: "india", label: "🇮🇳 Indian Context" },
   { id: "founder", label: "🚀 Startups & Founders" },
+  { id: "macro", label: "🌐 Macro & Monetary" },
 ];
 
 const DIFFICULTY_CONFIG: Record<string, { label: string; text: string; bg: string; border: string }> = {
@@ -607,22 +231,31 @@ export default function FinanceLibraryPage() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Merge Supabase books with verified covers and rich takeaways
-        const merged = (data as unknown as Book[]).map((dbBook) => {
-          const verified = VERIFIED_LIBRARY_BOOKS.find(
-            (vb) => vb.title.toLowerCase() === dbBook.title.toLowerCase()
-          );
+        const dbList = data as unknown as Book[];
+        const dbMap = new Map(dbList.map((b) => [b.title.toLowerCase(), b]));
+
+        // Merge DB data with local verified rich metadata
+        const mergedVerified = VERIFIED_LIBRARY_BOOKS.map((vb) => {
+          const dbBook = dbMap.get(vb.title.toLowerCase());
+          if (!dbBook) return vb;
           return {
+            ...vb,
             ...dbBook,
-            cover_url: dbBook.cover_url || verified?.cover_url,
-            pages: dbBook.pages || verified?.pages,
-            year_published: dbBook.year_published || verified?.year_published,
-            badge: verified?.badge,
-            key_takeaways: (dbBook.key_takeaways ?? verified?.key_takeaways ?? null) as string[] | string | null,
-            why_read: dbBook.why_read ?? verified?.why_read ?? null,
+            cover_url: dbBook.cover_url || vb.cover_url,
+            pages: dbBook.pages || vb.pages,
+            year_published: dbBook.year_published || vb.year_published,
+            badge: dbBook.badge || vb.badge,
+            key_takeaways: (dbBook.key_takeaways ?? vb.key_takeaways) as string[] | string | null,
+            why_read: dbBook.why_read ?? vb.why_read,
           };
         });
-        setBooks(merged);
+
+        // Any DB books that are not in verified list
+        const extraDbBooks = dbList.filter(
+          (db) => !VERIFIED_LIBRARY_BOOKS.some((vb) => vb.title.toLowerCase() === db.title.toLowerCase())
+        );
+
+        setBooks([...mergedVerified, ...extraDbBooks]);
       } else {
         setBooks(VERIFIED_LIBRARY_BOOKS);
       }
@@ -703,9 +336,7 @@ export default function FinanceLibraryPage() {
     const filtered = books.filter((b) => {
       // Category filter
       if (category !== "all") {
-        if (category === "investing") {
-          if (b.category !== "investing" && b.category !== "trading-markets") return false;
-        } else if (b.category !== category) {
+        if (b.category !== category) {
           return false;
         }
       }
@@ -718,8 +349,22 @@ export default function FinanceLibraryPage() {
       // Quick discovery tag filter
       if (discoveryFilter === "beginner" && b.difficulty !== "easy") return false;
       if (discoveryFilter === "investing" && b.category !== "investing") return false;
+      if (discoveryFilter === "trading" && b.category !== "trading-markets") return false;
       if (discoveryFilter === "behavioral" && b.category !== "behavioral-finance") return false;
-      if (discoveryFilter === "india" && !b.title.toLowerCase().includes("let's talk money")) return false;
+      if (discoveryFilter === "macro" && b.category !== "crypto-defi") return false;
+      if (
+        discoveryFilter === "india" &&
+        !(
+          b.badge?.includes("🇮🇳") ||
+          b.title.toLowerCase().includes("let's talk money") ||
+          b.title.toLowerCase().includes("coffee can") ||
+          b.title.toLowerCase().includes("diamonds in the dust") ||
+          b.author.toLowerCase().includes("halan") ||
+          b.author.toLowerCase().includes("mukherjea")
+        )
+      ) {
+        return false;
+      }
       if (
         discoveryFilter === "founder" &&
         b.category !== "corporate-finance" &&
@@ -846,7 +491,7 @@ export default function FinanceLibraryPage() {
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <strong>15</strong> Book Summaries
+                    <strong>{books.length}</strong> Curated Books
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
                     <span className="w-2 h-2 rounded-full bg-blue-400" />
@@ -989,11 +634,7 @@ export default function FinanceLibraryPage() {
                     const count =
                       cat.id === "all"
                         ? books.length
-                        : books.filter((b) =>
-                            cat.id === "investing"
-                              ? b.category === "investing" || b.category === "trading-markets"
-                              : b.category === cat.id
-                          ).length;
+                        : books.filter((b) => b.category === cat.id).length;
 
                     return (
                       <button

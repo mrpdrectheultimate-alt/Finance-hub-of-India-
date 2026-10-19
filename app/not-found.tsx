@@ -1,10 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 
 export default function NotFound() {
   return (
     <div style={s.page}>
-      <div style={s.logoMark}>F</div>
+      <div style={{ marginBottom: 24 }}>
+        <Image
+          src="/logo-icon.png"
+          alt="FinanceHub"
+          width={56}
+          height={56}
+          priority
+          style={{ width: 56, height: 56, objectFit: "contain" }}
+        />
+      </div>
       <h1 style={s.code}>404</h1>
       <h2 style={s.title}>Page not found</h2>
       <p style={s.desc}>

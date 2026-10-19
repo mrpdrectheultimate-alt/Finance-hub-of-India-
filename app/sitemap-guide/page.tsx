@@ -145,6 +145,7 @@ const SECTIONS: SiteSection[] = [
       { name:"Profile", desc:"Your stats, XP history, badges earned, completed lessons.", path:"/profile", badge:"login" },
       { name:"Pricing Plans", desc:"Free · Pro ₹499/month · Expert ₹999/month · 7-day trial · Cancel anytime.", path:"/pricing", badge:"free" },
       { name:"Certificate Verifier", desc:"Public page anyone can use to verify a FinanceHub certificate.", path:"/verify", badge:"free" },
+      { name:"Contact Support & Team", desc:"Reach out for student help, billing, partnerships, or bug reports.", path:"/contact", badge:"free" },
     ],
   },
   {

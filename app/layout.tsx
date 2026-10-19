@@ -61,12 +61,14 @@ export const metadata: Metadata = {
     creator:     "@polymerhub_",
   },
   icons: {
-    icon:        [
-      { url: "/icons/icon-32x32.png",  sizes: "32x32",   type: "image/png" },
-      { url: "/icons/icon-192x192.png",sizes: "192x192", type: "image/png" },
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.png", sizes: "48x48", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple:       "/icons/icon-180x180.png",
-    shortcut:    "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
   },
   alternates: {
     canonical:   "https://financehub.in",
@@ -93,6 +95,7 @@ const ORG_JSON_LD = {
   "@type":       "EducationalOrganization",
   "name":        "FinanceHub",
   "url":         "https://financehub.in",
+  "logo":        "https://financehub.in/logo.png",
   "description": "India's finance education platform — personal finance, investing, trading.",
   "foundingDate":"2024",
   "areaServed":  "IN",
@@ -104,7 +107,7 @@ const ORG_JSON_LD = {
     "description":  "Free finance education courses",
   },
   "sameAs": [
-    "https://twitter.com/financehub_in",
+    "https://x.com/polymerhub_",
     "https://www.linkedin.com/company/financehub-in",
   ],
 };
@@ -150,7 +153,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ── Service Worker registration ── */}
         <Script id="sw-register" strategy="afterInteractive">
           {`
-            if ('serviceWorker' in navigator) {
+            if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
                   .then(function(reg) {

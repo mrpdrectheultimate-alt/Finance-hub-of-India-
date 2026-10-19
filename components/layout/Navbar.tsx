@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 
@@ -86,30 +88,16 @@ export default function Navbar() {
         }}>
 
           {/* Logo */}
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-              background: "linear-gradient(135deg,#0E6163,#1D9E75)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 2px 8px rgba(14,97,99,0.3)",
-            }}>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                <rect x="2"  y="10" width="3" height="8"  rx="1" fill="rgba(255,255,255,0.6)"/>
-                <rect x="7"  y="6"  width="3" height="12" rx="1" fill="rgba(255,255,255,0.8)"/>
-                <rect x="12" y="2"  width="3" height="16" rx="1" fill="#fff"/>
-                <path d="M2 12 L7 8 L12 4 L17 2" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                <circle cx="17" cy="2" r="1.5" fill="#fff"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.3px", color: "#0B1A2B", lineHeight: 1 }}>
-                Finance<span style={{ color: "#0E6163" }}>Hub</span>
-              </div>
-              <div style={{ fontSize: 8, fontWeight: 600, color: "#a0aec0", letterSpacing: "0.08em", textTransform: "uppercase", lineHeight: 1 }}>
-                of India
-              </div>
-            </div>
-          </a>
+          <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+            <Image
+              src="/logo-horizontal.png"
+              alt="FinanceHub"
+              width={160}
+              height={36}
+              priority
+              style={{ height: 34, width: "auto", objectFit: "contain" }}
+            />
+          </Link>
 
           {/* Desktop nav links */}
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
@@ -101,6 +102,13 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
+            <Image
+              src="/logo-icon.png"
+              alt="FinanceHub"
+              width={18}
+              height={18}
+              className="w-4 h-4 object-contain inline-block"
+            />
             <span className="hidden sm:inline">Back to FinanceHub</span>
             <span className="sm:hidden">Home</span>
           </Link>

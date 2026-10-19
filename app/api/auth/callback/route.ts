@@ -10,12 +10,18 @@ import { createServerClient }        from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const code     = searchParams.get("code");
-  const next     = searchParams.get("next") ?? "/dashboard";
-  const appUrl   = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+  const code = searchParams.get("code");
+  const next = searchParams.get("next") ?? "/dashboard";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+
+  const authError = searchParams.get("error_description") || searchParams.get("error");
+  if (authError) {
+    console.error("OAuth Provider Error:", authError);
+    return NextResponse.redirect(`${appUrl}/login?error=${encodeURIComponent(authError)}`);
+  }
 
   if (!code) {
-    return NextResponse.redirect(`${appUrl}/auth/login?error=missing_code`);
+    return NextResponse.redirect(`${appUrl}/login?error=missing_code`);
   }
 
   const supabase = createServerClient();
@@ -25,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   if (error || !session) {
     console.error("Auth callback error:", error?.message);
-    return NextResponse.redirect(`${appUrl}/auth/login?error=auth_failed`);
+    return NextResponse.redirect(`${appUrl}/login?error=${encodeURIComponent(error?.message || "auth_failed")}`);
   }
 
   const user      = session.user;

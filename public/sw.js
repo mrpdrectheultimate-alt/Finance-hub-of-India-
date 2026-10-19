@@ -4,10 +4,10 @@
 // Offline-first caching for lessons, assets, and static pages
 // ============================================================
 
-const CACHE_NAME    = "financehub-v1";
-const STATIC_CACHE  = "financehub-static-v1";
-const LESSON_CACHE  = "financehub-lessons-v1";
-const API_CACHE     = "financehub-api-v1";
+const CACHE_NAME    = "financehub-v2";
+const STATIC_CACHE  = "financehub-static-v2";
+const LESSON_CACHE  = "financehub-lessons-v2";
+const API_CACHE     = "financehub-api-v2";
 
 // ─── Static assets to pre-cache on install ───────────────────
 const PRECACHE_URLS = [
@@ -51,6 +51,9 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // In development (localhost), do not intercept or cache anything so edits show immediately
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return;
 
   // Skip non-GET, cross-origin, and auth requests
   if (request.method !== "GET") return;

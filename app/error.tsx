@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 
 export default function ErrorPage({
   error,
@@ -11,7 +12,16 @@ export default function ErrorPage({
 }) {
   return (
     <div style={s.page}>
-      <div style={s.logoMark}>F</div>
+      <div style={{ marginBottom: 24 }}>
+        <Image
+          src="/logo-icon.png"
+          alt="FinanceHub"
+          width={56}
+          height={56}
+          priority
+          style={{ width: 56, height: 56, objectFit: "contain" }}
+        />
+      </div>
       <h1 style={s.title}>Something went wrong</h1>
       <p style={s.desc}>
         FinanceHub hit an unexpected error. Try again, or head back to the homepage.

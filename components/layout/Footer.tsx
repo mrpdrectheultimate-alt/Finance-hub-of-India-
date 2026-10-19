@@ -4,6 +4,9 @@
 // 4-column · All links · Disclaimer · India-first
 // ============================================================
 
+import Image from "next/image";
+import Link from "next/link";
+
 export default function Footer() {
   const YEAR = new Date().getFullYear();
 
@@ -48,6 +51,7 @@ export default function Footer() {
         { label: "Copyright & Fair Use",href: "/legal/copyright" },
         { label: "Refund Policy",       href: "/legal/refund" },
         { label: "Cookie Policy",       href: "/legal/cookies" },
+        { label: "Contact Team",        href: "/contact" },
       ],
     },
   ];
@@ -70,30 +74,16 @@ export default function Footer() {
           {/* Brand column */}
           <div>
             {/* Logo */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: 9,
-                background: "linear-gradient(135deg,#0E6163,#1D9E75)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(14,97,99,0.3)",
-                flexShrink: 0,
-              }}>
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                  <rect x="2"  y="10" width="3" height="8"  rx="1" fill="rgba(255,255,255,0.6)"/>
-                  <rect x="7"  y="6"  width="3" height="12" rx="1" fill="rgba(255,255,255,0.8)"/>
-                  <rect x="12" y="2"  width="3" height="16" rx="1" fill="#fff"/>
-                  <path d="M2 12 L7 8 L12 4 L17 2" stroke="rgba(255,255,255,0.9)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                  <circle cx="17" cy="2" r="1.5" fill="#fff"/>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: "-0.3px", lineHeight: 1 }}>
-                  Finance<span style={{ color: "#1D9E75" }}>Hub</span>
-                </div>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", lineHeight: 1, marginTop: 2 }}>
-                  of India
-                </div>
-              </div>
+            <div style={{ marginBottom: 16 }}>
+              <Link href="/" style={{ display: "inline-block", textDecoration: "none" }}>
+                <Image
+                  src="/logo-horizontal-white.png"
+                  alt="FinanceHub"
+                  width={165}
+                  height={36}
+                  style={{ height: 34, width: "auto", objectFit: "contain" }}
+                />
+              </Link>
             </div>
 
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.75, maxWidth: 260, marginBottom: 20 }}>
@@ -251,7 +241,7 @@ export default function Footer() {
               ["Copyright",  "/legal/copyright"],
               ["SEBI",       "/legal/sebi-compliance"],
               ["Refund",     "/legal/refund"],
-              ["Contact",    "mailto:hello@financehub.in"],
+              ["Contact",    "/contact"],
             ].map(([l, h]) => (
               <a key={l} href={h}
                 style={{

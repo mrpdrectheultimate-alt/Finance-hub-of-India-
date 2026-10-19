@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Logo        from "@/components/ui/Logo";
 
@@ -20,11 +20,34 @@ export default function SignupPage() {
     ? new URLSearchParams(window.location.search).get("plan") || "free"
     : "free";
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlError = params.get("error");
+      if (urlError) {
+        const decoded = decodeURIComponent(urlError);
+        if (decoded === "access_denied") {
+          setError("Google access was denied. If Google shows 'Google hasn't verified this app', click 'Advanced' (bottom left) → 'Go to Finance hub of India (unsafe)' → then 'Continue'.");
+        } else if (decoded.includes("exchange external code")) {
+          setError("Google authorization code could not be exchanged. Please ensure 'Skip nonce checks' is toggled ON in Supabase Google Provider settings.");
+        } else {
+          setError(decoded);
+        }
+      }
+    }
+  }, []);
+
   const handleGoogle = async () => {
     setLoading(true); setError("");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options:  { redirectTo: `${window.location.origin}/api/auth/callback?next=/onboarding` },
+      options:  {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/onboarding`,
+        queryParams: {
+          access_type: "offline",
+          prompt:      "consent",
+        },
+      },
     });
     if (error) { setError(error.message); setLoading(false); }
   };
