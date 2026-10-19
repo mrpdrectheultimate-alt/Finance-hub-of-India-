@@ -64,6 +64,7 @@ export default function Navbar() {
     { label: "Finance Lab", href: "/practice" },
     { label: "Library",     href: "/library" },
     { label: "AI Mentor",   href: "/ai-tutor" },
+    { label: "Contact",     href: "/contact" },
     { label: "Site Map",    href: "/sitemap-guide" },
   ];
 

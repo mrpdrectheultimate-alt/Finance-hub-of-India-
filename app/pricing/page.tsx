@@ -328,7 +328,7 @@ export default function PricingPage() {
         <div style={s.finalCtaTitle}>Start for free today</div>
         <p style={s.finalCtaSub}>No credit card required. Upgrade whenever you are ready.</p>
         <div style={s.finalCtaBtns}>
-          <Link href="/auth/signup" style={s.finalCtaPrimary}>
+          <Link href="/signup" style={s.finalCtaPrimary}>
             Get started free
           </Link>
           <Link href="/explore" style={s.finalCtaSecondary}>

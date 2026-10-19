@@ -173,7 +173,7 @@ export default function LessonComments({ lessonId, lessonTitle }: LessonComments
         </div>
       ) : (
         <div style={s.loginPrompt}>
-          <Link href="/auth/login" style={s.loginLink}>Log in</Link> to join the discussion
+          <Link href="/login" style={s.loginLink}>Log in</Link> to join the discussion
         </div>
       )}
 

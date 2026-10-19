@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth } from "@/lib/security";
+import { getRequestOrigin } from "@/lib/url";
 
 export async function POST(req: NextRequest) {
   const { user, error: authErr } = await requireAuth(req);
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2024-04-10" });
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    const appUrl = getRequestOrigin(req);
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
       return_url: `${appUrl}/dashboard`,

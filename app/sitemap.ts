@@ -7,8 +7,9 @@
 
 import { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase";
+import { getAppUrl } from "@/lib/url";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+const BASE_URL = getAppUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServiceClient();

@@ -572,7 +572,7 @@ export default function ForexPaperTrader({
             </span>
           </div>
           <Link
-            href="/auth/login"
+            href="/login"
             className="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300 hover:underline transition-colors ml-auto"
           >
             <span>Sign in to save portfolio to cloud</span>

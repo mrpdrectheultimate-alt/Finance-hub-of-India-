@@ -6,13 +6,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { getAppUrl } from "@/lib/url";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder_key");
 const ADMIN_EMAIL =
   process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",")[0]?.trim() ||
   "mrpdrecuniverse@gmail.com";
 const FROM = process.env.RESEND_FROM_EMAIL || "hello@financehub.in";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+const APP_URL = getAppUrl();
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: "💬 General Inquiry",

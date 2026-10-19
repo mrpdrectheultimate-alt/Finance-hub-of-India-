@@ -42,7 +42,9 @@ export function getEnv(): AppEnv {
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_anon_key",
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
 
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in",
+    appUrl:
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://finance-hub-of-india.vercel.app"),
     adminEmails: (process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
       .split(",")
       .map((e) => e.trim().toLowerCase())

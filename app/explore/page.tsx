@@ -818,10 +818,10 @@ export default function ExplorePage() {
                 Create a free account to track your completed lessons, practice in virtual simulators, earn verifiable course certificates, and test your knowledge with AI exams.
               </p>
               <div style={s.ctaButtonGroup}>
-                <Link href="/auth/signup" style={s.ctaPrimaryBtn}>
+                <Link href="/signup" style={s.ctaPrimaryBtn}>
                   Create Free Account →
                 </Link>
-                <Link href="/auth/login" style={s.ctaSecondaryBtn}>
+                <Link href="/login" style={s.ctaSecondaryBtn}>
                   Log In to Existing Account
                 </Link>
               </div>

@@ -28,14 +28,17 @@ const lora = Lora({
 
 // ─── Metadata ────────────────────────────────────────────────
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://finance-hub-of-india.vercel.app")
+  ),
   title: {
     default:  "FinanceHub — Finance Education for India",
     template: "%s | FinanceHub",
   },
   description: "India's best finance education platform. Learn personal finance, investing, trading, tax planning, and crypto. Free lessons in Hindi and English.",
   keywords:    ["personal finance India","SIP calculator","income tax India","mutual funds","stock market basics","financial planning","NIFTY","sensex","hindi finance"],
-  authors:     [{ name: "FinanceHub", url: "https://financehub.in" }],
+  authors:     [{ name: "FinanceHub", url: "https://finance-hub-of-india.vercel.app" }],
   creator:     "FinanceHub Education",
   publisher:   "FinanceHub Education Private Limited",
   manifest:    "/manifest.json",
@@ -47,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     type:        "website",
     locale:      "en_IN",
-    url:         "https://financehub.in",
+    url:         "https://finance-hub-of-india.vercel.app",
     siteName:    "FinanceHub",
     title:       "FinanceHub — Finance Education for India",
     description: "Learn personal finance, investing, trading and more. Free in Hindi and English.",

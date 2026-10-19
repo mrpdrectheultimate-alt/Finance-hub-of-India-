@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend }                    from "resend";
 import { createServiceClient }       from "@/lib/supabase";
+import { getAppUrl }                 from "@/lib/url";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key");
 const FROM   = process.env.RESEND_FROM_EMAIL || "FinanceHub <noreply@financehub.in>";
@@ -381,7 +382,7 @@ export async function POST(req: NextRequest) {
 
     const emailData = template({
       name:         profile.full_name?.split(" ")[0] || "there",
-      app_url:      process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in",
+      app_url:      getAppUrl(),
       streak:       profile.current_streak || 0,
       xp_total:     profile.xp_total || 0,
       lessons_done: 0,  // could fetch from user_progress if needed

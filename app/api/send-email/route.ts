@@ -3,9 +3,10 @@ import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeNumber, sanitizeString } from "@/lib/security";
+import { getAppUrl } from "@/lib/url";
 
 const FROM = process.env.RESEND_FROM_EMAIL || "hello@financehub.in";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+const APP_URL = getAppUrl();
 
 type EmailTemplate = {
   subject: string;

@@ -6,8 +6,9 @@
 // ============================================================
 
 import type { Metadata } from "next";
+import { getAppUrl } from "@/lib/url";
 
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+const APP_URL  = getAppUrl();
 const APP_NAME = "FinanceHub";
 const DEFAULT_DESC = "India's best finance education platform. Learn personal finance, investing, trading, tax and crypto through structured lessons, AI mentoring and interactive simulators. Free in Hindi and English.";
 

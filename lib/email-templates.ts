@@ -5,7 +5,9 @@
 // Usage: import { emails } from "@/lib/email-templates"
 // ============================================================
 
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+import { getAppUrl } from "@/lib/url";
+
+const APP_URL  = getAppUrl();
 const FROM     = process.env.RESEND_FROM_EMAIL   || "hello@financehub.in";
 const NOREPLY  = "noreply@financehub.in";
 

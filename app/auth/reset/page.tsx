@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
 
         <p style={s.footer}>
           Remembered it?{" "}
-          <Link href="/auth/login" style={s.link}>
+          <Link href="/login" style={s.link}>
             Back to log in
           </Link>
         </p>

@@ -906,7 +906,7 @@ export default function FinanceLibraryPage() {
                               </div>
                             ) : (
                               <Link
-                                href="/auth/login"
+                                href="/login"
                                 className="text-[11px] font-semibold text-slate-400 hover:text-[#0E6163]"
                               >
                                 Log in to track

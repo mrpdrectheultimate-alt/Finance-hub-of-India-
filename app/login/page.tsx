@@ -37,17 +37,30 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError("");
+    const origin =
+      typeof window !== "undefined" &&
+      window.location.origin &&
+      !window.location.origin.includes("localhost")
+        ? window.location.origin
+        : "https://finance-hub-of-india.vercel.app";
+    const next =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next") || "/dashboard"
+        : "/dashboard";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options:  {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+      options: {
+        redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
         queryParams: {
           access_type: "offline",
-          prompt:      "consent",
+          prompt: "consent",
         },
       },
     });
-    if (error) { setError(error.message); setLoading(false); }
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {

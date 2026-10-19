@@ -17,7 +17,10 @@ interface CertificateGeneratorProps {
   onClose: () => void;
 }
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+const appUrl =
+  typeof window !== "undefined" && window.location.origin && !window.location.origin.includes("localhost")
+    ? window.location.origin
+    : "https://finance-hub-of-india.vercel.app";
 
 export default function CertificateGenerator({ trackSlug, trackTitle, onClose }: CertificateGeneratorProps) {
   const [state, setState] = useState<"idle" | "loading" | "ready" | "error">("idle");

@@ -38,18 +38,28 @@ export default function SignupPage() {
   }, []);
 
   const handleGoogle = async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
+    const origin =
+      typeof window !== "undefined" &&
+      window.location.origin &&
+      !window.location.origin.includes("localhost")
+        ? window.location.origin
+        : "https://finance-hub-of-india.vercel.app";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options:  {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/onboarding`,
+      options: {
+        redirectTo: `${origin}/api/auth/callback?next=/onboarding`,
         queryParams: {
           access_type: "offline",
-          prompt:      "consent",
+          prompt: "consent",
         },
       },
     });
-    if (error) { setError(error.message); setLoading(false); }
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -59,11 +69,19 @@ export default function SignupPage() {
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     setLoading(true); setError("");
 
+    const origin =
+      typeof window !== "undefined" &&
+      window.location.origin &&
+      !window.location.origin.includes("localhost")
+        ? window.location.origin
+        : "https://finance-hub-of-india.vercel.app";
+
     const { error } = await supabase.auth.signUp({
-      email, password,
+      email,
+      password,
       options: {
         data: { full_name: name.trim(), selected_plan: plan },
-        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${origin}/api/auth/callback?next=/onboarding`,
       },
     });
 

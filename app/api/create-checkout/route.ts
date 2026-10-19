@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { requireAuth, sanitizeString } from "@/lib/security";
+import { getRequestOrigin } from "@/lib/url";
 
 export async function POST(req: NextRequest) {
   const { user, error: authErr } = await requireAuth(req);
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       customerId = customer.id;
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    const appUrl = getRequestOrigin(req);
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",

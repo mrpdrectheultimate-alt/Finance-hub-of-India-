@@ -49,7 +49,7 @@ export default function UpdatePasswordPage() {
           <div style={s.success}>
             <h1 style={s.title}>Password updated</h1>
             <p style={s.sub}>You can now log in with your new password.</p>
-            <Link href="/auth/login" style={s.btn}>Go to login</Link>
+            <Link href="/login" style={s.btn}>Go to login</Link>
           </div>
         ) : (
           <>

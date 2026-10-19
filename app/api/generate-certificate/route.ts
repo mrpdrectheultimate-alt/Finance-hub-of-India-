@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient }        from "@/lib/supabase";
+import { getAppUrl }                 from "@/lib/url";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const appUrl     = process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in";
+    const appUrl     = getAppUrl();
     const verifyUrl  = `${appUrl}/verify/${verificationId}`;
     const issuedDate = new Date(cert.issued_at).toLocaleDateString("en-IN", {
       day: "numeric", month: "long", year: "numeric"

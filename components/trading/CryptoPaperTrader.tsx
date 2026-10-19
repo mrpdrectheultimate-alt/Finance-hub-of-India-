@@ -416,7 +416,7 @@ export default function CryptoPaperTrader({ embedded = false }: { embedded?: boo
           {isGuest && (
             <div style={s.guestBanner}>
               <span>✨ <strong>Demo Practice Mode:</strong> Practicing with ₹1,00,000 virtual cash. Trades are saved locally in your browser.</span>
-              <a href="/auth/login" style={s.guestLink}>Sign in to save portfolio →</a>
+              <a href="/login" style={s.guestLink}>Sign in to save portfolio →</a>
             </div>
           )}
           <div style={s.tickerBar}>

@@ -1,10 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import type { Database } from "@/types/database";
+import { getRequestOrigin } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const origin = getRequestOrigin(req);
+
   try {
     const requestUrl = new URL(req.url);
     const next = requestUrl.searchParams.get("next") || "/dashboard";
@@ -16,35 +19,36 @@ export async function GET(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("error", "missing_supabase_env");
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(`${origin}/login?error=missing_supabase_env`);
     }
 
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false },
     });
 
-    const redirectTo = new URL(`/auth/callback?next=${encodeURIComponent(safeNext)}`, req.url).toString();
+    const redirectTo = `${origin}/api/auth/callback?next=${encodeURIComponent(safeNext)}`;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
         skipBrowserRedirect: true,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 
     if (error || !data.url) {
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("error", error?.message || "google_oauth_unavailable");
-      return NextResponse.redirect(loginUrl);
+      console.error("Google OAuth error:", error);
+      return NextResponse.redirect(
+        `${origin}/login?error=${encodeURIComponent(error?.message || "google_oauth_unavailable")}`
+      );
     }
 
     return NextResponse.redirect(data.url);
   } catch (err: unknown) {
-    console.error("Google Auth API Error:", err);
-    const loginUrl = new URL("/auth/login", req.url);
-    loginUrl.searchParams.set("error", "google_oauth_exception");
-    return NextResponse.redirect(loginUrl);
+    console.error("Google Auth API Exception:", err);
+    return NextResponse.redirect(`${origin}/login?error=google_oauth_exception`);
   }
 }

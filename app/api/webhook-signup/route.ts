@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestOrigin } from "@/lib/url";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    const appUrl = getRequestOrigin(req);
     await fetch(`${appUrl}/api/send-email`, {
       method: "POST",
       headers: {
