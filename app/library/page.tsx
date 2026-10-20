@@ -210,15 +210,11 @@ export default function FinanceLibraryPage() {
     initUser();
   }, []);
 
-  // 2. Fetch Books & Videos from Supabase
+  // 2. Fetch Books & Videos from Supabase on mount
   useEffect(() => {
-    if (tab === "videos") {
-      loadVideos();
-    } else {
-      loadBooks();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+    loadBooks();
+    loadVideos();
+  }, []);
 
   const loadBooks = async () => {
     try {
@@ -416,12 +412,16 @@ export default function FinanceLibraryPage() {
   }, [videos, search, typeFilter]);
 
   const playlistCount = useMemo(
-    () => videos.filter((v) => v.video_type === "playlist" || v.embed_type === "playlist").length,
+    () => videos.filter((v) => v.video_type === "playlist" || v.embed_type === "playlist").length || 4,
     [videos]
   );
   const singleVideoCount = useMemo(
-    () => videos.filter((v) => v.video_type !== "playlist" && v.embed_type !== "playlist").length,
+    () => videos.filter((v) => v.video_type !== "playlist" && v.embed_type !== "playlist").length || 115,
     [videos]
+  );
+  const totalVideoCount = useMemo(
+    () => (videos.length > 0 ? videos.length : singleVideoCount + playlistCount),
+    [videos, singleVideoCount, playlistCount]
   );
 
   const resetFilters = () => {
@@ -495,11 +495,11 @@ export default function FinanceLibraryPage() {
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
                     <span className="w-2 h-2 rounded-full bg-blue-400" />
-                    <strong>115</strong> Curated Videos
+                    <strong>{singleVideoCount}</strong> Curated Videos
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-slate-100">
                     <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <strong>4</strong> Master Playlists
+                    <strong>{playlistCount}</strong> Master Playlists
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-emerald-300">
                     <Check className="w-3.5 h-3.5" />
@@ -562,7 +562,7 @@ export default function FinanceLibraryPage() {
               <span>🎬</span>
               <span>Videos &amp; Playlists</span>
               <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 font-semibold">
-                {videos.length || 115}
+                {totalVideoCount}
               </span>
             </button>
           </div>
