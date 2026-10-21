@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { icon: "EX", label: "Explore", href: "/explore", group: "Learn" },
   { icon: "LIB", label: "Library", href: "/library", group: "Learn" },
   { icon: "SIM", label: "Simulators", href: "/simulators", group: "Practice" },
+  { icon: "3D", label: "Trading Theater", href: "/trading-theater", group: "Practice" },
   { icon: "PR", label: "Practice", href: "/practice", group: "Practice" },
   { icon: "AI", label: "AI Tutor", href: "/ai-tutor", group: "Practice" },
   { icon: "EXM", label: "Practice Exam", href: "/ai-exam", group: "Practice" },
