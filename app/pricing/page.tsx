@@ -41,6 +41,7 @@ const PLANS: Plan[] = [
       "Community discussions",
     ],
     locked: [
+      "3D Trading Academy & advanced options simulations",
       "Full lesson library with 55+ lessons",
       "Unlimited AI tutor",
       "Forex and crypto paper trading",
@@ -61,6 +62,8 @@ const PLANS: Plan[] = [
     tagline: "Everything you need to master finance",
     popular: true,
     features: [
+      "3D Animated Trading Academy with real-time candlestick walkthroughs",
+      "AI voice-narrated trade simulations & decision checkpoints",
       "All 55+ lessons across 4 tracks",
       "Unlimited AI tutor with 5 personas",
       "Forex paper trading with 6 pairs",
@@ -111,6 +114,7 @@ const FAQ = [
 ];
 
 const COMPARISON = [
+  { feature: "3D Trading Academy (Voiced & Animated)", free: "Preview", pro: "Full Access (10 Scenarios)", expert: "Full Access + Advanced" },
   { feature: "Lessons", free: "10 free", pro: "55+", expert: "55+" },
   { feature: "AI tutor questions", free: "5/day", pro: "Unlimited", expert: "Unlimited" },
   { feature: "AI tutor personas", free: "1", pro: "5", expert: "5" },

@@ -60,12 +60,12 @@ export default function Navbar() {
   const tier = TIER_BADGE[profile?.subscription_tier || "free"];
 
   const NAV_LINKS = [
-    { label: "Explore",     href: "/explore" },
-    { label: "Finance Lab", href: "/practice" },
-    { label: "Library",     href: "/library" },
-    { label: "AI Mentor",   href: "/ai-tutor" },
-    { label: "Contact",     href: "/contact" },
-    { label: "Site Map",    href: "/sitemap-guide" },
+    { label: "Explore",         href: "/explore" },
+    { label: "Practice",        href: "/simulators" },
+    { label: "Trading Academy", href: "/trading-theater" },
+    { label: "Library",         href: "/library" },
+    { label: "AI Mentor",       href: "/ai-tutor" },
+    { label: "Contact",         href: "/contact" },
   ];
 
   return (

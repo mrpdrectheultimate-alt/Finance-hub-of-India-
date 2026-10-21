@@ -14,7 +14,7 @@ type Step = "goal" | "level" | "time" | "ready";
 const GOALS = [
   { id: "personal", icon: "💰", label: "Manage my personal finances", track: "personal-finance", desc: "Budget, save, invest, insure" },
   { id: "investing", icon: "📈", label: "Learn to invest in stocks", track: "trading-markets", desc: "Equity, mutual funds, markets" },
-  { id: "trading", icon: "📊", label: "Understand technical analysis", track: "technical-analysis", desc: "Charts, indicators, strategies" },
+  { id: "trading", icon: "📊", label: "3D Trading Academy & Technicals", track: "technical-analysis", desc: "Animated chart walkthroughs & trade simulations" },
   { id: "crypto", icon: "₿", label: "Explore crypto and DeFi", track: "crypto-defi", desc: "Bitcoin, Ethereum, Web3" },
   { id: "corporate", icon: "🏢", label: "Learn corporate finance", track: "corporate-finance", desc: "Valuation, M&A, accounting" },
   { id: "behavioral", icon: "🧠", label: "Understand my money mindset", track: "behavioral-finance", desc: "Psychology, biases, habits" },
@@ -357,7 +357,7 @@ export default function OnboardingPage() {
               </div>
               {[
                 { icon: "📖", text: "Start with the fundamentals", done: false },
-                { icon: "🎯", text: "Practice with quizzes after each lesson", done: false },
+                { icon: "📊", text: "3D Trading Academy animated trade walkthroughs", done: false },
                 { icon: "🧮", text: "Apply knowledge in Finance Lab simulators", done: false },
                 { icon: "🤖", text: "Ask AI Mentor anything you're unsure about", done: false },
                 { icon: "🏆", text: "Earn your first certificate", done: false },
