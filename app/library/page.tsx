@@ -54,6 +54,18 @@ type TypeFilter = "all" | "video" | "playlist";
 type SortOption = "recommended" | "popular" | "difficulty-asc" | "difficulty-desc" | "title-asc" | "author-asc";
 
 // Category Definitions with color tokens and icons
+const VIDEO_TOPICS = [
+  { id: "all", label: "All Topics", icon: "📚", color: "#0E6163" },
+  { id: "personal-finance", label: "Personal Finance", icon: "💰", color: "#059669" },
+  { id: "trading-markets", label: "Stock Market & Investing", icon: "📈", color: "#2563EB" },
+  { id: "technical-analysis", label: "Technical Analysis", icon: "📊", color: "#7C3AED" },
+  { id: "crypto-defi", label: "Crypto & Web3", icon: "₿", color: "#0891B2" },
+  { id: "corporate-finance", label: "Corporate Finance", icon: "🏢", color: "#4F46E5" },
+  { id: "behavioral-finance", label: "Behavioral Finance", icon: "🧠", color: "#D97706" },
+  { id: "forex-currency", label: "Forex & Currencies", icon: "💱", color: "#0284C7" },
+  { id: "general", label: "Economics & Macro", icon: "🌐", color: "#475569" },
+];
+
 const CATEGORIES = [
   { id: "all", label: "All Topics", icon: "📚", color: "#0E6163" },
   { id: "personal-finance", label: "Personal Finance", icon: "💰", color: "#059669" },
@@ -166,6 +178,7 @@ export default function FinanceLibraryPage() {
 
   // Filters & Search
   const [category, setCategory] = useState("all");
+  const [videoCategory, setVideoCategory] = useState("all");
   const [discoveryFilter, setDiscoveryFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -397,19 +410,64 @@ export default function FinanceLibraryPage() {
     });
   }, [books, category, difficultyFilter, discoveryFilter, search, sortBy]);
 
-  // Video Filtering
+  // Video Filtering with Category, Difficulty, Type, and Search
   const filteredVideos = useMemo(() => {
     const term = search.trim().toLowerCase();
     return videos.filter((v) => {
+      // 1. Text Search across Title, Channel, Description, Curator Note
       const matchesSearch =
         !term ||
         v.title.toLowerCase().includes(term) ||
         v.channel_name.toLowerCase().includes(term) ||
-        (v.description || "").toLowerCase().includes(term);
-      const matchesType = typeFilter === "all" || v.video_type === typeFilter;
-      return matchesSearch && matchesType;
+        (v.description || "").toLowerCase().includes(term) ||
+        (v.curator_note || "").toLowerCase().includes(term);
+
+      // 2. Format / Type Match
+      const matchesType =
+        typeFilter === "all" ||
+        v.video_type === typeFilter ||
+        (typeFilter === "playlist" && v.embed_type === "playlist");
+
+      // 3. Category Match
+      let matchesCategory = true;
+      if (videoCategory !== "all") {
+        if (videoCategory === "trading-markets" || videoCategory === "investing") {
+          matchesCategory = v.category === "trading-markets" || v.category === "investing";
+        } else if (videoCategory === "general" || videoCategory === "economics") {
+          matchesCategory = v.category === "general" || v.category === "economics";
+        } else {
+          matchesCategory = v.category === videoCategory;
+        }
+      }
+
+      // 4. Difficulty Level Match
+      let matchesDifficulty = true;
+      if (difficultyFilter !== "all") {
+        if (difficultyFilter === "easy") matchesDifficulty = v.level === "beginner";
+        else if (difficultyFilter === "medium") matchesDifficulty = v.level === "intermediate";
+        else if (difficultyFilter === "advanced") matchesDifficulty = v.level === "advanced";
+      }
+
+      return matchesSearch && matchesType && matchesCategory && matchesDifficulty;
     });
-  }, [videos, search, typeFilter]);
+  }, [videos, search, typeFilter, videoCategory, difficultyFilter]);
+
+  // Video Sorting
+  const sortedVideos = useMemo(() => {
+    const list = [...filteredVideos];
+    if (sortBy === "title-asc") return list.sort((a, b) => a.title.localeCompare(b.title));
+    if (sortBy === "author-asc") return list.sort((a, b) => a.channel_name.localeCompare(b.channel_name));
+    if (sortBy === "difficulty-asc") {
+      const order: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+      return list.sort((a, b) => (order[a.level] || 2) - (order[b.level] || 2));
+    }
+    if (sortBy === "difficulty-desc") {
+      const order: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+      return list.sort((a, b) => (order[b.level] || 2) - (order[a.level] || 2));
+    }
+    // Default: Featured first, then original DB order
+    return list.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+  }, [filteredVideos, sortBy]);
 
   const playlistCount = useMemo(
     () => videos.filter((v) => v.video_type === "playlist" || v.embed_type === "playlist").length || 4,
@@ -426,6 +484,7 @@ export default function FinanceLibraryPage() {
 
   const resetFilters = () => {
     setCategory("all");
+    setVideoCategory("all");
     setDiscoveryFilter("all");
     setDifficultyFilter("all");
     setSearch("");
@@ -925,20 +984,35 @@ export default function FinanceLibraryPage() {
           {/* ══════════════════════════════════════════════════════════ */}
           {/* TAB 2: VIDEOS & PLAYLISTS (FULL PRESERVATION)              */}
           {/* ══════════════════════════════════════════════════════════ */}
+                    {/* TAB 2: VIDEOS & PLAYLISTS (CINEMA THEATER + FULL CATALOG GRID) */}
+          {/* ══════════════════════════════════════════════════════════ */}
           {tab === "videos" && (
-            <div className="space-y-8">
-              {/* Cinema Player Section */}
+            <div className="space-y-10">
+              {/* 1. Cinema Theater Player Section */}
               <div ref={playerRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Main Video Embed (8 cols) */}
                 <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-md p-6">
                   {activeVideo ? (
                     <div>
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase font-mono">
-                          {activeVideo.level}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-500">
-                          {activeVideo.category}
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase font-mono">
+                            {activeVideo.level}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 capitalize">
+                            {activeVideo.category.replace("-", " ")}
+                          </span>
+                          {activeVideo.duration_hrs && (
+                            <span className="text-xs text-slate-400 font-mono flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {activeVideo.duration_hrs >= 1
+                                ? `${activeVideo.duration_hrs}h`
+                                : `${Math.round(activeVideo.duration_hrs * 60)} min`}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs font-bold text-teal-700 flex items-center gap-1 bg-teal-50 px-2.5 py-1 rounded-lg">
+                          <Sparkles className="w-3.5 h-3.5" /> Cinema Theater
                         </span>
                       </div>
                       <VideoPlayer
@@ -960,19 +1034,19 @@ export default function FinanceLibraryPage() {
                   )}
                 </div>
 
-                {/* Queue / Recommended Playlist (4 cols) */}
+                {/* Queue / Recommended Up Next (4 cols) */}
                 <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-5 shadow-md space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                      Up Next &amp; Recommended
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <span>⚡</span> Up Next &amp; Recommended
                     </h3>
                     <span className="text-xs font-semibold text-slate-400">
-                      {filteredVideos.slice(0, 8).length} videos
+                      {sortedVideos.slice(0, 8).length} queued
                     </span>
                   </div>
 
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
-                    {filteredVideos.slice(0, 10).map((v) => {
+                  <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
+                    {sortedVideos.slice(0, 10).map((v) => {
                       const isSelected = activeVideo?.id === v.id;
                       return (
                         <button
@@ -983,7 +1057,7 @@ export default function FinanceLibraryPage() {
                           }}
                           className={`w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
                             isSelected
-                              ? "bg-teal-50/80 border-teal-600 shadow-sm"
+                              ? "bg-teal-50/90 border-teal-600 shadow-sm"
                               : "bg-white border-slate-100 hover:border-slate-300"
                           }`}
                         >
@@ -993,9 +1067,13 @@ export default function FinanceLibraryPage() {
                               alt={v.title}
                               className="w-full h-full object-cover"
                             />
-                            {isSelected && (
-                              <div className="absolute inset-0 bg-teal-900/60 flex items-center justify-center text-white text-[10px] font-bold">
+                            {isSelected ? (
+                              <div className="absolute inset-0 bg-teal-900/70 flex items-center justify-center text-white text-[10px] font-bold">
                                 Playing
+                              </div>
+                            ) : (
+                              <div className="absolute bottom-1 right-1 px-1 py-0.2 bg-black/80 text-[9px] font-mono text-white rounded">
+                                {v.duration_hrs ? (v.duration_hrs >= 1 ? `${v.duration_hrs}h` : `${Math.round(v.duration_hrs * 60)}m`) : '15m'}
                               </div>
                             )}
                           </div>
@@ -1007,7 +1085,10 @@ export default function FinanceLibraryPage() {
                             >
                               {v.title}
                             </h4>
-                            <p className="text-[11px] text-slate-500 truncate">{v.channel_name}</p>
+                            <p className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+                              <span>{v.channel_name}</span>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                            </p>
                           </div>
                         </button>
                       );
@@ -1015,6 +1096,302 @@ export default function FinanceLibraryPage() {
                   </div>
                 </div>
               </div>
+
+              {/* 2. Video Catalog & Discovery Toolbar */}
+              <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                      <span>🎬</span> Video Catalog &amp; Masterclasses
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Explore verified video lessons, full crash courses, and multi-hour masterclasses across 8 core tracks.
+                    </p>
+                  </div>
+
+                  {/* Format Filter Switcher */}
+                  <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0">
+                    <button
+                      onClick={() => setTypeFilter("all")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        typeFilter === "all" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      All ({totalVideoCount})
+                    </button>
+                    <button
+                      onClick={() => setTypeFilter("video")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        typeFilter === "video" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Single Videos ({singleVideoCount})
+                    </button>
+                    <button
+                      onClick={() => setTypeFilter("playlist")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        typeFilter === "playlist" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Master Playlists ({playlistCount})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search Bar + Controls */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 pt-2">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search videos by title, creator, or topic (e.g., 'Rachana', 'candlestick', 'ITR', 'options')..."
+                      className="w-full h-11 pl-11 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-teal-700 focus:bg-white transition-all text-slate-900"
+                    />
+                    {search && (
+                      <button
+                        onClick={() => setSearch("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm p-1"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Difficulty Select */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <select
+                      value={difficultyFilter}
+                      onChange={(e) => setDifficultyFilter(e.target.value)}
+                      className="h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-teal-700 cursor-pointer"
+                    >
+                      <option value="all">All Difficulties</option>
+                      <option value="easy">Beginner</option>
+                      <option value="medium">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+
+                    {/* Sort Dropdown */}
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      className="h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-teal-700 cursor-pointer"
+                    >
+                      <option value="recommended">Sort: Recommended</option>
+                      <option value="difficulty-asc">Difficulty: Easy → Hard</option>
+                      <option value="difficulty-desc">Difficulty: Hard → Easy</option>
+                      <option value="title-asc">Title: A → Z</option>
+                      <option value="author-asc">Creator: A → Z</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Category Filter Chips */}
+                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+                    <Filter className="w-3 h-3" /> Tracks:
+                  </span>
+                  {VIDEO_TOPICS.map((vt) => {
+                    const isActive = videoCategory === vt.id;
+                    const count =
+                      vt.id === "all"
+                        ? videos.length
+                        : videos.filter((v) => {
+                            if (vt.id === "trading-markets") return v.category === "trading-markets" || v.category === "investing";
+                            if (vt.id === "general") return v.category === "general" || v.category === "economics";
+                            return v.category === vt.id;
+                          }).length;
+
+                    return (
+                      <button
+                        key={vt.id}
+                        onClick={() => setVideoCategory(vt.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                          isActive
+                            ? "bg-[#0E6163] text-white shadow-sm ring-2 ring-[#0E6163]/20"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200/80"
+                        }`}
+                      >
+                        <span>{vt.icon}</span>
+                        <span>{vt.label}</span>
+                        <span
+                          className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                            isActive ? "bg-white/20 text-white" : "bg-white text-slate-500"
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Video Catalog Grid View */}
+              {sortedVideos.length === 0 ? (
+                <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center my-8">
+                  <div className="text-5xl mb-3">🎬</div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">No matching videos found</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mb-6 max-w-md mx-auto">
+                    We could not find any videos matching your current filters or search query. Try broadening your criteria or reset filters.
+                  </p>
+                  <button
+                    onClick={() => {
+                      resetFilters();
+                      setTypeFilter("all");
+                    }}
+                    className="px-6 py-2.5 rounded-xl bg-[#0E6163] text-white text-xs font-bold hover:bg-[#0A4A4C] transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-xs text-slate-500 px-1 font-medium">
+                    <span>
+                      Showing <strong className="text-slate-900 font-bold">{sortedVideos.length}</strong> of {videos.length} videos
+                    </span>
+                    {(videoCategory !== "all" || difficultyFilter !== "all" || search || typeFilter !== "all") && (
+                      <button
+                        onClick={() => {
+                          resetFilters();
+                          setTypeFilter("all");
+                        }}
+                        className="text-teal-700 font-bold hover:underline"
+                      >
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {sortedVideos.map((v) => {
+                      const isSelected = activeVideo?.id === v.id;
+                      const isPlaylist = v.video_type === "playlist" || v.embed_type === "playlist";
+
+                      return (
+                        <article
+                          key={v.id}
+                          className={`bg-white rounded-2xl border transition-all duration-300 flex flex-col overflow-hidden group shadow-sm hover:shadow-xl ${
+                            isSelected
+                              ? "border-teal-600 ring-2 ring-teal-600/20"
+                              : "border-slate-200/90 hover:border-teal-600/40"
+                          }`}
+                        >
+                          {/* 16:9 Video Thumbnail */}
+                          <div
+                            className="relative aspect-video bg-slate-900 overflow-hidden cursor-pointer"
+                            onClick={() => {
+                              setActiveVideo(v);
+                              playerRef.current?.scrollIntoView({ behavior: "smooth" });
+                            }}
+                          >
+                            <img
+                              src={`https://img.youtube.com/vi/${v.embed_id}/mqdefault.jpg`}
+                              alt={v.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+
+                            {/* Format Badge Top Left */}
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/75 text-white backdrop-blur-sm">
+                                {isPlaylist ? "📚 PLAYLIST" : "🎬 VIDEO"}
+                              </span>
+                            </div>
+
+                            {/* Level Badge Top Right */}
+                            <div className="absolute top-2.5 right-2.5">
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${
+                                  v.level === "beginner"
+                                    ? "bg-emerald-500/90 text-white"
+                                    : v.level === "intermediate"
+                                    ? "bg-amber-500/90 text-white"
+                                    : "bg-indigo-600/90 text-white"
+                                }`}
+                              >
+                                {v.level}
+                              </span>
+                            </div>
+
+                            {/* Duration Badge Bottom Right */}
+                            <div className="absolute bottom-2.5 right-2.5">
+                              <span className="px-2 py-0.5 rounded bg-black/85 text-[10px] font-mono text-white flex items-center gap-1 font-semibold">
+                                <Clock className="w-2.5 h-2.5" />
+                                {v.duration_hrs
+                                  ? (v.duration_hrs >= 1
+                                      ? `${v.duration_hrs}h`
+                                      : `${Math.round(v.duration_hrs * 60)}m`)
+                                  : "15m"}
+                              </span>
+                            </div>
+
+                            {/* Play Overlay */}
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-transform group-hover:scale-110 shadow-lg ${
+                                isSelected ? "bg-emerald-600" : "bg-red-600"
+                              }`}>
+                                <span className="text-sm ml-0.5">▶</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Content Body */}
+                          <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                            <div>
+                              {/* Creator / Channel Name */}
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1.5 font-medium">
+                                <span className="truncate">{v.channel_name}</span>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              </div>
+
+                              {/* Title */}
+                              <h3
+                                onClick={() => {
+                                  setActiveVideo(v);
+                                  playerRef.current?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-teal-700 transition-colors cursor-pointer"
+                              >
+                                {v.title}
+                              </h3>
+
+                              {/* Curator Note Excerpt */}
+                              {v.curator_note && (
+                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                                  💡 {v.curator_note}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Card Footer / Trigger */}
+                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                              <span className="text-[10px] font-semibold text-slate-400 capitalize">
+                                {v.category.replace("-", " ")}
+                              </span>
+
+                              <button
+                                onClick={() => {
+                                  setActiveVideo(v);
+                                  playerRef.current?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                                  isSelected
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-teal-50 text-teal-800 hover:bg-teal-100"
+                                }`}
+                              >
+                                <span>{isSelected ? "✓ Playing" : "▶ Play"}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

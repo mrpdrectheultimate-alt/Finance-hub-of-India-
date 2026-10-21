@@ -1171,7 +1171,7 @@ export default function TradingTheaterPage() {
       setProgress(((stepIdx + 1) / scenario.steps.length) * 100);
 
       if (step.chartAction) {
-        setOverlays((prev) => [...new Set([...prev, step.chartAction!])]);
+        setOverlays((prev) => Array.from(new Set([...prev, step.chartAction!])));
       }
 
       narrate(step.narration);

@@ -38,6 +38,8 @@ const TRACK_TO_CATEGORY: Record<string, string> = {
   "forex-currency": "forex-currency",
   "technical-analysis": "technical-analysis",
   investing: "trading-markets",
+  economics: "general",
+  general: "general",
 };
 
 export default function LessonVideoTab({ lessonId, trackSlug, trackColor = "#0E6163" }: LessonVideoTabProps) {
