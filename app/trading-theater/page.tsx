@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { HINDI_TRANSLATIONS } from "./hindiTranslations";
 
 // ============================================================
 // FinanceHub — 3D Animated Trading Theater
@@ -29,6 +30,11 @@ interface Candle {
 interface Step {
   id: number;
   title: string;
+  titleHi?: string;
+  narrationHi?: string;
+  actionHi?: string;
+  ruleHi?: string;
+  calculationHi?: string;
   narration: string;
   action: string;
   rule?: string;
@@ -38,6 +44,9 @@ interface Step {
     options: string[];
     correct: number;
     explanation: string;
+    questionHi?: string;
+    optionsHi?: string[];
+    explanationHi?: string;
   };
   chartAction?:
     | "draw_resistance"
@@ -61,8 +70,11 @@ interface Step {
 interface Scenario {
   id: string;
   title: string;
+  titleHi?: string;
   subtitle: string;
+  subtitleHi?: string;
   category: string;
+  categoryHi?: string;
   difficulty: "Beginner" | "Intermediate" | "Advanced";
   duration: string;
   icon: string;
@@ -833,6 +845,110 @@ export default function TradingTheaterPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [lang, setLang] = useState<"en" | "hi">("en");
+  const [userProgress, setUserProgress] = useState<Record<string, { is_completed: boolean; completed_steps: number; checkpoints_passed: number }>>({});
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [completedScenarioData, setCompletedScenarioData] = useState<{ id: string; title: string; xp: number } | null>(null);
+
+  // Load progress from localStorage and API on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("fh_trading_theater_progress");
+      if (cached) {
+        setUserProgress(JSON.parse(cached));
+      }
+    } catch {}
+
+    fetch("/api/trading-theater/progress")
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.progress)) {
+          const map: Record<string, { is_completed: boolean; completed_steps: number; checkpoints_passed: number }> = {};
+          res.progress.forEach((p: any) => {
+            map[p.scenario_id] = {
+              is_completed: p.is_completed,
+              completed_steps: p.completed_steps || 0,
+              checkpoints_passed: p.checkpoints_passed || 0,
+            };
+          });
+          setUserProgress((prev) => {
+            const merged = { ...prev, ...map };
+            try {
+              localStorage.setItem("fh_trading_theater_progress", JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const completedCount = useMemo(() => {
+    return Object.values(userProgress).filter((p) => p?.is_completed).length;
+  }, [userProgress]);
+
+  // Persist progress helper
+  const saveProgress = useCallback(
+    async (
+      scenarioId: string,
+      stepIdx: number,
+      totalSteps: number,
+      checkpointsPassed: number,
+      checkpointsTotal: number,
+      isCompleted: boolean,
+      quizAnswers?: Record<string, number>
+    ) => {
+      setUserProgress((prev) => {
+        const current = prev[scenarioId] || { is_completed: false, completed_steps: 0, checkpoints_passed: 0 };
+        const updated = {
+          is_completed: current.is_completed || isCompleted,
+          completed_steps: Math.max(current.completed_steps, stepIdx + 1),
+          checkpoints_passed: Math.max(current.checkpoints_passed, checkpointsPassed),
+        };
+        const nextMap = { ...prev, [scenarioId]: updated };
+        try {
+          localStorage.setItem("fh_trading_theater_progress", JSON.stringify(nextMap));
+        } catch {}
+        return nextMap;
+      });
+
+      try {
+        await fetch("/api/trading-theater/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenarioId,
+            completedSteps: stepIdx + 1,
+            totalSteps,
+            checkpointsPassed,
+            checkpointsTotal,
+            isCompleted,
+            lastStepIndex: stepIdx,
+            quizAnswers,
+          }),
+        });
+      } catch {}
+    },
+    []
+  );
+
+  const finishScenario = useCallback(
+    (scenario: Scenario) => {
+      saveProgress(scenario.id, scenario.steps.length, scenario.steps.length, 1, 1, true);
+      const hiTitle = HINDI_TRANSLATIONS[scenario.id]?.titleHi;
+      setCompletedScenarioData({
+        id: scenario.id,
+        title: lang === "hi" && hiTitle ? hiTitle : scenario.title,
+        xp: 40,
+      });
+      setShowCelebration(true);
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setIsNarrating(false);
+    },
+    [lang, saveProgress]
+  );
 
   // ── Canvas: Draw Chart ──────────────────────────────────────
   const drawChart = useCallback(
@@ -1133,24 +1249,38 @@ export default function TradingTheaterPage() {
 
   // ── Narration via Web Speech API ─────────────────────────────
   const narrate = useCallback(
-    (text: string) => {
+    (textEn: string, textHi?: string) => {
       if (!voiceEnabled || typeof window === "undefined" || !window.speechSynthesis) return;
       window.speechSynthesis.cancel();
+      const text = lang === "hi" && textHi ? textHi : textEn;
       const utt = new SpeechSynthesisUtterance(text);
-      utt.rate = 0.92;
+      utt.rate = lang === "hi" ? 0.90 : 0.92;
       utt.pitch = 1.0;
       utt.volume = 0.95;
 
       const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(
-        (v) =>
-          v.name.includes("Google") ||
-          v.name.includes("Daniel") ||
-          v.name.includes("Samantha") ||
-          v.name.includes("Natural") ||
-          v.lang.startsWith("en")
-      );
-      if (preferred) utt.voice = preferred;
+      if (lang === "hi") {
+        utt.lang = "hi-IN";
+        const hiVoice = voices.find(
+          (v) =>
+            v.lang.toLowerCase().startsWith("hi") ||
+            v.name.toLowerCase().includes("hindi") ||
+            v.name.includes("Lekha") ||
+            v.name.includes("Kalpana") ||
+            v.name.includes("Google हिन्दी")
+        );
+        if (hiVoice) utt.voice = hiVoice;
+      } else {
+        const preferred = voices.find(
+          (v) =>
+            v.name.includes("Google") ||
+            v.name.includes("Daniel") ||
+            v.name.includes("Samantha") ||
+            v.name.includes("Natural") ||
+            v.lang.startsWith("en")
+        );
+        if (preferred) utt.voice = preferred;
+      }
 
       utt.onstart = () => setIsNarrating(true);
       utt.onend = () => setIsNarrating(false);
@@ -1158,7 +1288,7 @@ export default function TradingTheaterPage() {
       speechRef.current = utt;
       window.speechSynthesis.speak(utt);
     },
-    [voiceEnabled]
+    [voiceEnabled, lang]
   );
 
   // ── Handle step progression ──────────────────────────────────
@@ -1174,7 +1304,8 @@ export default function TradingTheaterPage() {
         setOverlays((prev) => Array.from(new Set([...prev, step.chartAction!])));
       }
 
-      narrate(step.narration);
+      const hiData = HINDI_TRANSLATIONS[scenario.id]?.steps[step.id];
+      narrate(step.narration, hiData?.narrationHi);
 
       if (step.pause && step.checkpoint) {
         setTimeout(() => {
@@ -1205,6 +1336,7 @@ export default function TradingTheaterPage() {
       playStep(activeScenario, next);
     } else {
       setIsPlaying(false);
+      finishScenario(activeScenario);
     }
   };
 
@@ -1213,11 +1345,30 @@ export default function TradingTheaterPage() {
     const step = activeScenario?.steps[currentStep];
     if (step?.checkpoint) {
       const isCorrect = optionIdx === step.checkpoint.correct;
-      narrate(
-        isCorrect
-          ? "Correct! " + step.checkpoint.explanation
-          : "Not quite. " + step.checkpoint.explanation
-      );
+      const hiData = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[step.id] : null;
+
+      if (lang === "hi") {
+        const expl = hiData?.checkpoint?.explanationHi || step.checkpoint.explanation;
+        narrate(isCorrect ? "बिल्कुल सही! " + expl : "सही नहीं है। " + expl);
+      } else {
+        narrate(
+          isCorrect
+            ? "Correct! " + step.checkpoint.explanation
+            : "Not quite. " + step.checkpoint.explanation
+        );
+      }
+
+      if (activeScenario) {
+        saveProgress(
+          activeScenario.id,
+          currentStep,
+          activeScenario.steps.length,
+          isCorrect ? 1 : 0,
+          1,
+          false,
+          { [step.id]: optionIdx }
+        );
+      }
     }
   };
 
@@ -1352,14 +1503,78 @@ export default function TradingTheaterPage() {
             </span>
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: 0, letterSpacing: "-0.3px" }}>
-            Watch Institutional Trades Unfold — Live
+            {lang === "hi" ? "संस्थागत ट्रेडिंग रणनीतियाँ — लाइव सिमुलेशन" : "Watch Institutional Trades Unfold — Live"}
           </h1>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: "4px 0 0" }}>
-            Real-time candlestick animations, voice-narrated rules, and decision checkpoints · Historical Data
+            {lang === "hi"
+              ? "रीयल-टाइम कैंडलस्टिक एनिमेशन, एआई वॉइस कमेंटरी और इंटरैक्टिव निर्णय चेकपॉइंट्स · ऐतिहासिक डेटा"
+              : "Real-time candlestick animations, voice-narrated rules, and decision checkpoints · Historical Data"}
           </p>
         </div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {/* Language Switcher Toggle */}
+          <div
+            style={{
+              display: "flex",
+              background: "rgba(255,255,255,0.06)",
+              borderRadius: 10,
+              padding: 3,
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            <button
+              onClick={() => setLang("en")}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                border: "none",
+                background: lang === "en" ? "linear-gradient(135deg, #0E6163, #1D9E75)" : "transparent",
+                color: lang === "en" ? "#fff" : "rgba(255,255,255,0.5)",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              🇬🇧 EN
+            </button>
+            <button
+              onClick={() => setLang("hi")}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                border: "none",
+                background: lang === "hi" ? "linear-gradient(135deg, #FF9933, #138808)" : "transparent",
+                color: lang === "hi" ? "#fff" : "rgba(255,255,255,0.5)",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              🇮🇳 हिंदी
+            </button>
+          </div>
+
+          {/* Progress Counter Pill */}
+          <div
+            style={{
+              padding: "6px 14px",
+              borderRadius: 10,
+              background: "rgba(0,255,136,0.08)",
+              border: "1px solid rgba(0,255,136,0.25)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span style={{ fontSize: 13, color: "#00FF88", fontWeight: 800 }}>⚡ {completedCount} / {SCENARIOS.length}</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>
+              {lang === "hi" ? "मास्टर्ड" : "Mastered"}
+            </span>
+          </div>
+
           <button
             onClick={() => setVoiceEnabled((v) => !v)}
             style={{
@@ -1373,7 +1588,7 @@ export default function TradingTheaterPage() {
               cursor: "pointer",
             }}
           >
-            {voiceEnabled ? "🔊 Voice Narration ON" : "🔇 Voice OFF"}
+            {voiceEnabled ? (lang === "hi" ? "🔊 वॉइस चालू" : "🔊 Voice ON") : (lang === "hi" ? "🔇 वॉइस बंद" : "🔇 Voice OFF")}
           </button>
 
           {activeScenario ? (
@@ -1501,6 +1716,28 @@ export default function TradingTheaterPage() {
                   </div>
                 )}
 
+                {userProgress[scenario.id]?.is_completed && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 14,
+                      left: 14,
+                      padding: "3px 10px",
+                      borderRadius: 20,
+                      background: "rgba(0,255,136,0.15)",
+                      border: "1px solid rgba(0,255,136,0.4)",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: "#00FF88",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    ✓ {lang === "hi" ? "मास्टर्ड" : "MASTERED"}
+                  </div>
+                )}
+
                 <div style={{ display: "flex", gap: 14, marginBottom: 14 }}>
                   <div
                     style={{
@@ -1520,10 +1757,14 @@ export default function TradingTheaterPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize: 16, fontWeight: 800, color: "#fff", lineHeight: 1.3, margin: "0 0 4px" }}>
-                      {scenario.title}
+                      {lang === "hi" && HINDI_TRANSLATIONS[scenario.id]?.titleHi
+                        ? HINDI_TRANSLATIONS[scenario.id].titleHi
+                        : scenario.title}
                     </h3>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.4 }}>
-                      {scenario.subtitle}
+                      {lang === "hi" && HINDI_TRANSLATIONS[scenario.id]?.subtitleHi
+                        ? HINDI_TRANSLATIONS[scenario.id].subtitleHi
+                        : scenario.subtitle}
                     </p>
                   </div>
                 </div>
@@ -1568,7 +1809,9 @@ export default function TradingTheaterPage() {
                       color: "rgba(255,255,255,0.6)",
                     }}
                   >
-                    {scenario.category}
+                    {lang === "hi" && HINDI_TRANSLATIONS[scenario.id]?.categoryHi
+                      ? HINDI_TRANSLATIONS[scenario.id].categoryHi
+                      : scenario.category}
                   </span>
                   <span
                     style={{
@@ -1598,7 +1841,7 @@ export default function TradingTheaterPage() {
                     color: "#00FF88",
                   }}
                 >
-                  <span style={{ fontSize: 16 }}>▶</span> Launch Theater Walkthrough
+                  <span style={{ fontSize: 16 }}>▶</span> {lang === "hi" ? "सिमुलेशन शुरू करें" : "Launch Theater Walkthrough"}
                 </div>
               </div>
             ))}
@@ -1767,10 +2010,10 @@ export default function TradingTheaterPage() {
             {/* Header */}
             <div style={{ padding: "18px 22px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>
-                {activeScenario.category} · {activeScenario.difficulty}
+                {(lang === "hi" && HINDI_TRANSLATIONS[activeScenario.id]?.categoryHi) ? HINDI_TRANSLATIONS[activeScenario.id].categoryHi : activeScenario.category} · {activeScenario.difficulty}
               </div>
               <h2 style={{ fontSize: 17, fontWeight: 800, color: "#fff", margin: "0 0 12px" }}>
-                {activeScenario.title}
+                {(lang === "hi" && HINDI_TRANSLATIONS[activeScenario.id]?.titleHi) ? HINDI_TRANSLATIONS[activeScenario.id].titleHi : activeScenario.title}
               </h2>
 
               {/* Progress step dots */}
@@ -1819,7 +2062,10 @@ export default function TradingTheaterPage() {
                       {currentStep + 1}
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>
-                      {currentStepData.title}
+                      {(() => {
+                        const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                        return (lang === "hi" && hiStep?.titleHi) ? hiStep.titleHi : currentStepData.title;
+                      })()}
                     </div>
                   </div>
 
@@ -1836,7 +2082,10 @@ export default function TradingTheaterPage() {
                       fontWeight: 700,
                     }}
                   >
-                    🎬 {currentStepData.action}
+                    🎬 {(() => {
+                      const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                      return (lang === "hi" && hiStep?.actionHi) ? hiStep.actionHi : currentStepData.action;
+                    })()}
                   </div>
 
                   {/* Narration transcript */}
@@ -1848,7 +2097,10 @@ export default function TradingTheaterPage() {
                       marginBottom: 16,
                     }}
                   >
-                    {currentStepData.narration}
+                    {(() => {
+                      const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                      return (lang === "hi" && hiStep?.narrationHi) ? hiStep.narrationHi : currentStepData.narration;
+                    })()}
                   </p>
 
                   {/* Trading rule */}
@@ -1874,7 +2126,10 @@ export default function TradingTheaterPage() {
                         CORE TRADING RULE
                       </div>
                       <div style={{ fontSize: 12, color: "rgba(255,215,0,0.9)", lineHeight: 1.6 }}>
-                        {currentStepData.rule}
+                        {(() => {
+                        const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                        return (lang === "hi" && hiStep?.ruleHi) ? hiStep.ruleHi : currentStepData.rule;
+                      })()}
                       </div>
                     </div>
                   )}
@@ -1911,7 +2166,10 @@ export default function TradingTheaterPage() {
                             marginBottom: 12,
                           }}
                         >
-                          {currentStepData.checkpoint.question}
+                          {(() => {
+                            const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                            return (lang === "hi" && hiStep?.checkpoint?.questionHi) ? hiStep.checkpoint.questionHi : currentStepData.checkpoint.question;
+                          })()}
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1958,7 +2216,10 @@ export default function TradingTheaterPage() {
                                 {showResult && isCorrect && "✅ "}
                                 {showResult && !isCorrect && isSelected && "❌ "}
                                 {!showResult && `${String.fromCharCode(65 + i)}. `}
-                                {opt}
+                                {(() => {
+                                  const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                                  return (lang === "hi" && hiStep?.checkpoint?.optionsHi && hiStep.checkpoint.optionsHi[i]) ? hiStep.checkpoint.optionsHi[i] : opt;
+                                })()}
                               </button>
                             );
                           })}
@@ -1976,7 +2237,10 @@ export default function TradingTheaterPage() {
                               lineHeight: 1.6,
                             }}
                           >
-                            {currentStepData.checkpoint.explanation}
+                            {(() => {
+                              const hiStep = activeScenario ? HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id] : null;
+                              return (lang === "hi" && hiStep?.checkpoint?.explanationHi) ? hiStep.checkpoint.explanationHi : currentStepData.checkpoint.explanation;
+                            })()}
                           </div>
                         )}
                       </div>
@@ -2026,7 +2290,10 @@ export default function TradingTheaterPage() {
                       {i < currentStep ? "✓" : i + 1}
                     </div>
                     <div style={{ fontSize: 12, color: i === currentStep ? "#fff" : "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
-                      {s.title}
+                      {(() => {
+                        const sHi = HINDI_TRANSLATIONS[activeScenario.id]?.steps[s.id];
+                        return (lang === "hi" && sHi?.titleHi) ? sHi.titleHi : s.title;
+                      })()}
                       {s.pause && <span style={{ marginLeft: 6, fontSize: 10, color: "#00BFFF" }}>⏸</span>}
                     </div>
                   </div>
@@ -2062,7 +2329,12 @@ export default function TradingTheaterPage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => currentStepData && narrate(currentStepData.narration)}
+                  onClick={() => {
+                    if (currentStepData && activeScenario) {
+                      const hiStep = HINDI_TRANSLATIONS[activeScenario.id]?.steps[currentStepData.id];
+                      narrate(currentStepData.narration, hiStep?.narrationHi);
+                    }
+                  }}
                   style={{
                     flex: 1,
                     padding: "12px",
@@ -2112,14 +2384,11 @@ export default function TradingTheaterPage() {
                     cursor: "pointer",
                   }}
                 >
-                  Next Step →
+                  {lang === "hi" ? "अगला चरण →" : "Next Step →"}
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    setActiveScenario(null);
-                    stopNarration();
-                  }}
+                  onClick={() => activeScenario && finishScenario(activeScenario)}
                   style={{
                     flex: 2,
                     padding: "12px",
@@ -2132,13 +2401,143 @@ export default function TradingTheaterPage() {
                     cursor: "pointer",
                   }}
                 >
-                  ✅ Complete — Explore Next
+                  {lang === "hi" ? "✅ पूरा हुआ — अगली रणनीति" : "✅ Complete — Explore Next"}
                 </button>
               )}
             </div>
           </div>
         </div>
       )}
-    </div>
+    
+      {/* ── CELEBRATION MODAL ──────────────────────────────────── */}
+      {showCelebration && completedScenarioData && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div
+            style={{
+              background: "linear-gradient(145deg, #0D1626, #070B14)",
+              border: "1px solid rgba(0,255,136,0.4)",
+              borderRadius: 20,
+              padding: 36,
+              maxWidth: 500,
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 25px 50px -12px rgba(0,255,136,0.25)",
+            }}
+          >
+            <div style={{ fontSize: 54, marginBottom: 12 }}>🏆</div>
+            <div
+              style={{
+                display: "inline-block",
+                padding: "4px 14px",
+                borderRadius: 20,
+                background: "rgba(0,255,136,0.15)",
+                border: "1px solid rgba(0,255,136,0.4)",
+                color: "#00FF88",
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.1em",
+                marginBottom: 14,
+              }}
+            >
+              {lang === "hi" ? "रणनीति पूरी हुई" : "SCENARIO MASTERED"}
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 8px" }}>
+              {completedScenarioData.title}
+            </h2>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 20 }}>
+              {lang === "hi"
+                ? "आपने इस रणनीति के सभी इंटरैक्टिव स्टेप्स और चेकपॉइंट सफलतापूर्वक पूरे कर लिए हैं!"
+                : "You have successfully completed all animated steps and decision checkpoints for this scenario!"}
+            </p>
+
+            <div
+              style={{
+                background: "rgba(0,255,136,0.06)",
+                border: "1px solid rgba(0,255,136,0.2)",
+                borderRadius: 14,
+                padding: "16px",
+                display: "flex",
+                justifyContent: "space-around",
+                marginBottom: 24,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
+                  {lang === "hi" ? "अर्जित XP" : "XP EARNED"}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#00FF88" }}>
+                  +{completedScenarioData.xp} XP
+                </div>
+              </div>
+              <div style={{ width: 1, background: "rgba(255,255,255,0.1)" }} />
+              <div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>
+                  {lang === "hi" ? "कुल पूर्ण" : "TOTAL COMPLETED"}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#00BFFF" }}>
+                  {completedCount} / {SCENARIOS.length}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => {
+                  setShowCelebration(false);
+                  setActiveScenario(null);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 10,
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                {lang === "hi" ? "कैटलॉग पर लौटें" : "Academy Catalog"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCelebration(false);
+                  const currentIdx = SCENARIOS.findIndex((s) => s.id === completedScenarioData.id);
+                  const nextScenario = SCENARIOS[(currentIdx + 1) % SCENARIOS.length];
+                  startScenario(nextScenario);
+                }}
+                className="glow-green"
+                style={{
+                  flex: 1.3,
+                  padding: "12px",
+                  background: "linear-gradient(135deg,#0E6163,#1D9E75)",
+                  border: "none",
+                  borderRadius: 10,
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+              >
+                {lang === "hi" ? "अगली रणनीति →" : "Next Scenario →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+</div>
   );
 }
