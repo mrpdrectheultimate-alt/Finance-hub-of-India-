@@ -11,6 +11,7 @@ interface ProgressPayload {
   checkpointsTotal?: number;
   isCompleted?: boolean;
   lastStepIndex?: number;
+  scorePct?: number;
   quizAnswers?: Record<string, number>;
 }
 
@@ -39,28 +40,88 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Use service client with any-cast for newly introduced tables
     const serviceClient = createServiceClient() as any;
-    const { data, error } = await serviceClient
-      .from("user_trading_progress")
-      .select("*")
-      .eq("user_id", user.id);
 
-    if (error) {
-      // Table may not have been migrated yet in Supabase SQL editor
-      return NextResponse.json({
-        success: true,
-        authenticated: true,
-        progress: [],
-        tableReady: false,
-        notice: "Table user_trading_progress pending SQL execution in Supabase",
-      });
+    // 1. First check official theater_progress table joined with trading_scenarios
+    try {
+      const { data: tpData, error: tpError } = await serviceClient
+        .from("theater_progress")
+        .select(`
+          id,
+          user_id,
+          scenario_id,
+          steps_completed,
+          checkpoints_correct,
+          checkpoints_total,
+          is_completed,
+          score_pct,
+          completed_at,
+          trading_scenarios (
+            id,
+            slug,
+            title
+          )
+        `)
+        .eq("user_id", user.id);
+
+      if (!tpError && Array.isArray(tpData) && tpData.length > 0) {
+        const progressList = tpData.map((item: any) => ({
+          scenario_id: item.trading_scenarios?.slug || item.scenario_id,
+          completed_steps: item.steps_completed || 0,
+          checkpoints_passed: item.checkpoints_correct || 0,
+          checkpoints_total: item.checkpoints_total || 0,
+          is_completed: Boolean(item.is_completed),
+          score_pct: item.score_pct || 100,
+          completed_at: item.completed_at,
+        }));
+
+        return NextResponse.json({
+          success: true,
+          authenticated: true,
+          progress: progressList,
+          tableReady: true,
+          schema: "theater_progress",
+        });
+      }
+    } catch {
+      // Fallback
     }
 
+    // 2. Check user_trading_progress fallback table
+    try {
+      const { data: utpData, error: utpError } = await serviceClient
+        .from("user_trading_progress")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (!utpError && Array.isArray(utpData) && utpData.length > 0) {
+        const progressList = utpData.map((item: any) => ({
+          scenario_id: item.scenario_id,
+          completed_steps: item.completed_steps || 0,
+          checkpoints_passed: item.checkpoints_passed || 0,
+          checkpoints_total: item.checkpoints_total || 0,
+          is_completed: Boolean(item.is_completed),
+          score_pct: 100,
+          completed_at: item.completed_at,
+        }));
+
+        return NextResponse.json({
+          success: true,
+          authenticated: true,
+          progress: progressList,
+          tableReady: true,
+          schema: "user_trading_progress",
+        });
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Default empty when user has not completed any scenarios yet
     return NextResponse.json({
       success: true,
       authenticated: true,
-      progress: data || [],
+      progress: [],
       tableReady: true,
     });
   } catch (err: unknown) {
@@ -84,6 +145,7 @@ export async function POST(req: NextRequest) {
       checkpointsTotal = 0,
       isCompleted = false,
       lastStepIndex = 0,
+      scorePct = 100,
       quizAnswers = {},
     } = body;
 
@@ -118,56 +180,89 @@ export async function POST(req: NextRequest) {
     }
 
     const serviceClient = createServiceClient() as any;
+    let savedToTheaterProgress = false;
+    let rpcResponse = null;
 
-    // Check if previously completed before upserting
-    let newlyCompleted = false;
-    if (isCompleted) {
-      const { data: existing } = await serviceClient
-        .from("user_trading_progress")
-        .select("is_completed")
-        .eq("user_id", user.id)
-        .eq("scenario_id", scenarioId)
+    // 1. Try resolving scenario UUID from trading_scenarios
+    try {
+      const { data: scData } = await serviceClient
+        .from("trading_scenarios")
+        .select("id, xp_reward, title")
+        .eq("slug", scenarioId)
         .maybeSingle();
 
-      if (!existing || !existing.is_completed) {
-        newlyCompleted = true;
+      if (scData?.id) {
+        // If completed, invoke complete_theater_scenario RPC
+        if (isCompleted) {
+          try {
+            const { data: rpcData } = await serviceClient.rpc(
+              "complete_theater_scenario",
+              {
+                p_user_id: user.id,
+                p_scenario_id: scData.id,
+                p_score: scorePct,
+              }
+            );
+            rpcResponse = rpcData;
+            savedToTheaterProgress = true;
+          } catch {
+            // Fallback to direct upsert
+          }
+        }
+
+        // Direct upsert to theater_progress
+        const { error: tpErr } = await serviceClient
+          .from("theater_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              scenario_id: scData.id,
+              steps_completed: completedSteps,
+              checkpoints_correct: checkpointsPassed,
+              checkpoints_total: checkpointsTotal,
+              is_completed: isCompleted,
+              score_pct: scorePct,
+              completed_at: isCompleted ? new Date().toISOString() : null,
+            },
+            { onConflict: "user_id,scenario_id" }
+          );
+
+        if (!tpErr) {
+          savedToTheaterProgress = true;
+        }
       }
+    } catch {
+      // Ignore and proceed to fallback
     }
 
-    const upsertData: Record<string, unknown> = {
-      user_id: user.id,
-      scenario_id: scenarioId,
-      completed_steps: completedSteps,
-      total_steps: totalSteps,
-      checkpoints_passed: checkpointsPassed,
-      checkpoints_total: checkpointsTotal,
-      is_completed: isCompleted,
-      last_step_index: lastStepIndex,
-      quiz_answers: quizAnswers,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (isCompleted) {
-      upsertData.completed_at = new Date().toISOString();
+    // 2. Also save to user_trading_progress for backwards compatibility
+    try {
+      await serviceClient
+        .from("user_trading_progress")
+        .upsert(
+          {
+            user_id: user.id,
+            scenario_id: scenarioId,
+            completed_steps: completedSteps,
+            total_steps: totalSteps,
+            checkpoints_passed: checkpointsPassed,
+            checkpoints_total: checkpointsTotal,
+            is_completed: isCompleted,
+            last_step_index: lastStepIndex,
+            quiz_answers: quizAnswers,
+            completed_at: isCompleted ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,scenario_id" }
+        );
+    } catch {
+      // Non-fatal
     }
 
-    const { error: upsertError } = await serviceClient
-      .from("user_trading_progress")
-      .upsert(upsertData, { onConflict: "user_id,scenario_id" });
-
-    if (upsertError) {
-      return NextResponse.json({
-        success: true,
-        localOnly: true,
-        notice: "Table user_trading_progress pending in Supabase. Progress saved locally.",
-      });
-    }
-
-    // Award XP if newly completed
-    let xpAwarded = 0;
-    if (newlyCompleted) {
+    // 3. Award XP directly to profiles if newly completed and RPC wasn't executed
+    let xpAwarded = isCompleted ? 50 : 0;
+    if (isCompleted && !rpcResponse) {
       try {
-        xpAwarded = 40; // 40 XP per completed scenario
         const { data: profile } = await serviceClient
           .from("profiles")
           .select("xp_total")
@@ -184,7 +279,7 @@ export async function POST(req: NextRequest) {
             .eq("id", user.id);
         }
       } catch {
-        // XP award is non-fatal
+        // Non-fatal
       }
     }
 
@@ -193,6 +288,8 @@ export async function POST(req: NextRequest) {
       scenarioId,
       isCompleted,
       xpAwarded,
+      savedToTheaterProgress,
+      rpcResponse,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
