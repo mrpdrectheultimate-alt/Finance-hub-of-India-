@@ -51,33 +51,42 @@ export function PWAInstallPrompt() {
   const [dismissed,      setDismissed]      = useState(false);
 
   useEffect(() => {
-    // Check if already dismissed
-    if (localStorage.getItem("pwa-install-dismissed")) return;
+    if (typeof window === "undefined") return;
 
-    // Detect platform
+    // 1. Do not show if already accepted or running as installed PWA (standalone)
+    if (localStorage.getItem("pwa-install-accepted")) return;
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if ((window.navigator as any).standalone) return;
+
+    // 2. Check if dismissed recently (suppress for 7 days)
+    const dismissedAt = localStorage.getItem("pwa-install-dismissed");
+    if (dismissedAt) {
+      const elapsed = Date.now() - parseInt(dismissedAt, 10);
+      if (!isNaN(elapsed) && elapsed < 7 * 24 * 60 * 60 * 1000) return;
+    }
+
+    // 3. Detect platform
     const ua = navigator.userAgent.toLowerCase();
-    if (/iphone|ipad|ipod/.test(ua)) setPlatform("ios");
-    else if (/android/.test(ua))      setPlatform("android");
-    else                              setPlatform("desktop");
+    if (/iphone|ipad|ipod/.test(ua)) {
+      setPlatform("ios");
+      // On iOS: show manual instructions after 15 seconds
+      const timer = setTimeout(() => setShow(true), 15000);
+      return () => clearTimeout(timer);
+    } else if (/android/.test(ua)) {
+      setPlatform("android");
+    } else {
+      setPlatform("desktop");
+    }
 
-    // Listen for beforeinstallprompt (Chrome/Android)
+    // 4. Listen for beforeinstallprompt (Chrome / Android / Edge)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show prompt after 30 seconds of use
-      setTimeout(() => setShow(true), 30000);
+      // Show prompt after 12 seconds
+      setTimeout(() => setShow(true), 12000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
-    // iOS: show manual instructions after delay if not installed
-    if (/iphone|ipad|ipod/.test(ua)) {
-      const isStandalone = (window.navigator as any).standalone;
-      if (!isStandalone) {
-        setTimeout(() => setShow(true), 60000); // Show after 1 minute on iOS
-      }
-    }
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
@@ -102,94 +111,202 @@ export function PWAInstallPrompt() {
   if (!show || dismissed) return null;
 
   return (
-    <div style={{
-      position:    "fixed",
-      bottom:      80,
-      left:        16,
-      right:       16,
-      background:  "#1c2b3a",
-      borderRadius: 16,
-      padding:     "16px 18px",
-      boxShadow:   "0 20px 60px rgba(0,0,0,0.3)",
-      zIndex:      9999,
-      fontFamily:  "var(--font-ui,system-ui)",
-      border:      "1px solid rgba(255,255,255,0.1)",
-      animation:   "slide-up 0.3s ease-out",
-    }}>
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        {/* App icon */}
-        <div style={{
-          width: 52, height: 52, borderRadius: 12, flexShrink: 0,
-          overflow: "hidden",
-        }}>
-          <Image
-            src="/app-icon-dark.png"
-            alt="FinanceHub"
-            width={52}
-            height={52}
-            style={{ width: 52, height: 52, objectFit: "cover" }}
-          />
+    <>
+      <style>{`
+        @keyframes pwaSlideUpIn {
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        @media (max-width: 640px) {
+          .fh-pwa-prompt-box {
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 16px !important;
+            max-width: calc(100vw - 32px) !important;
+          }
+        }
+      `}</style>
+      <aside
+        className="fh-pwa-prompt-box"
+        role="region"
+        aria-label="Install FinanceHub Web App"
+        style={{
+          position:       "fixed",
+          bottom:         24,
+          left:           24,
+          width:          "100%",
+          maxWidth:       340,
+          background:     "linear-gradient(145deg, #101c28 0%, #0c141d 100%)",
+          borderRadius:   16,
+          padding:        "14px 16px",
+          boxShadow:      "0 18px 45px -8px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08)",
+          zIndex:         9990,
+          fontFamily:     "var(--font-ui, system-ui, -apple-system, sans-serif)",
+          border:         "1px solid rgba(255,255,255,0.12)",
+          backdropFilter: "blur(16px)",
+          animation:      "pwaSlideUpIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {/* Top Header Row */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
+          {/* App icon */}
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              flexShrink: 0,
+              overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "#060d14",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              src="/app-icon-dark.png"
+              alt="FinanceHub"
+              width={40}
+              height={40}
+              style={{ width: 40, height: 40, objectFit: "cover" }}
+            />
+          </div>
+
+          {/* Title & subtitle */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#ffffff", lineHeight: 1.25, letterSpacing: "-0.2px" }}>
+              Install FinanceHub
+            </div>
+            <div style={{ fontSize: 11.5, color: "#94a3b8", lineHeight: 1.35, marginTop: 2 }}>
+              {platform === "ios"
+                ? "Tap Share → Add to Home Screen"
+                : "Fast, offline-ready & instant access"}
+            </div>
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={handleDismiss}
+            aria-label="Close install prompt"
+            style={{
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.45)",
+              cursor: "pointer",
+              fontSize: 16,
+              padding: "2px 4px",
+              lineHeight: 1,
+              transition: "color 0.15s ease",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#ffffff")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 3 }}>
-            Install FinanceHub
-          </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: 12 }}>
-            {platform === "ios"
-              ? "Tap Share → 'Add to Home Screen' for the best experience"
-              : "Add to your home screen — works offline, loads instantly"
-            }
-          </div>
-
-          {/* Benefits */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
-            {[
-              { icon: "⚡", text: "Faster" },
-              { icon: "📴", text: "Offline" },
-              { icon: "🔔", text: "Reminders" },
-            ].map(b => (
-              <div key={b.text} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
-                <span>{b.icon}</span> {b.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Actions */}
-          {platform === "ios" ? (
-            <div style={{ fontSize: 12, color: "#1D9E75", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-              <span>Tap</span>
-              <span style={{ fontSize: 16 }}>⬆️</span>
-              <span>Share → Add to Home Screen</span>
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={handleInstall}
-                style={{
-                  flex: 1, padding: "9px", background: "#0E6163", color: "#fff",
-                  border: "none", borderRadius: 9, fontSize: 13, fontWeight: 700,
-                  cursor: "pointer", fontFamily: "var(--font-ui,system-ui)",
-                }}>
-                Install App
-              </button>
-              <button onClick={handleDismiss}
-                style={{
-                  padding: "9px 14px", background: "rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.6)", border: "none", borderRadius: 9,
-                  fontSize: 13, cursor: "pointer", fontFamily: "var(--font-ui,system-ui)",
-                }}>
-                Later
-              </button>
-            </div>
-          )}
+        {/* Benefits Micro-Pills */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+          {[
+            { icon: "⚡", label: "2x Faster" },
+            { icon: "📴", label: "Offline" },
+            { icon: "🔔", label: "Reminders" },
+          ].map(badge => (
+            <span
+              key={badge.label}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 10.5,
+                fontWeight: 500,
+                color: "#cbd5e1",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                padding: "2px 7px",
+                borderRadius: 6,
+                letterSpacing: "-0.1px",
+              }}
+            >
+              <span>{badge.icon}</span>
+              <span>{badge.label}</span>
+            </span>
+          ))}
         </div>
 
-        <button onClick={handleDismiss}
-          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 18, padding: 0, flexShrink: 0 }}>
-          ✕
-        </button>
-      </div>
-    </div>
+        {/* Action Row */}
+        {platform === "ios" ? (
+          <div
+            style={{
+              fontSize: 11.5,
+              color: "#34d399",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(16, 185, 129, 0.1)",
+              border: "1px solid rgba(16, 185, 129, 0.2)",
+              padding: "6px 10px",
+              borderRadius: 8,
+            }}
+          >
+            <span>Tap</span>
+            <span style={{ fontSize: 13 }}>⬆️</span>
+            <span>Share → &quot;Add to Home Screen&quot;</span>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={handleInstall}
+              style={{
+                flex: 1,
+                padding: "7px 12px",
+                background: "#0E6163",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                boxShadow: "0 2px 8px rgba(14, 97, 99, 0.4)",
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#127678")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#0E6163")}
+            >
+              Install App
+            </button>
+            <button
+              onClick={handleDismiss}
+              style={{
+                padding: "7px 12px",
+                background: "rgba(255,255,255,0.08)",
+                color: "#cbd5e1",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+            >
+              Later
+            </button>
+          </div>
+        )}
+      </aside>
+    </>
   );
 }
 

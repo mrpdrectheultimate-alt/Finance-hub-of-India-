@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { MessageSquare, Search, Plus, Filter, Sparkles, CheckCircle2, TrendingUp, HelpCircle } from "lucide-react";
 import QuestionCard, { QuestionCardProps } from "@/components/community/QuestionCard";
 import AskQuestionModal from "@/components/community/AskQuestionModal";
-import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import { supabase } from "@/lib/supabase";
 
 export default function CommunityPage() {
@@ -64,9 +63,6 @@ export default function CommunityPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-20">
-      {/* PWA Install Banner */}
-      <PWAInstallPrompt />
-
       {/* Header Banner */}
       <div className="bg-gradient-to-b from-slate-900 via-slate-900/90 to-slate-950 border-b border-slate-800 pt-10 pb-12 px-6">
         <div className="max-w-5xl mx-auto">
