@@ -38,9 +38,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     const origin =
-      typeof window !== "undefined" &&
-      window.location.origin &&
-      !window.location.origin.includes("localhost")
+      typeof window !== "undefined" && window.location.origin
         ? window.location.origin
         : "https://finance-hub-of-india.vercel.app";
     const next =

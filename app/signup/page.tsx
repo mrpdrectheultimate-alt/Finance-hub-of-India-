@@ -41,15 +41,17 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     const origin =
-      typeof window !== "undefined" &&
-      window.location.origin &&
-      !window.location.origin.includes("localhost")
+      typeof window !== "undefined" && window.location.origin
         ? window.location.origin
         : "https://finance-hub-of-india.vercel.app";
+    const next =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next") || "/onboarding"
+        : "/onboarding";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/api/auth/callback?next=/onboarding`,
+        redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
