@@ -153,45 +153,71 @@ VALUES
  'Historical — Hindi narration',6,1,TRUE,TRUE,50,17),
 
 -- ── 8 New Advanced Scenarios ──────────────────────────────────
-('candlestick-pattern-trade','Candlestick Patterns — Bullish Engulfing',
- 'Spotting reversal confirmation on Tata Motors with volume expansion',
- 'Price Action','beginner',4,'TATAMOTORS','15-minute',
- 'Historical — Auto Sector Q1',4,1,TRUE,FALSE,50,18),
+('candlestick-pattern-trade','Candlestick Pattern Trade',
+ 'Hammer and Engulfing live trade',
+ 'Price Action','beginner',5,'HDFC Bank','15-minute',
+ 'Historical Oct 2024',5,1,TRUE,FALSE,50,18),
 
 ('vwap-intraday-strategy','VWAP Intraday Strategy',
- 'Trading institutional pullbacks and mean reversion on Reliance Industries',
- 'Intraday Trading','intermediate',5,'RELIANCE','5-minute',
- 'Historical — Earnings Week',4,1,TRUE,FALSE,60,19),
+ 'Institutional reference line for high-prob entries',
+ 'Intraday','intermediate',5,'NIFTY 50','5-minute',
+ 'Historical Oct 2024',4,1,TRUE,FALSE,75,19),
 
-('short-selling-strategy','Short Selling — Profiting in a Falling Market',
- 'Borrowing, selling high, and buying back lower on intraday breakdown',
- 'Equity & Intraday','beginner',4,'INFY','15-minute',
- 'Historical — IT Sector Correction',4,1,TRUE,FALSE,50,20),
+('short-selling-basics','Short Selling',
+ 'Profiting from falling markets',
+ 'Advanced Strategies','intermediate',5,'Nifty IT Futures','Daily',
+ 'Historical 2024',4,1,TRUE,FALSE,75,20),
 
-('gap-trading-strategy','Opening Gap Strategy — Fade vs Follow',
- 'Trading the 9:15 AM opening gap on NIFTY without getting trapped',
- 'Opening Bell','intermediate',5,'NIFTY 50','5-minute',
- 'Historical — Global Overnight Cues',4,1,TRUE,FALSE,65,21),
+('gap-up-gap-down-strategy','Gap Up Gap Down Strategy',
+ 'Reading and trading the opening gap',
+ 'Intraday','beginner',4,'NIFTY 50','5-minute',
+ 'Historical Oct 2024',4,1,TRUE,FALSE,50,21),
 
-('fno-expiry-day-strategy','F&O Expiry Day — Thursday Theta Decay',
- 'Navigating rapid option decay and the reality of Zero to Hero trades',
- 'Options Trading','advanced',5,'BANKNIFTY','15-minute',
- 'Historical — Weekly Thursday Expiry',4,1,FALSE,FALSE,85,22),
+('fo-expiry-day-strategy','F&O Expiry Day Strategy',
+ 'Theta decay and Iron Condor on Thursday',
+ 'Derivatives','advanced',6,'NIFTY Options','5-minute',
+ 'Historical Oct 2024',4,1,FALSE,FALSE,100,22),
 
-('bull-trap-liquidity-hunt','Stoploss Hunt & The Bull Trap',
- 'How institutional algorithms sweep retail breakout stops before dumping',
- 'Market Structure','intermediate',5,'NIFTY 50','15-minute',
- 'Historical — Institutional Liquidity Sweep',4,1,FALSE,FALSE,75,23),
+('stop-loss-hunt-operator-trap','Stop-Loss Hunt',
+ 'How operators trap retail and how to avoid it',
+ 'Market Mechanics','intermediate',4,'Mid-cap','5-minute',
+ 'Educational demo',3,1,TRUE,FALSE,75,23),
 
-('crypto-btc-breakout','Crypto BTC Breakout — Ascending Triangle',
- 'Trading 24/7 market structure and multi-day volatility expansion on Bitcoin',
- 'Crypto Trading','intermediate',5,'BTC/USDT','1-hour',
- 'Historical — Halving Cycle Accumulation',4,1,FALSE,FALSE,70,24),
+('crypto-bitcoin-breakout','Bitcoin Breakout Trade',
+ 'Technical breakout on BTC with India tax context',
+ 'Crypto','intermediate',4,'Bitcoin','Daily',
+ 'Historical 2024',4,1,FALSE,FALSE,75,24),
 
-('trade-journal-review','The Post-Trade Journal — Turning Data Into Edge',
- 'Analyzing win/loss metrics, execution slip, and psychological triggers',
- 'Trading Psychology','beginner',4,'PORTFOLIO JOURNAL','Daily',
- 'Real trader trade-log simulation',4,1,TRUE,FALSE,100,25)
+('trade-journal-review','Trade Journal Review',
+ 'Post-trade analysis — the missing skill',
+ 'Psychology','beginner',4,'Portfolio','Weekly',
+ 'Demonstration',4,1,TRUE,FALSE,50,25),
+
+-- Legacy alias slugs (for backwards-compatibility)
+('short-selling-strategy','Short Selling (Legacy Slug)',
+ 'Profiting from falling markets',
+ 'Advanced Strategies','intermediate',5,'Nifty IT Futures','Daily',
+ 'Historical 2024',4,1,TRUE,FALSE,75,120),
+
+('gap-trading-strategy','Gap Trading Strategy (Legacy Slug)',
+ 'Reading and trading the opening gap',
+ 'Intraday','beginner',4,'NIFTY 50','5-minute',
+ 'Historical Oct 2024',4,1,TRUE,FALSE,50,121),
+
+('fno-expiry-day-strategy','F&O Expiry Day (Legacy Slug)',
+ 'Theta decay and Iron Condor on Thursday',
+ 'Derivatives','advanced',6,'NIFTY Options','5-minute',
+ 'Historical Oct 2024',4,1,FALSE,FALSE,100,122),
+
+('bull-trap-liquidity-hunt','Bull Trap Liquidity Hunt (Legacy Slug)',
+ 'How operators trap retail and how to avoid it',
+ 'Market Mechanics','intermediate',4,'Mid-cap','5-minute',
+ 'Educational demo',3,1,TRUE,FALSE,75,123),
+
+('crypto-btc-breakout','Crypto BTC Breakout (Legacy Slug)',
+ 'Technical breakout on BTC with India tax context',
+ 'Crypto','intermediate',4,'Bitcoin','Daily',
+ 'Historical 2024',4,1,FALSE,FALSE,75,124)
 
 ON CONFLICT (slug) DO NOTHING;
 
