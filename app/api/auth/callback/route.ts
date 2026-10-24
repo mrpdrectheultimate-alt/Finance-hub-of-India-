@@ -7,7 +7,7 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient as createAuthServerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient as createAuthServerClient } from "@supabase/ssr";
 import { createServiceClient } from "@/lib/supabase";
 import { getRequestOrigin } from "@/lib/url";
 import type { Database } from "@/types/database";
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       getAll() {
         return req.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });
