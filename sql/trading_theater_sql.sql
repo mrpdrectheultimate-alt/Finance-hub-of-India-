@@ -150,7 +150,48 @@ VALUES
 ('support-resistance-hindi','Support Resistance Hindi Walkthrough',
  'Support aur resistance kaise identify karein — Hindi mein',
  'Price Action','beginner',4,'NIFTY 50','15-minute',
- 'Historical — Hindi narration',6,1,TRUE,TRUE,50,17)
+ 'Historical — Hindi narration',6,1,TRUE,TRUE,50,17),
+
+-- ── 8 New Advanced Scenarios ──────────────────────────────────
+('candlestick-pattern-trade','Candlestick Patterns — Bullish Engulfing',
+ 'Spotting reversal confirmation on Tata Motors with volume expansion',
+ 'Price Action','beginner',4,'TATAMOTORS','15-minute',
+ 'Historical — Auto Sector Q1',4,1,TRUE,FALSE,50,18),
+
+('vwap-intraday-strategy','VWAP Intraday Strategy',
+ 'Trading institutional pullbacks and mean reversion on Reliance Industries',
+ 'Intraday Trading','intermediate',5,'RELIANCE','5-minute',
+ 'Historical — Earnings Week',4,1,TRUE,FALSE,60,19),
+
+('short-selling-strategy','Short Selling — Profiting in a Falling Market',
+ 'Borrowing, selling high, and buying back lower on intraday breakdown',
+ 'Equity & Intraday','beginner',4,'INFY','15-minute',
+ 'Historical — IT Sector Correction',4,1,TRUE,FALSE,50,20),
+
+('gap-trading-strategy','Opening Gap Strategy — Fade vs Follow',
+ 'Trading the 9:15 AM opening gap on NIFTY without getting trapped',
+ 'Opening Bell','intermediate',5,'NIFTY 50','5-minute',
+ 'Historical — Global Overnight Cues',4,1,TRUE,FALSE,65,21),
+
+('fno-expiry-day-strategy','F&O Expiry Day — Thursday Theta Decay',
+ 'Navigating rapid option decay and the reality of Zero to Hero trades',
+ 'Options Trading','advanced',5,'BANKNIFTY','15-minute',
+ 'Historical — Weekly Thursday Expiry',4,1,FALSE,FALSE,85,22),
+
+('bull-trap-liquidity-hunt','Stoploss Hunt & The Bull Trap',
+ 'How institutional algorithms sweep retail breakout stops before dumping',
+ 'Market Structure','intermediate',5,'NIFTY 50','15-minute',
+ 'Historical — Institutional Liquidity Sweep',4,1,FALSE,FALSE,75,23),
+
+('crypto-btc-breakout','Crypto BTC Breakout — Ascending Triangle',
+ 'Trading 24/7 market structure and multi-day volatility expansion on Bitcoin',
+ 'Crypto Trading','intermediate',5,'BTC/USDT','1-hour',
+ 'Historical — Halving Cycle Accumulation',4,1,FALSE,FALSE,70,24),
+
+('trade-journal-review','The Post-Trade Journal — Turning Data Into Edge',
+ 'Analyzing win/loss metrics, execution slip, and psychological triggers',
+ 'Trading Psychology','beginner',4,'PORTFOLIO JOURNAL','Daily',
+ 'Real trader trade-log simulation',4,1,TRUE,FALSE,100,25)
 
 ON CONFLICT (slug) DO NOTHING;
 
