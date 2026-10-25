@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, getBrowserClient } from "@/lib/supabase";
 import Logo        from "@/components/ui/Logo";
 
 // ============================================================
@@ -45,7 +45,8 @@ export default function LoginPage() {
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("next") || "/dashboard"
         : "/dashboard";
-    const { error } = await supabase.auth.signInWithOAuth({
+    const client = getBrowserClient();
+    const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
@@ -66,7 +67,8 @@ export default function LoginPage() {
     if (!email || !password) { setError("Please enter your email and password."); return; }
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const client = getBrowserClient();
+    const { error } = await client.auth.signInWithPassword({ email, password });
     if (error) { setError(error.message); setLoading(false); }
     else        window.location.href = "/dashboard";
   };

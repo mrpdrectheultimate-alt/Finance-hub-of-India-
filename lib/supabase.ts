@@ -13,9 +13,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supa
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key";
 const SUPABASE_SVC = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "dummy_svc_key";
 
-// ─── Browser client (for Client Components) ──────────────────
-// Usage: import { supabase, getBrowserClient } from "@/lib/supabase"
-
 let _browserClient: any = null;
 
 export function getBrowserClient() {
@@ -23,15 +20,27 @@ export function getBrowserClient() {
     return createClient<Database>(SUPABASE_URL, SUPABASE_ANON);
   }
   if (!_browserClient) {
-    _browserClient = createSSRBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON);
+    _browserClient = createSSRBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
+      cookieOptions: {
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      },
+    });
   }
   return _browserClient;
 }
 
-// Alias used throughout the codebase
-export const supabase = typeof window !== "undefined"
-  ? getBrowserClient()
-  : createClient<Database>(SUPABASE_URL, SUPABASE_ANON);
+// Dynamic proxy to guarantee that client-side calls always use createSSRBrowserClient
+export const supabase = new Proxy({} as any, {
+  get(_target, prop) {
+    const client = typeof window !== "undefined"
+      ? getBrowserClient()
+      : createClient<Database>(SUPABASE_URL, SUPABASE_ANON);
+    const value = (client as any)[prop];
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 // ─── Server client (for Server Components & Route Handlers) ──
 // Reads/writes auth cookies — authenticated as current user

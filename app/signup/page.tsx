@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, getBrowserClient } from "@/lib/supabase";
 import Logo        from "@/components/ui/Logo";
 
 // ============================================================
@@ -48,7 +48,8 @@ export default function SignupPage() {
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("next") || "/onboarding"
         : "/onboarding";
-    const { error } = await supabase.auth.signInWithOAuth({
+    const client = getBrowserClient();
+    const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
@@ -78,7 +79,8 @@ export default function SignupPage() {
         ? window.location.origin
         : "https://finance-hub-of-india.vercel.app";
 
-    const { error } = await supabase.auth.signUp({
+    const client = getBrowserClient();
+    const { error } = await client.auth.signUp({
       email,
       password,
       options: {
