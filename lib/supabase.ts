@@ -2,9 +2,10 @@
 // FinanceHub — Supabase Client Helpers
 // lib/supabase.ts
 // Three clients: browser · server (cookie-based) · service role
+// Upgraded to @supabase/ssr for unified, robust cookie exchange
 // ============================================================
 
-import { createBrowserClient, createServerClient as createAuthServerClient } from "@supabase/auth-helpers-nextjs";
+import { createBrowserClient as createSSRBrowserClient, createServerClient as createSSRServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
@@ -22,7 +23,7 @@ export function getBrowserClient() {
     return createClient<Database>(SUPABASE_URL, SUPABASE_ANON);
   }
   if (!_browserClient) {
-    _browserClient = createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON);
+    _browserClient = createSSRBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON);
   }
   return _browserClient;
 }
@@ -43,7 +44,27 @@ export function createServerClient() {
   try {
     const { cookies } = require("next/headers");
     const cookieStore = cookies();
-    return createAuthServerClient<Database>(SUPABASE_URL, SUPABASE_ANON, { cookies: () => cookieStore } as any);
+    return createSSRServerClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, {
+                ...options,
+                path: "/",
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+              });
+            });
+          } catch {
+            // Next.js Server Components throw if set is called during render; safe to ignore
+          }
+        },
+      },
+    });
   } catch {
     return createServiceClient();
   }

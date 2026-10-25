@@ -2,6 +2,7 @@
 // FinanceHub — Next.js Middleware
 // middleware.ts  (project root — runs on every request)
 // Handles: Auth protection · Rate limiting · Security · Redirects
+// Upgraded to @supabase/ssr with auth.getUser() session verification
 // ============================================================
 
 import { createServerClient } from "@supabase/ssr";
@@ -37,7 +38,7 @@ const API_RATE_LIMITS: Record<string, number> = {
   "/api/notes":           60,
 };
 
-// Simple in-memory rate limit store (resets on edge function cold start)
+// Simple in-memory rate limit store
 const rateLimitStore = new Map<string, { count: number; reset: number }>();
 
 function checkRateLimit(key: string, limit: number): boolean {
@@ -95,8 +96,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── 2. Supabase session management ──────────────────────────
-  const res = NextResponse.next();
+  // ── 2. Supabase session management via @supabase/ssr ────────
+  let res = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co",
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key",
@@ -106,17 +112,26 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          res = NextResponse.next({
+            request,
+          });
           cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            res.cookies.set(name, value, options);
+            res.cookies.set(name, value, {
+              ...options,
+              path: "/",
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+            });
           });
         },
       },
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-  const isAuthenticated = !!session;
+  // Use auth.getUser() for guaranteed JWT validation and cookie refresh
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
 
   // ── 3. Protect authenticated routes ─────────────────────────
   const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r));
@@ -138,7 +153,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login?next=/admin/dashboard", request.url));
     }
     const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim());
-    if (!adminEmails.includes(session?.user?.email || "")) {
+    if (!adminEmails.includes(user?.email || "")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
@@ -172,7 +187,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all routes except static files and Next internals
     "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons/|robots.txt|sitemap.xml).*)",
   ],
 };

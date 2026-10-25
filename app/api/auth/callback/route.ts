@@ -51,7 +51,12 @@ export async function GET(req: NextRequest) {
       },
       setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, {
+            ...options,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+          });
         });
       },
     },
