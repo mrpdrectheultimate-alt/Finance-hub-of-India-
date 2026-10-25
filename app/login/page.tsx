@@ -34,32 +34,14 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     setLoading(true);
     setError("");
-    const origin =
-      typeof window !== "undefined" && window.location.origin
-        ? window.location.origin
-        : "https://finance-hub-of-india.vercel.app";
     const next =
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("next") || "/dashboard"
         : "/dashboard";
-    const client = getBrowserClient();
-    const { error } = await client.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    }
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {

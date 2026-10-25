@@ -113,7 +113,6 @@ export async function middleware(request: NextRequest) {
         },
         set(name: string, value: string, options: any) {
           request.cookies.set({ name, value, ...options });
-          res = NextResponse.next({ request });
           res.cookies.set(name, value, {
             ...options,
             path: "/",
@@ -123,7 +122,6 @@ export async function middleware(request: NextRequest) {
         },
         remove(name: string, options: any) {
           request.cookies.set({ name, value: "", ...options });
-          res = NextResponse.next({ request });
           res.cookies.set(name, "", {
             ...options,
             path: "/",
@@ -137,9 +135,6 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          res = NextResponse.next({
-            request,
-          });
           cookiesToSet.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, {
               ...options,
@@ -157,28 +152,37 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const isAuthenticated = !!user;
 
+  // Helper to ensure refreshed session cookies are carried along redirects
+  const createRedirectResponse = (targetUrl: URL | string) => {
+    const redirectRes = NextResponse.redirect(targetUrl);
+    res.cookies.getAll().forEach((c) => {
+      redirectRes.cookies.set(c.name, c.value, c);
+    });
+    return redirectRes;
+  };
+
   // ── 3. Protect authenticated routes ─────────────────────────
   const isProtected = PROTECTED_ROUTES.some(r => pathname.startsWith(r));
   if (isProtected && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+    return createRedirectResponse(loginUrl);
   }
 
   // ── 4. Redirect logged-in users away from auth pages ────────
   const isAuthRoute = AUTH_ONLY_ROUTES.some(r => pathname.startsWith(r));
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return createRedirectResponse(new URL("/dashboard", request.url));
   }
 
   // ── 5. Admin route protection ────────────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login?next=/admin/dashboard", request.url));
+      return createRedirectResponse(new URL("/login?next=/admin/dashboard", request.url));
     }
     const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim());
     if (!adminEmails.includes(user?.email || "")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return createRedirectResponse(new URL("/dashboard", request.url));
     }
   }
 

@@ -18,6 +18,8 @@ export async function GET(req: NextRequest) {
   const origin = getRequestOrigin(req);
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/dashboard";
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 
@@ -27,8 +29,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(authError)}`);
   }
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+  if (!code && !(tokenHash && type)) {
+    return NextResponse.redirect(`${origin}/login?error=missing_auth_params`);
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -65,11 +67,25 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Exchange OAuth code for session
-  const { data: { session }, error } = await supabaseAuth.auth.exchangeCodeForSession(code);
+  // Exchange code or verify OTP/token_hash for session
+  let session = null;
+  let error = null;
+
+  if (code) {
+    const res = await supabaseAuth.auth.exchangeCodeForSession(code);
+    session = res.data?.session;
+    error = res.error;
+  } else if (tokenHash && type) {
+    const res = await supabaseAuth.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type as any,
+    });
+    session = res.data?.session;
+    error = res.error;
+  }
 
   if (error || !session) {
-    console.error("Auth callback code exchange error:", error?.message);
+    console.error("Auth callback verification error:", error?.message);
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(error?.message || "auth_failed")}`
     );
@@ -78,9 +94,33 @@ export async function GET(req: NextRequest) {
   const user = session.user;
   const isNewUser =
     user.created_at === user.updated_at ||
-    new Date().getTime() - new Date(user.created_at).getTime() < 10000; // within 10 seconds
+    new Date().getTime() - new Date(user.created_at).getTime() < 60000; // within 60 seconds
 
   const adminClient = createServiceClient();
+
+  // Always guarantee that a profile exists for this authenticated user
+  try {
+    await (adminClient as any).from("profiles").upsert(
+      {
+        id: user.id,
+        email: user.email,
+        full_name:
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split("@")[0] ||
+          "Learner",
+        avatar_url:
+          user.user_metadata?.avatar_url ||
+          user.user_metadata?.picture ||
+          null,
+        subscription_tier: "free",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+  } catch (profSyncErr) {
+    console.warn("Profile sync notice:", profSyncErr);
+  }
 
   if (isNewUser) {
     // ── New user setup ─────────────────────────────────────

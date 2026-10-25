@@ -50,6 +50,19 @@ const LEAGUE_INFO = (xp: number) => {
 
 const TIER_LIMITS: Record<string, number> = { free: 5, pro: 50, expert: 200 };
 
+const DEFAULT_PROFILE: Profile = {
+  id:                 "",
+  full_name:          "Learner",
+  subscription_tier:  "free",
+  xp_total:           50,
+  current_streak:     1,
+  longest_streak:     1,
+  primary_track:      "personal-finance",
+  onboarding_goal:    "",
+  ai_questions_today: 0,
+  theme:              "light",
+};
+
 function StatCard({ icon, value, label, color = "#0E6163", sub }: { icon: string; value: string | number; label: string; color?: string; sub?: string }) {
   return (
     <div style={{
@@ -66,7 +79,7 @@ function StatCard({ icon, value, label, color = "#0E6163", sub }: { icon: string
 }
 
 export default function DashboardPage() {
-  const [profile,      setProfile]      = useState<Profile | null>(null);
+  const [profile,      setProfile]      = useState<Profile>(DEFAULT_PROFILE);
   const [recent,       setRecent]       = useState<RecentLesson[]>([]);
   const [nextLesson,   setNextLesson]   = useState<NextLesson | null>(null);
   const [weekActivity, setWeekActivity] = useState<WeekDay[]>([]);
@@ -122,21 +135,25 @@ export default function DashboardPage() {
       setReviewCount(reviewsCount);
 
       const rawProf = profileRes.data;
-      if (rawProf) {
-        const normProf: Profile = {
-          id:                 rawProf.id,
-          full_name:          rawProf.full_name || rawProf.name || "Learner",
-          subscription_tier:  rawProf.subscription_tier || rawProf.role || "free",
-          xp_total:           rawProf.xp_total || 0,
-          current_streak:     rawProf.current_streak ?? rawProf.streak_current ?? 0,
-          longest_streak:     rawProf.longest_streak ?? rawProf.streak_longest ?? 0,
-          primary_track:      rawProf.primary_track || "personal-finance",
-          onboarding_goal:    rawProf.onboarding_goal || rawProf.goal || "",
-          ai_questions_today: rawProf.ai_questions_today || 0,
-          theme:              rawProf.theme || "light",
-        };
-        setProfile(normProf);
-      }
+      const userMetaName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split("@")[0] ||
+        "Learner";
+
+      const normProf: Profile = {
+        id:                 user.id,
+        full_name:          rawProf?.full_name || rawProf?.name || userMetaName,
+        subscription_tier:  rawProf?.subscription_tier || rawProf?.role || "free",
+        xp_total:           rawProf?.xp_total ?? 50,
+        current_streak:     rawProf?.current_streak ?? rawProf?.streak_current ?? 1,
+        longest_streak:     rawProf?.longest_streak ?? rawProf?.streak_longest ?? 1,
+        primary_track:      rawProf?.primary_track || "personal-finance",
+        onboarding_goal:    rawProf?.onboarding_goal || rawProf?.goal || "",
+        ai_questions_today: rawProf?.ai_questions_today || 0,
+        theme:              rawProf?.theme || "light",
+      };
+      setProfile(normProf);
 
       const prog = progressRes.data || [];
       const done = prog.filter((p: any) => p.completed || p.completed_at);
@@ -228,8 +245,6 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-
-  if (!profile) return null;
 
   const league = LEAGUE_INFO(profile.xp_total || 0);
   const leagueMin = league.name === "Bronze" ? 0 : league.name === "Silver" ? 500 : league.name === "Gold" ? 2000 : league.name === "Diamond" ? 5000 : 10000;
