@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getBrowserClient } from "@/lib/supabase";
 import {
   BookOpen,
   Calculator,
@@ -421,6 +422,43 @@ export default function HomePage() {
   // FAQ State
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // User Authentication State
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const client = getBrowserClient();
+    client.auth.getUser().then(({ data: { user } }: any) => {
+      if (user) {
+        setCurrentUser(user);
+        client
+          .from("profiles")
+          .select("full_name, avatar_url, subscription_tier")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }: any) => {
+            if (data) setUserProfile(data);
+          });
+      }
+    });
+
+    const { data: listener } = client.auth.onAuthStateChange((_event: any, session: any) => {
+      setCurrentUser(session?.user || null);
+    });
+
+    return () => {
+      listener?.subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const client = getBrowserClient();
+    await client.auth.signOut();
+    setCurrentUser(null);
+    setUserProfile(null);
+    window.location.reload();
+  };
+
   // Scroll detection for sticky header
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -585,20 +623,42 @@ export default function HomePage() {
               <span>Simulators Active</span>
             </div>
 
-            <Link
-              href="/login"
-              className="hidden sm:inline-block px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#0E6163] transition-colors"
-            >
-              Log in
-            </Link>
+            {currentUser ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 bg-[#0E6163] hover:bg-[#0A4A4C] text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="hidden sm:inline-block px-3 py-2 text-xs font-bold text-slate-500 hover:text-red-600 transition-colors"
+                  title="Sign out"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="hidden sm:inline-block px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-[#0E6163] transition-colors"
+                >
+                  Log in
+                </Link>
 
-            <Link
-              href="/signup"
-              className="px-4 sm:px-5 py-2.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all flex items-center gap-1.5"
-            >
-              <span>Start Free</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 sm:px-5 py-2.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all flex items-center gap-1.5"
+                >
+                  <span>Start Free</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </>
+            )}
 
             {/* Mobile Hamburger Toggle */}
             <button
@@ -655,22 +715,44 @@ export default function HomePage() {
             >
               Tuition &amp; Plans
             </a>
-            <div className="pt-3 border-t border-slate-100 flex gap-2">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2.5 rounded-lg border border-slate-200 text-xs font-bold"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2.5 rounded-lg bg-[#0E6163] text-white text-xs font-bold"
-              >
-                Start Free
-              </Link>
-            </div>
+            {currentUser ? (
+              <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-2.5 rounded-lg bg-[#0E6163] text-white text-xs font-bold flex items-center justify-center gap-2"
+                >
+                  <span>Go to Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleSignOut();
+                  }}
+                  className="w-full text-center py-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 hover:text-red-600"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="pt-3 border-t border-slate-100 flex gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 text-center py-2.5 rounded-lg border border-slate-200 text-xs font-bold"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 text-center py-2.5 rounded-lg bg-[#0E6163] text-white text-xs font-bold"
+                >
+                  Start Free
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -689,7 +771,11 @@ export default function HomePage() {
               {/* Sovereign Eyebrow Badge */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-xs font-bold tracking-wide">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>National Financial Literacy Initiative · 100% Free Core · SEBI Compliant</span>
+                <span>
+                  {currentUser
+                    ? `Welcome back, ${userProfile?.full_name?.split(" ")[0] || currentUser.email?.split("@")[0] || "Learner"} · Account Active`
+                    : "National Financial Literacy Initiative · 100% Free Core · SEBI Compliant"}
+                </span>
               </div>
 
               {/* Main Headline: Editorial Serif + Emerald Modern Sans */}
@@ -707,13 +793,23 @@ export default function HomePage() {
 
               {/* Primary Call-to-Actions */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                <Link
-                  href="/signup"
-                  className="px-6 py-3.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-                >
-                  <span>Start Learning Free</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {currentUser ? (
+                  <Link
+                    href="/dashboard"
+                    className="px-6 py-3.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <span>Continue to My Dashboard</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/signup"
+                    className="px-6 py-3.5 bg-[#0E6163] hover:bg-[#0A4A4C] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <span>Start Learning Free</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
                 <Link
                   href="/explore"
                   className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm rounded-xl border border-slate-300 shadow-xs transition-colors"

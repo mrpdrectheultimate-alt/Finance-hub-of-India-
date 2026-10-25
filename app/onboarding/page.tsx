@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -57,6 +57,25 @@ export default function OnboardingPage() {
 
   const accentColor = goalData ? TRACK_COLORS[goalData.track] || "#0E6163" : "#0E6163";
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
+      if (!user) {
+        window.location.href = "/login?next=/onboarding";
+        return;
+      }
+      supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }: any) => {
+          if (data?.onboarding_completed) {
+            router.push("/dashboard");
+          }
+        });
+    });
+  }, [router]);
+
   const handleGoal = (g: (typeof GOALS)[0]) => {
     setGoal(g.id);
     setGoalData(g);
@@ -80,7 +99,7 @@ export default function OnboardingPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/auth/login");
+        router.push("/login?next=/onboarding");
         return;
       }
 

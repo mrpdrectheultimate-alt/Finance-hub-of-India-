@@ -40,9 +40,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=missing_supabase_env`);
   }
 
-  // Pre-prepare destination response so we can attach session cookies directly
-  let targetUrl = `${origin}${safeNext}`;
-  const response = NextResponse.redirect(targetUrl);
+  // Buffer session cookies from code exchange
+  const cookieJar: Array<{ name: string; value: string; options?: any }> = [];
 
   const supabaseAuth = createAuthServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -50,13 +49,8 @@ export async function GET(req: NextRequest) {
         return req.cookies.getAll();
       },
       setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, {
-            ...options,
-            path: "/",
-            sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
-          });
+        cookiesToSet.forEach((cookie) => {
+          cookieJar.push(cookie);
         });
       },
     },
@@ -159,8 +153,16 @@ export async function GET(req: NextRequest) {
       console.error("New user DB initialization error:", dbErr);
     }
 
-    // Redirect new user to onboarding
-    response.headers.set("Location", `${origin}/onboarding?welcome=1`);
+    // Build response for new user
+    const response = NextResponse.redirect(`${origin}/onboarding?welcome=1`);
+    cookieJar.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, {
+        ...options,
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      });
+    });
     return response;
   }
 
@@ -171,7 +173,16 @@ export async function GET(req: NextRequest) {
     console.warn("Streak update notice:", streakErr);
   }
 
-  response.headers.set("Location", `${origin}${safeNext}`);
+  // Build response for returning user
+  const response = NextResponse.redirect(`${origin}${safeNext}`);
+  cookieJar.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, {
+      ...options,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  });
   return response;
 }
 
