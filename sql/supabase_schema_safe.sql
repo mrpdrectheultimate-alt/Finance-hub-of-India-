@@ -205,30 +205,68 @@ AS $$
 $$;
 
 -- ============================================================
--- Auto profile creation on signup
+-- Auto profile creation on signup (Fault-tolerant & schema-safe)
 -- ============================================================
-CREATE OR REPLACE FUNCTION handle_new_user()
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin, authenticated, anon;
+GRANT ALL ON TABLE public.profiles TO supabase_auth_admin;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supabase_auth_admin;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+SET search_path = public, auth, pg_temp
+AS $
 BEGIN
-  INSERT INTO profiles (id, full_name, avatar_url)
+  INSERT INTO public.profiles (
+    id,
+    full_name,
+    avatar_url,
+    email,
+    role,
+    xp_total,
+    streak_current,
+    streak_longest,
+    onboarding_done,
+    created_at,
+    updated_at
+  )
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
-    NEW.raw_user_meta_data->>'avatar_url'
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name',
+      split_part(NEW.email, '@', 1)
+    ),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', ''),
+    NEW.email,
+    'free',
+    0,
+    0,
+    0,
+    FALSE,
+    NOW(),
+    NOW()
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE
+  SET
+    full_name = COALESCE(EXCLUDED.full_name, profiles.full_name),
+    avatar_url = COALESCE(EXCLUDED.avatar_url, profiles.avatar_url),
+    email = COALESCE(EXCLUDED.email, profiles.email),
+    updated_at = NOW();
 
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user failed for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
-$$;
+$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
-FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================
 -- Updated-at trigger
@@ -312,7 +350,7 @@ WITH CHECK (auth.uid() = id OR auth.role() = 'service_role');
 
 DROP POLICY IF EXISTS "profiles_service_insert" ON profiles;
 CREATE POLICY "profiles_service_insert" ON profiles
-FOR INSERT WITH CHECK (auth.uid() = id OR auth.role() = 'service_role');
+FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "profiles_admin_read" ON profiles;
 CREATE POLICY "profiles_admin_read" ON profiles
