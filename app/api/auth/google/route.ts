@@ -26,6 +26,15 @@ export async function GET(req: NextRequest) {
 
     const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
       cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          pendingCookies.push({ name, value, options });
+        },
+        remove(name: string, options: any) {
+          pendingCookies.push({ name, value: "", options: { ...options, maxAge: 0 } });
+        },
         getAll() {
           return req.cookies.getAll();
         },

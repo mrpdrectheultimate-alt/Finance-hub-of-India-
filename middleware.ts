@@ -108,6 +108,30 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy_key",
     {
       cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({ name, value, ...options });
+          res = NextResponse.next({ request });
+          res.cookies.set(name, value, {
+            ...options,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+          });
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({ name, value: "", ...options });
+          res = NextResponse.next({ request });
+          res.cookies.set(name, "", {
+            ...options,
+            path: "/",
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 0,
+          });
+        },
         getAll() {
           return request.cookies.getAll();
         },

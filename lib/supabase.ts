@@ -55,6 +55,34 @@ export function createServerClient() {
     const cookieStore = cookies();
     return createSSRServerClient<Database>(SUPABASE_URL, SUPABASE_ANON, {
       cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set(name, value, {
+              ...options,
+              path: "/",
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+            });
+          } catch {
+            // Next.js Server Components throw if set is called during render; safe to ignore
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set(name, "", {
+              ...options,
+              path: "/",
+              sameSite: "lax",
+              secure: process.env.NODE_ENV === "production",
+              maxAge: 0,
+            });
+          } catch {
+            // Next.js Server Components throw if set is called during render; safe to ignore
+          }
+        },
         getAll() {
           return cookieStore.getAll();
         },
