@@ -119,13 +119,19 @@ ORDER BY metric;
 
 ---
 
-## UPDATED RUN ORDER — Phase 10 Added
+## UPDATED RUN ORDER — Phase 10 & Phase 11 Added
 
 Run AFTER all previous files:
 
-`
-32. phase10_cases_hindi.sql   — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
-`
+```
+32. phase10_cases_hindi.sql     — 13 more case studies (total 25) + 10 Hindi lessons (total 23)
+35. case_studies_phase11.sql    — 5 critical gap case studies (total 30 master cases):
+                                  • Case 26: Zara's Health Insurance Claim Rejection (Personal Finance)
+                                  • Case 27: Nikhil's Intraday Trading Addiction (Behavioral Finance)
+                                  • Case 28: Neha's ESOP Tax Shock (Corporate Finance)
+                                  • Case 29: Ravi's Flat — 7-Year Builder Delay / RERA (Personal Finance)
+                                  • Case 30: Ramesh's FD Inflation Illusion — 20 Years (Personal Finance)
+```
 
 ---
 
@@ -136,16 +142,15 @@ Run AFTER core schema and gamification:
 34. feedback_schema.sql     — Feedback table, RLS policies, daily summary analytics view
 ```
 
-## UPDATED EXPECTED COUNTS (After all 36 files)
+## UPDATED EXPECTED COUNTS (After all 37 files)
 
 | Content | Count |
 |---------|-------|
 | Published lessons | 375+ |
 | Hindi lessons | 23+ |
-| Case studies | 25 |
+| Case studies | 30 |
 | Concepts (knowledge graph) | 100+ |
 | Videos | 157+ |
 | Career paths | 15 |
 | Badges | 20 |
 | Feedback & Referral Tables | Complete |
-
