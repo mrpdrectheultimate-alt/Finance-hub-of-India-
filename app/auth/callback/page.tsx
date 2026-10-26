@@ -40,6 +40,33 @@ export default function AuthCallbackPage() {
           return;
         }
 
+        // Ensure profile exists for this authenticated user before landing on dashboard
+        const user = data.session.user;
+        if (user) {
+          try {
+            await (client as any).from("profiles").upsert(
+              {
+                id: user.id,
+                email: user.email,
+                full_name:
+                  user.user_metadata?.full_name ||
+                  user.user_metadata?.name ||
+                  user.email?.split("@")[0] ||
+                  "Learner",
+                avatar_url:
+                  user.user_metadata?.avatar_url ||
+                  user.user_metadata?.picture ||
+                  null,
+                subscription_tier: "free",
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "id" }
+            );
+          } catch (profileErr) {
+            console.warn("Client profile upsert notice:", profileErr);
+          }
+        }
+
         // Successfully authenticated! Seamlessly proceed to destination
         window.location.href = safeNext;
       } catch (e: any) {
