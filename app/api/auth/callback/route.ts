@@ -86,6 +86,14 @@ export async function GET(req: NextRequest) {
 
   if (error || !session) {
     console.error("Auth callback verification error:", error?.message);
+    if (code) {
+      // If server-side code exchange missed the verifier cookie (e.g. cross-domain drop / ITP),
+      // seamlessly delegate to client-side callback resolver where document.cookie & localStorage reside!
+      console.warn("Delegating OAuth code exchange to client-side resolver on /auth/callback");
+      return NextResponse.redirect(
+        `${origin}/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(safeNext)}`
+      );
+    }
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(error?.message || "auth_failed")}`
     );

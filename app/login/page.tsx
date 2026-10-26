@@ -34,14 +34,39 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError("");
-    const next =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("next") || "/dashboard"
-        : "/dashboard";
-    window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
+    try {
+      const next =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("next") || "/dashboard"
+          : "/dashboard";
+      const origin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "https://finance-hub-of-india.vercel.app";
+      const client = getBrowserClient();
+      const { data, error: oauthErr } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (oauthErr) {
+        setError(oauthErr.message);
+        setLoading(false);
+      } else if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to initialize Google login");
+      setLoading(false);
+    }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -176,7 +201,7 @@ export default function LoginPage() {
                 boxSizing:    "border-box",
                 transition:   "border-color 0.15s",
               }}
-              onFocus={e  => (e.target.style.borderColor = "#0E6163")}
+              onFocus={e  => (e.target.style.borderColor = "#2563EB")}
               onBlur={e   => (e.target.style.borderColor = "#d1d5db")}
             />
           </div>
@@ -188,7 +213,7 @@ export default function LoginPage() {
                 Password
               </label>
               <a href="/forgot-password"
-                style={{ fontSize: 13, color: "#0E6163", textDecoration: "none", fontWeight: 500 }}>
+                style={{ fontSize: 13, color: "#2563EB", textDecoration: "none", fontWeight: 500 }}>
                 Forgot password?
               </a>
             </div>
@@ -210,7 +235,7 @@ export default function LoginPage() {
                 boxSizing:    "border-box",
                 transition:   "border-color 0.15s",
               }}
-              onFocus={e  => (e.target.style.borderColor = "#0E6163")}
+              onFocus={e  => (e.target.style.borderColor = "#2563EB")}
               onBlur={e   => (e.target.style.borderColor = "#d1d5db")}
             />
           </div>
@@ -238,7 +263,7 @@ export default function LoginPage() {
             style={{
               width:        "100%",
               padding:      "12px",
-              background:   loading ? "#6b9e99" : "#0E6163",
+              background:   loading ? "#93C5FD" : "#2563EB",
               color:        "#fff",
               border:       "none",
               borderRadius: 10,
@@ -277,7 +302,7 @@ export default function LoginPage() {
         }}>
           No account yet?{" "}
           <a href="/signup"
-            style={{ color: "#0E6163", fontWeight: 600, textDecoration: "none" }}>
+            style={{ color: "#2563EB", fontWeight: 600, textDecoration: "none" }}>
             Sign up free
           </a>
         </p>

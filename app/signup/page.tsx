@@ -38,14 +38,39 @@ export default function SignupPage() {
     }
   }, []);
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setLoading(true);
     setError("");
-    const next =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("next") || "/onboarding"
-        : "/onboarding";
-    window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
+    try {
+      const next =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("next") || "/onboarding"
+          : "/onboarding";
+      const origin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "https://finance-hub-of-india.vercel.app";
+      const client = getBrowserClient();
+      const { data, error: oauthErr } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (oauthErr) {
+        setError(oauthErr.message);
+        setLoading(false);
+      } else if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to initialize Google login");
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -123,7 +148,7 @@ export default function SignupPage() {
               style={{
                 display: "inline-block",
                 padding: "11px 24px",
-                background: "#0E6163",
+                background: "#2563EB",
                 color: "#fff",
                 borderRadius: 10,
                 fontSize: 14,
@@ -172,7 +197,7 @@ export default function SignupPage() {
                 <label style={{ display:"block", fontSize:13, fontWeight:500, color:"#374151", marginBottom:6 }}>Full name</label>
                 <input value={name} onChange={e=>setName(e.target.value)}
                   placeholder="Rahul Sharma" autoComplete="name" style={inputStyle}
-                  onFocus={e=>(e.target.style.borderColor="#0E6163")}
+                  onFocus={e=>(e.target.style.borderColor="#2563EB")}
                   onBlur={e=>(e.target.style.borderColor="#d1d5db")} />
               </div>
 
@@ -181,7 +206,7 @@ export default function SignupPage() {
                 <label style={{ display:"block", fontSize:13, fontWeight:500, color:"#374151", marginBottom:6 }}>Email address</label>
                 <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
                   placeholder="rahul@example.com" autoComplete="email" style={inputStyle}
-                  onFocus={e=>(e.target.style.borderColor="#0E6163")}
+                  onFocus={e=>(e.target.style.borderColor="#2563EB")}
                   onBlur={e=>(e.target.style.borderColor="#d1d5db")} />
               </div>
 
@@ -190,11 +215,11 @@ export default function SignupPage() {
                 <label style={{ display:"block", fontSize:13, fontWeight:500, color:"#374151", marginBottom:6 }}>Password</label>
                 <input type="password" value={password} onChange={e=>setPassword(e.target.value)}
                   placeholder="Min. 8 characters" autoComplete="new-password" style={inputStyle}
-                  onFocus={e=>(e.target.style.borderColor="#0E6163")}
+                  onFocus={e=>(e.target.style.borderColor="#2563EB")}
                   onBlur={e=>(e.target.style.borderColor="#d1d5db")} />
                 <div style={{ fontSize:11, color:"#9ca3af", marginTop:5 }}>
                   {password.length > 0 && (
-                    <span style={{ color: password.length >= 8 ? "#1D9E75" : "#e53e3e" }}>
+                    <span style={{ color: password.length >= 8 ? "#2563EB" : "#e53e3e" }}>
                       {password.length >= 8 ? "✓ Strong enough" : `${8-password.length} more characters needed`}
                     </span>
                   )}
@@ -210,7 +235,7 @@ export default function SignupPage() {
 
               {/* Submit */}
               <button type="submit" disabled={loading}
-                style={{ width:"100%", padding:"12px", background:loading?"#6b9e99":"#0E6163", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:600, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                style={{ width:"100%", padding:"12px", background:loading?"#93C5FD":"#2563EB", color:"#fff", border:"none", borderRadius:10, fontSize:15, fontWeight:600, cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
                 {loading ? (
                   <><div style={{ width:16, height:16, border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"#fff", borderRadius:"50%", animation:"spin 0.7s linear infinite" }}/> Creating account…</>
                 ) : "Create free account"}
@@ -220,14 +245,14 @@ export default function SignupPage() {
             {/* Terms notice */}
             <p style={{ fontSize:11, color:"#9ca3af", textAlign:"center", margin:"16px 0 0", lineHeight:1.6 }}>
               By signing up you agree to our{" "}
-              <a href="/legal/terms" style={{ color:"#0E6163" }}>Terms</a> and{" "}
-              <a href="/legal/privacy" style={{ color:"#0E6163" }}>Privacy Policy</a>.
+              <a href="/legal/terms" style={{ color:"#2563EB" }}>Terms</a> and{" "}
+              <a href="/legal/privacy" style={{ color:"#2563EB" }}>Privacy Policy</a>.
             </p>
 
             {/* Login link */}
             <p style={{ textAlign:"center", fontSize:14, color:"#6b7280", margin:"16px 0 0" }}>
               Already have an account?{" "}
-              <a href="/login" style={{ color:"#0E6163", fontWeight:600 }}>Log in</a>
+              <a href="/login" style={{ color:"#2563EB", fontWeight:600 }}>Log in</a>
             </p>
           </>
         )}
