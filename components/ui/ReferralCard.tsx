@@ -90,7 +90,7 @@ export function ReferralCard() {
 
   return (
     <div style={{
-      background:    "linear-gradient(135deg, #0B1A2B 0%, #0E6163 100%)",
+      background:    "linear-gradient(135deg, #090D16 0%, #1E3A8A 100%)",
       borderRadius:  16,
       padding:       "24px",
       color:         "#fff",
@@ -100,19 +100,19 @@ export function ReferralCard() {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
         <div>
           <div style={{ fontSize:15, fontWeight:700, marginBottom:4 }}>🎁 Invite friends — earn XP</div>
-          <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)", lineHeight:1.6 }}>
-            You get <strong style={{ color:"#1D9E75" }}>+100 XP</strong> · Your friend gets <strong style={{ color:"#1D9E75" }}>+150 XP</strong>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>
+            You get <strong style={{ color:"#60A5FA" }}>+100 XP</strong> · Your friend gets <strong style={{ color:"#60A5FA" }}>+150 XP</strong>
           </div>
         </div>
         {/* Stats */}
         <div style={{ display:"flex", gap:16, textAlign:"center" }}>
           <div>
             <div style={{ fontSize:22, fontWeight:800, lineHeight:1 }}>{referrals}</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:2 }}>Friends joined</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", marginTop:2 }}>Friends joined</div>
           </div>
           <div>
-            <div style={{ fontSize:22, fontWeight:800, lineHeight:1, color:"#1D9E75" }}>{xpEarned}</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)", marginTop:2 }}>XP earned</div>
+            <div style={{ fontSize:22, fontWeight:800, lineHeight:1, color:"#F59E0B" }}>{xpEarned}</div>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", marginTop:2 }}>XP earned</div>
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export function ReferralCard() {
               onClick={copyLink}
               style={{
                 padding:"12px 18px",
-                background: copied ? "#1D9E75" : "rgba(255,255,255,0.15)",
+                background: copied ? "#2563EB" : "rgba(255,255,255,0.15)",
                 border:"1px solid rgba(255,255,255,0.2)",
                 borderRadius:10, color:"#fff",
                 fontSize:13, fontWeight:600,
@@ -187,7 +187,7 @@ export function ReferralCard() {
         </div>
       ) : (
         <button onClick={generateCode} disabled={generating}
-          style={{ width:"100%", padding:"13px", background:"#1D9E75", border:"none", borderRadius:10, color:"#fff", fontSize:14, fontWeight:700, cursor:generating?"not-allowed":"pointer", fontFamily:"inherit" }}>
+          style={{ width:"100%", padding:"13px", background:"#2563EB", border:"none", borderRadius:10, color:"#fff", fontSize:14, fontWeight:700, cursor:generating?"not-allowed":"pointer", fontFamily:"inherit" }}>
           {generating ? "Generating your code…" : "Get my referral code"}
         </button>
       )}
