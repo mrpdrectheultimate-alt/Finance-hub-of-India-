@@ -635,11 +635,6 @@ export default function HomePage() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         a { text-decoration: none; color: inherit; }
-        .hero-pill { animation: pulseGlow 2.5s infinite; }
-        @keyframes pulseGlow {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.02); }
-        }
         .lift-card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
         .lift-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(37,99,235,0.08); }
         .tab-btn { transition: all 0.18s ease; }
@@ -757,7 +752,6 @@ export default function HomePage() {
             <div>
               {/* Trust Badge */}
               <div
-                className="hero-pill"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
