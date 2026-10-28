@@ -1,10 +1,24 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import LessonQA from "@/components/community/LessonQA";
 import { FinanceDisclaimer } from "@/components/ui/FinanceDisclaimer";
+
+// In-memory cache for instant zero-flicker lesson transitions
+interface CachedLessonData {
+  lesson: Lesson;
+  siblings: SiblingLesson[];
+  prevLesson: SiblingLesson | null;
+  nextLesson: SiblingLesson | null;
+  questions: QuizQuestion[];
+  completed: boolean;
+  note: string;
+}
+
+const LESSON_CACHE = new Map<string, CachedLessonData>();
 
 // ============================================================
 // FinanceHub — World-Class Lesson Reader & Player
@@ -398,13 +412,15 @@ function inlineStyleFormat(str: string): string {
 
 export default function LessonPlayer({ params }: { params: { slug: string } }) {
   const router = useRouter();
+  const rawSlug = useMemo(() => decodeURIComponent(params?.slug || "").trim(), [params?.slug]);
+  const cached = useMemo(() => LESSON_CACHE.get(rawSlug) || null, [rawSlug]);
 
-  // Core Data
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [prevLesson, setPrevLesson] = useState<SiblingLesson | null>(null);
-  const [nextLesson, setNextLesson] = useState<SiblingLesson | null>(null);
-  const [siblingLessons, setSiblingLessons] = useState<SiblingLesson[]>([]);
+  // Core Data (instant hydration from cache if available)
+  const [lesson, setLesson] = useState<Lesson | null>(cached ? cached.lesson : null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>(cached ? cached.questions : []);
+  const [prevLesson, setPrevLesson] = useState<SiblingLesson | null>(cached ? cached.prevLesson : null);
+  const [nextLesson, setNextLesson] = useState<SiblingLesson | null>(cached ? cached.nextLesson : null);
+  const [siblingLessons, setSiblingLessons] = useState<SiblingLesson[]>(cached ? cached.siblings : []);
 
   // Reader Settings & Preferences
   const [theme, setTheme] = useState<ReadingTheme>("light");
@@ -414,9 +430,9 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
 
   // User State & Progress
   const [progress, setProgress] = useState(0);
-  const [completed, setCompleted] = useState(false);
+  const [completed, setCompleted] = useState(cached ? cached.completed : false);
   const [tab, setTab] = useState<Tab>("lesson");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(cached ? cached.note : "");
   const [notesSaved, setNotesSaved] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
@@ -427,7 +443,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
     streak: number;
     milestone: number | null;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
   const [user, setUser] = useState<any>(null);
   const [certId, setCertId] = useState<string | null>(null);
 
@@ -440,15 +456,32 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
     return formatMarkdown(lesson.content_mdx);
   }, [lesson?.content_mdx]);
 
+  // Sync state if navigating between cached lessons
+  useEffect(() => {
+    const curCached = LESSON_CACHE.get(rawSlug);
+    if (curCached) {
+      setLesson(curCached.lesson);
+      setQuestions(curCached.questions);
+      setPrevLesson(curCached.prevLesson);
+      setNextLesson(curCached.nextLesson);
+      setSiblingLessons(curCached.siblings);
+      setCompleted(curCached.completed);
+      setNote(curCached.note);
+      setLoading(false);
+    }
+  }, [rawSlug]);
+
   // Load lesson, user, progress, notes, and quiz data
   useEffect(() => {
+    let isCurrent = true;
+
     (async () => {
       const {
         data: { user: u },
       } = await (supabase.auth as any).getUser();
+      if (!isCurrent) return;
       setUser(u);
 
-      const rawSlug = decodeURIComponent(params.slug || "").trim();
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           rawSlug
@@ -489,7 +522,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
       if (lErr) console.error("Lesson query error:", lErr);
 
       if (!lessonData) {
-        setLoading(false);
+        if (isCurrent) setLoading(false);
         return;
       }
 
@@ -516,82 +549,131 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
           },
         },
       };
+
+      if (!isCurrent) return;
       setLesson(mapped);
+      // Lesson content is ready: unlock UI immediately without waiting for secondary queries!
+      setLoading(false);
 
-      // Fetch sibling lessons in the same level for Prev/Next navigation
-      if (lvl?.id) {
-        const { data: siblings } = await (supabase as any)
-          .from("lessons")
-          .select("id, title, slug, sort_order, duration_minutes, is_free")
-          .eq("level_id", lvl.id)
-          .eq("is_published", true)
-          .order("sort_order", { ascending: true });
+      // Concurrent secondary data fetching (Siblings, Progress, Notes, Quizzes)
+      let foundSiblings: SiblingLesson[] = [];
+      let foundPrev: SiblingLesson | null = null;
+      let foundNext: SiblingLesson | null = null;
+      let isCompleted = false;
+      let savedNote = "";
+      let normalizedQuestions: QuizQuestion[] = [];
 
-        if (siblings && siblings.length > 0) {
-          setSiblingLessons(siblings);
-          const curIdx = siblings.findIndex(
-            (s: any) => s.id === lessonData.id || s.slug === lessonData.slug
-          );
-          if (curIdx > 0) setPrevLesson(siblings[curIdx - 1]);
-          if (curIdx >= 0 && curIdx < siblings.length - 1)
-            setNextLesson(siblings[curIdx + 1]);
+      const [siblingsRes, progRes, noteRes, quizRes] = await Promise.allSettled([
+        lvl?.id
+          ? (supabase as any)
+              .from("lessons")
+              .select("id, title, slug, sort_order, duration_minutes, is_free")
+              .eq("level_id", lvl.id)
+              .eq("is_published", true)
+              .order("sort_order", { ascending: true })
+          : Promise.resolve({ data: [] }),
+
+        u
+          ? (supabase as any)
+              .from("user_progress")
+              .select("completed, quiz_score")
+              .eq("user_id", u.id)
+              .eq("lesson_id", lessonData.id)
+              .single()
+          : Promise.resolve({ data: null }),
+
+        u
+          ? (supabase as any)
+              .from("user_notes")
+              .select("content")
+              .eq("user_id", u.id)
+              .eq("lesson_id", lessonData.id)
+              .single()
+          : Promise.resolve({ data: null }),
+
+        (supabase as any)
+          .from("quizzes")
+          .select("id, title, passing_score")
+          .eq("lesson_id", lessonData.id),
+      ]);
+
+      if (!isCurrent) return;
+
+      if (siblingsRes.status === "fulfilled" && siblingsRes.value?.data?.length) {
+        const siblings = siblingsRes.value.data;
+        foundSiblings = siblings;
+        setSiblingLessons(siblings);
+        const curIdx = siblings.findIndex(
+          (s: any) => s.id === lessonData.id || s.slug === lessonData.slug
+        );
+        if (curIdx > 0) {
+          foundPrev = siblings[curIdx - 1];
+          setPrevLesson(foundPrev);
+        }
+        if (curIdx >= 0 && curIdx < siblings.length - 1) {
+          foundNext = siblings[curIdx + 1];
+          setNextLesson(foundNext);
         }
       }
 
-      // Check User Progress & Notes
-      if (u) {
-        const { data: prog } = await (supabase as any)
-          .from("user_progress")
-          .select("completed, quiz_score")
-          .eq("user_id", u.id)
-          .eq("lesson_id", lessonData.id)
-          .single();
-        if (prog?.completed) setCompleted(true);
-
-        const { data: noteData } = await (supabase as any)
-          .from("user_notes")
-          .select("content")
-          .eq("user_id", u.id)
-          .eq("lesson_id", lessonData.id)
-          .single();
-        if (noteData?.content) setNote(noteData.content);
+      if (progRes.status === "fulfilled" && progRes.value?.data?.completed) {
+        isCompleted = true;
+        setCompleted(true);
       }
 
-      // Fetch Quizzes
-      const { data: quizRes } = await (supabase as any)
-        .from("quizzes")
-        .select("id, title, passing_score")
-        .eq("lesson_id", lessonData.id);
+      if (noteRes.status === "fulfilled" && noteRes.value?.data?.content) {
+        savedNote = noteRes.value.data.content;
+        setNote(savedNote);
+      }
 
-      const quizIds = (quizRes || []).map((q: any) => q.id);
+      if (quizRes.status === "fulfilled" && quizRes.value?.data?.length) {
+        const quizIds = quizRes.value.data.map((q: any) => q.id);
+        if (quizIds.length > 0) {
+          const { data: rawQuiz } = await (supabase as any)
+            .from("quiz_questions")
+            .select("*")
+            .in("quiz_id", quizIds)
+            .order("order_index", { ascending: true })
+            .limit(10);
 
-      const { data: rawQuiz } =
-        quizIds.length > 0
-          ? await (supabase as any)
-              .from("quiz_questions")
-              .select("*")
-              .in("quiz_id", quizIds)
-              .order("order_index", { ascending: true })
-              .limit(10)
-          : { data: [] };
+          if (isCurrent && rawQuiz) {
+            normalizedQuestions = rawQuiz.map((q: any, i: number) => {
+              const options = extractOptions(q.options, q);
+              return {
+                id: q.id || `q-${i}`,
+                quiz_id: q.quiz_id || "",
+                question_text: extractQuestionText(q, i),
+                options,
+                correct_index: extractCorrectIndex(q.correct, q.correct_index, options.length),
+                explanation: extractExplanation(q),
+                order_index: q.order_index ?? i,
+              };
+            });
+            setQuestions(normalizedQuestions);
+          }
+        }
+      }
 
-      const normalizedQuestions: QuizQuestion[] = (rawQuiz || []).map((q: any, i: number) => {
-        const options = extractOptions(q.options, q);
-        return {
-          id: q.id || `q-${i}`,
-          quiz_id: q.quiz_id || "",
-          question_text: extractQuestionText(q, i),
-          options,
-          correct_index: extractCorrectIndex(q.correct, q.correct_index, options.length),
-          explanation: extractExplanation(q),
-          order_index: q.order_index ?? i,
-        };
-      });
+      // Populate in-memory cache for instant zero-flicker future navigation
+      const cacheBundle: CachedLessonData = {
+        lesson: mapped,
+        siblings: foundSiblings,
+        prevLesson: foundPrev,
+        nextLesson: foundNext,
+        questions: normalizedQuestions,
+        completed: isCompleted,
+        note: savedNote,
+      };
 
-      setQuestions(normalizedQuestions);
-      setLoading(false);
+      LESSON_CACHE.set(rawSlug, cacheBundle);
+      if (mapped.slug) LESSON_CACHE.set(mapped.slug, cacheBundle);
+      if (mapped.id) LESSON_CACHE.set(mapped.id, cacheBundle);
     })();
-  }, [params.slug]);
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [rawSlug]);
 
   // Complete lesson API call
   const completeLesson = useCallback(
@@ -780,14 +862,78 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
       ? "text-[19px] leading-[1.85]"
       : "text-[17px] leading-[1.8]";
 
-  if (loading) {
+  if (loading && !lesson) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
-        <div className="max-w-[760px] w-full space-y-4">
-          <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
-          <div className="h-10 w-3/4 bg-slate-200 rounded-lg animate-pulse" />
-          <div className="h-6 w-1/3 bg-slate-200 rounded animate-pulse" />
-          <div className="h-96 w-full bg-slate-200 rounded-2xl animate-pulse mt-8" />
+      <div className="min-h-screen bg-[#F8FAFC] text-slate-800">
+        {/* Top Progress Bar Placeholder */}
+        <div className="fixed top-0 left-0 right-0 h-1 bg-slate-200/60 z-50 overflow-hidden">
+          <div className="h-full w-1/4 bg-emerald-600/60 animate-pulse" />
+        </div>
+
+        {/* Sticky Header Skeleton matching h-14 */}
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
+          <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-3.5 w-16 bg-slate-200 rounded animate-pulse" />
+              <span className="text-slate-300">›</span>
+              <div className="h-3.5 w-24 bg-slate-200 rounded animate-pulse" />
+              <span className="text-slate-300">›</span>
+              <div className="h-3.5 w-32 bg-slate-200 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-20 bg-slate-200 rounded-lg animate-pulse hidden sm:block" />
+              <div className="h-7 w-28 bg-slate-200 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </header>
+
+        {/* Workspace Skeleton with exact reader geometry */}
+        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-10 items-start">
+            {/* Sidebar Skeleton */}
+            <aside className="hidden lg:block space-y-6">
+              <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
+                <div className="h-3 w-28 bg-slate-200 rounded animate-pulse" />
+                <div className="h-2.5 w-full bg-slate-100 rounded animate-pulse" />
+                <div className="h-2.5 w-4/5 bg-slate-100 rounded animate-pulse" />
+                <div className="h-2.5 w-3/4 bg-slate-100 rounded animate-pulse" />
+              </div>
+              <div className="p-5 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
+                <div className="h-3 w-32 bg-slate-200 rounded animate-pulse" />
+                <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
+                <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
+                <div className="h-8 w-full bg-slate-100 rounded-xl animate-pulse" />
+              </div>
+            </aside>
+
+            {/* Main Article Content Skeleton */}
+            <main className="space-y-6 min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-20 bg-slate-200 rounded-full animate-pulse" />
+                <div className="h-6 w-24 bg-slate-200 rounded-full animate-pulse" />
+                <div className="h-6 w-16 bg-slate-200 rounded-full animate-pulse" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="h-10 w-4/5 bg-slate-200 rounded-xl animate-pulse" />
+                <div className="h-4 w-2/3 bg-slate-100 rounded animate-pulse" />
+              </div>
+
+              <div className="p-6 rounded-2xl border border-emerald-100 bg-emerald-50/40 space-y-3">
+                <div className="h-4 w-32 bg-emerald-200 rounded animate-pulse" />
+                <div className="h-3 w-full bg-emerald-100/80 rounded animate-pulse" />
+                <div className="h-3 w-5/6 bg-emerald-100/80 rounded animate-pulse" />
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <div className="h-4 w-full bg-slate-200/70 rounded animate-pulse" />
+                <div className="h-4 w-11/12 bg-slate-200/70 rounded animate-pulse" />
+                <div className="h-4 w-4/5 bg-slate-200/70 rounded animate-pulse" />
+                <div className="h-4 w-full bg-slate-200/70 rounded animate-pulse" />
+                <div className="h-4 w-3/4 bg-slate-200/70 rounded animate-pulse" />
+              </div>
+            </main>
+          </div>
         </div>
       </div>
     );
@@ -801,12 +947,12 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
         <p className="text-slate-600 mb-6 text-sm">
           The requested lesson may have moved or is not yet published.
         </p>
-        <a
+        <Link
           href="/explore"
           className="px-5 py-2.5 bg-[#0E6163] text-white rounded-xl text-sm font-semibold hover:bg-[#0A4A4C] transition-colors"
         >
           Browse All Learning Tracks →
-        </a>
+        </Link>
       </div>
     );
   }
@@ -849,21 +995,21 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
         <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Breadcrumb Path */}
           <div className="flex items-center gap-2 text-xs font-medium truncate">
-            <a
+            <Link
               href="/explore"
               className="hover:underline flex items-center gap-1"
               style={{ color: themeStyles.textMuted }}
             >
               <span>Explore</span>
-            </a>
+            </Link>
             <span style={{ color: themeStyles.textMuted }}>›</span>
-            <a
+            <Link
               href={`/tracks/${track.slug}`}
               className="hover:underline truncate max-w-[160px] sm:max-w-none font-semibold"
               style={{ color: track.color_hex || themeStyles.accent }}
             >
               {track.name}
-            </a>
+            </Link>
             <span style={{ color: themeStyles.textMuted }}>›</span>
             <span
               className="truncate max-w-[200px] hidden md:inline"
@@ -978,12 +1124,12 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                 You have satisfied all milestones for {track.name}. View your verified certificate.
               </p>
             </div>
-            <a
+            <Link
               href="/certificates"
               className="inline-block px-5 py-2.5 bg-white text-[#0E6163] font-bold text-xs rounded-xl hover:bg-emerald-50 transition-colors shadow-sm"
             >
               View Certificate →
-            </a>
+            </Link>
           </div>
         </div>
       )}
@@ -1081,7 +1227,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                     {siblingLessons.map((sib, idx) => {
                       const isCurrent = sib.id === lesson.id || sib.slug === lesson.slug;
                       return (
-                        <a
+                        <Link
                           key={sib.id}
                           href={`/learn/${sib.slug}`}
                           className="flex items-center gap-2.5 p-2 rounded-xl text-xs transition-colors group"
@@ -1111,7 +1257,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                           >
                             {sib.duration_minutes}m
                           </span>
-                        </a>
+                        </Link>
                       );
                     })}
                   </div>
@@ -1352,13 +1498,13 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                           </button>
                         )}
                         {nextLesson && (
-                          <a
+                          <Link
                             href={`/learn/${nextLesson.slug}`}
                             className="w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-bold text-white transition-colors text-center"
                             style={{ backgroundColor: themeStyles.accent }}
                           >
                             Next Lesson →
-                          </a>
+                          </Link>
                         )}
                       </div>
                     )}
@@ -1370,7 +1516,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                     style={{ borderColor: themeStyles.cardBorder }}
                   >
                     {prevLesson ? (
-                      <a
+                      <Link
                         href={`/learn/${prevLesson.slug}`}
                         className="p-4 rounded-2xl border transition-all hover:shadow-md group"
                         style={{
@@ -1396,13 +1542,13 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                         >
                           ⏱ {prevLesson.duration_minutes} min
                         </div>
-                      </a>
+                      </Link>
                     ) : (
                       <div />
                     )}
 
                     {nextLesson && (
-                      <a
+                      <Link
                         href={`/learn/${nextLesson.slug}`}
                         className="p-4 rounded-2xl border transition-all hover:shadow-md text-right group"
                         style={{
@@ -1428,7 +1574,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                         >
                           ⏱ {nextLesson.duration_minutes} min
                         </div>
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>
@@ -1568,13 +1714,13 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                           Retry Quiz
                         </button>
                         {nextLesson && (
-                          <a
+                          <Link
                             href={`/learn/${nextLesson.slug}`}
                             className="px-6 py-2.5 rounded-xl text-white font-semibold text-xs shadow-md transition-colors"
                             style={{ backgroundColor: themeStyles.accent }}
                           >
                             Next Lesson →
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -1769,7 +1915,7 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                       "What are the biggest mistakes to avoid here?",
                       "How do I practice this in paper trading?",
                     ].map((prompt, i) => (
-                      <a
+                      <Link
                         key={i}
                         href={`/ai-tutor?prompt=${encodeURIComponent(
                           `Regarding the lesson "${lesson.title}": ${prompt}`
@@ -1782,16 +1928,16 @@ export default function LessonPlayer({ params }: { params: { slug: string } }) {
                         }}
                       >
                         💡 &ldquo;{prompt}&rdquo;
-                      </a>
+                      </Link>
                     ))}
                   </div>
-                  <a
+                  <Link
                     href={`/ai-tutor?context=${encodeURIComponent(lesson.title)}`}
                     className="block w-full text-center py-3.5 rounded-xl text-white text-xs sm:text-sm font-bold shadow-md transition-colors"
                     style={{ backgroundColor: themeStyles.accent }}
                   >
                     Open AI Mentor in Full Screen →
-                  </a>
+                  </Link>
                 </div>
               )}
 

@@ -389,6 +389,7 @@ export default function TrackPage({ params }: { params: { slug: string } }) {
                         <Link
                           key={l.id}
                           href={`/learn/${l.slug || l.id}`}
+                          prefetch={true}
                           style={{
                             display: "flex",
                             alignItems: "center",

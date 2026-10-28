@@ -876,6 +876,7 @@ function TrackCurriculumSection({
                   <Link
                     key={lesson.id}
                     href={`/learn/${lesson.slug}`}
+                    prefetch={true}
                     style={{
                       ...s.lessonCard,
                       background: isCompleted ? "#F0FDF4" : "#FFFFFF",
