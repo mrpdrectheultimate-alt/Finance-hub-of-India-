@@ -31,6 +31,8 @@ export default function SignupPage() {
           setError("Google access was denied. If Google shows 'Google hasn't verified this app', click 'Advanced' (bottom left) → 'Go to Finance hub of India (unsafe)' → then 'Continue'.");
         } else if (decoded.includes("exchange external code")) {
           setError("Google authorization code could not be exchanged. Please ensure 'Skip nonce checks' is toggled ON in Supabase Google Provider settings.");
+        } else if (decoded.includes("PKCE") || decoded.includes("code verifier")) {
+          setError("Your sign-in attempt timed out or cookies were blocked. Please click 'Sign up with Google' again to complete secure registration.");
         } else {
           setError(decoded);
         }
@@ -38,7 +40,7 @@ export default function SignupPage() {
     }
   }, []);
 
-  const handleGoogle = async () => {
+  const handleGoogle = () => {
     setLoading(true);
     setError("");
     try {
@@ -46,27 +48,7 @@ export default function SignupPage() {
         typeof window !== "undefined"
           ? new URLSearchParams(window.location.search).get("next") || "/onboarding"
           : "/onboarding";
-      const origin =
-        typeof window !== "undefined" && window.location.origin
-          ? window.location.origin
-          : "https://finance-hub-of-india.vercel.app";
-      const client = getBrowserClient();
-      const { data, error: oauthErr } = await client.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
-      });
-      if (oauthErr) {
-        setError(oauthErr.message);
-        setLoading(false);
-      } else if (data?.url) {
-        window.location.href = data.url;
-      }
+      window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
     } catch (err: any) {
       setError(err?.message || "Failed to initialize Google login");
       setLoading(false);

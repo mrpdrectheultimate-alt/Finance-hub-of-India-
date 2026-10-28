@@ -7,7 +7,6 @@
 
 import { createBrowserClient as createSSRBrowserClient, createServerClient as createSSRServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { parse, serialize } from "cookie";
 import type { Database } from "@/types/database";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
@@ -26,41 +25,6 @@ export function getBrowserClient() {
         path: "/",
         sameSite: "lax",
         secure: window.location.protocol === "https:",
-      },
-      cookies: {
-        get(name: string) {
-          const cookieObj = parse(document.cookie || "");
-          const val = cookieObj[name];
-          if (val) return val;
-          try {
-            return window.localStorage.getItem(name) || undefined;
-          } catch {
-            return undefined;
-          }
-        },
-        set(name: string, value: string, options: any) {
-          try {
-            document.cookie = serialize(name, value, {
-              path: "/",
-              sameSite: "lax",
-              secure: window.location.protocol === "https:",
-              ...options,
-            });
-            window.localStorage.setItem(name, value);
-          } catch {}
-        },
-        remove(name: string, options: any) {
-          try {
-            document.cookie = serialize(name, "", {
-              path: "/",
-              sameSite: "lax",
-              secure: window.location.protocol === "https:",
-              ...options,
-              maxAge: 0,
-            });
-            window.localStorage.removeItem(name);
-          } catch {}
-        },
       },
     });
   }
