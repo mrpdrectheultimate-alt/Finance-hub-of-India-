@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
+import { ModeToggle } from "@/components/ui/ModeToggle";
 import { ReferralCard } from "@/components/ui/ReferralCard";
 import Logo from "@/components/ui/Logo";
 import Link from "next/link";
@@ -161,7 +161,15 @@ export default function SettingsPage() {
 
 
           <div>
-            <DarkModeToggle />
+            <div style={{ marginBottom: 12 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--mode-text)", marginBottom: 4 }}>
+              Display Mode
+            </h3>
+            <p style={{ fontSize: 13, color: "var(--mode-text-3)", marginBottom: 16 }}>
+              Choose how FinanceHub looks across all pages. Saved automatically.
+            </p>
+            <ModeToggle />
+          </div>
           </div>
 
 

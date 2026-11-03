@@ -301,3 +301,7 @@ const s: Record<string, CSSProperties> = {
     fontWeight: 600,
   },
 };
+
+
+export { ModeToggle } from "@/components/ui/ModeToggle";
+export { ModeToggleCompact } from "@/components/ui/ModeToggleCompact";

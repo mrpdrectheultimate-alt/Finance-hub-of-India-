@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
+import { ModeToggleCompact } from "@/components/ui/ModeToggleCompact";
 
 // ============================================================
 // FinanceHub — Global Navbar
@@ -125,7 +125,7 @@ export default function Navbar() {
 
           {/* Right side */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <DarkModeToggle compact />
+            <ModeToggleCompact />
 
             {/* Streak (logged in) */}
             {profile && profile.current_streak > 0 && (

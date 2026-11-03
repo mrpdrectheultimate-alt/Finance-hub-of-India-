@@ -4,6 +4,8 @@ export {
   ThemeProvider,
   ThemeSwitcher,
   ThemeToggle,
+  ModeToggle,
+  ModeToggleCompact,
   useTheme,
 } from "@/components/ui/ThemeProvider";
 
