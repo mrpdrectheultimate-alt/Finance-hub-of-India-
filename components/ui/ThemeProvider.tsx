@@ -31,7 +31,7 @@ const ROUTE_THEMES: { pattern: RegExp; theme: Theme }[] = [
   { pattern: /\/pricing/, theme: "default" },
 ];
 
-export type Mode = "light" | "dark" | "sepia";
+export type Mode = "light" | "dark" | "sepia" | "focus";
 export type TextSize = "default" | "large" | "larger";
 export type Theme =
   | "default"
@@ -78,7 +78,7 @@ function getAutoTheme(pathname: string | null): Theme {
 }
 
 function isMode(value: string | null): value is Mode {
-  return value === "light" || value === "dark" || value === "sepia";
+  return value === "light" || value === "dark" || value === "sepia" || value === "focus";
 }
 
 function isTextSize(value: string | null): value is TextSize {
@@ -154,7 +154,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleMode = useCallback(() => {
-    setMode(mode === "dark" ? "light" : mode === "light" ? "sepia" : "light");
+    setMode(mode === "light" ? "dark" : mode === "dark" ? "sepia" : mode === "sepia" ? "focus" : "light");
   }, [mode, setMode]);
 
   return (
@@ -174,6 +174,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
           { id: "light" as const, label: "Light", short: "LT" },
           { id: "sepia" as const, label: "Reading", short: "RD" },
           { id: "dark" as const, label: "Dark", short: "DK" },
+          { id: "focus" as const, label: "Focus", short: "FC" },
         ].map((item) => (
           <button
             key={item.id}
@@ -213,7 +214,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
 
 export function ThemeToggle() {
   const { mode, toggleMode } = useTheme();
-  const label = mode === "dark" ? "Dark" : mode === "sepia" ? "Read" : "Light";
+  const label = mode === "dark" ? "Dark" : mode === "sepia" ? "Read" : mode === "focus" ? "Focus" : "Light";
 
   return (
     <button onClick={toggleMode} title={`Theme mode: ${label}. Click to cycle.`} style={s.toggleButton} type="button">

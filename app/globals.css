@@ -1595,3 +1595,638 @@ p, .body {
   .landing-feature-grid,
   .landing-options { grid-template-columns: 1fr; }
 }
+
+
+/* ============================================================
+   FinanceHub — Global Theme Modes
+   theme_modes.css
+   
+   APPEND THIS ENTIRE FILE to the bottom of globals.css
+   
+   Covers all 4 modes across the entire site:
+   [data-mode="light"]  — default, clean white
+   [data-mode="dark"]   — deep dark, easy on eyes at night
+   [data-mode="sepia"]  — warm amber, best for long reading
+   [data-mode="focus"]  — stripped back, max concentration
+   
+   Works with ThemeProvider setting data-mode on <html>
+   ALL components that use these variables get modes for free.
+   ============================================================ */
+
+/* ── BASE: CSS custom properties on :root ──────────────────── */
+/* Light mode is the default — no attribute needed */
+:root,
+[data-mode="light"] {
+  /* Backgrounds */
+  --mode-bg:          #FFFFFF;
+  --mode-bg-alt:      #F8FAFC;
+  --mode-bg-card:     #FFFFFF;
+  --mode-bg-elevated: #FFFFFF;
+  --mode-bg-sidebar:  #F8FAFC;
+  --mode-bg-nav:      rgba(255,255,255,0.96);
+  --mode-bg-input:    #FFFFFF;
+  --mode-bg-hover:    #F1F5F9;
+  --mode-bg-active:   #E6F4F4;
+  --mode-bg-overlay:  rgba(0,0,0,0.5);
+
+  /* Text */
+  --mode-text:        #0B1A2B;
+  --mode-text-2:      #475569;
+  --mode-text-3:      #64748B;
+  --mode-text-4:      #94A3B8;
+  --mode-text-inverse:#FFFFFF;
+  --mode-text-brand:  #0E6163;
+
+  /* Borders */
+  --mode-border:      #E2E8F0;
+  --mode-border-2:    #CBD5E1;
+  --mode-border-focus:#0E6163;
+
+  /* Accent */
+  --mode-accent:      #0E6163;
+  --mode-accent-2:    #1D9E75;
+  --mode-accent-amber:#F59E0B;
+  --mode-accent-light:#E6F4F4;
+
+  /* Nav specifically */
+  --mode-nav-text:    #475569;
+  --mode-nav-active:  #0E6163;
+  --mode-nav-border:  #E2E8F0;
+
+  /* Cards */
+  --mode-card-bg:     #FFFFFF;
+  --mode-card-border: #E2E8F0;
+  --mode-card-shadow: 0 1px 8px rgba(0,0,0,0.06);
+
+  /* Code/mono */
+  --mode-code-bg:     #F1F5F9;
+  --mode-code-text:   #0B1A2B;
+
+  /* Quote/highlight */
+  --mode-quote-bg:    #F8FAFC;
+  --mode-quote-border:#0E6163;
+
+  /* Table */
+  --mode-table-head:  #F8FAFC;
+  --mode-table-row:   #FFFFFF;
+  --mode-table-alt:   #F8FAFC;
+
+  /* Footer */
+  --mode-footer-bg:   #0B1A2B;
+  --mode-footer-text: rgba(255,255,255,0.45);
+
+  /* Reading */
+  --mode-font-body:   'Inter', system-ui, sans-serif;
+  --mode-line-height: 1.75;
+  --mode-font-size:   16px;
+
+  /* Transitions */
+  --mode-transition:  background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+  /* Scrollbar */
+  --mode-scroll-track: #F1F5F9;
+  --mode-scroll-thumb: #CBD5E1;
+}
+
+/* ── DARK MODE ──────────────────────────────────────────────── */
+[data-mode="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --mode-bg:          #0F172A;
+  --mode-bg-alt:      #1E293B;
+  --mode-bg-card:     #1E293B;
+  --mode-bg-elevated: #334155;
+  --mode-bg-sidebar:  #0F172A;
+  --mode-bg-nav:      rgba(15,23,42,0.97);
+  --mode-bg-input:    #1E293B;
+  --mode-bg-hover:    #334155;
+  --mode-bg-active:   #1E3A5F;
+  --mode-bg-overlay:  rgba(0,0,0,0.75);
+
+  /* Text */
+  --mode-text:        #F1F5F9;
+  --mode-text-2:      #CBD5E1;
+  --mode-text-3:      #94A3B8;
+  --mode-text-4:      #64748B;
+  --mode-text-inverse:#0F172A;
+  --mode-text-brand:  #4DD9AC;
+
+  /* Borders */
+  --mode-border:      #334155;
+  --mode-border-2:    #475569;
+  --mode-border-focus:#4DD9AC;
+
+  /* Accent — slightly brighter for dark bg */
+  --mode-accent:      #4DD9AC;
+  --mode-accent-2:    #34D399;
+  --mode-accent-amber:#FCD34D;
+  --mode-accent-light:rgba(77,217,172,0.12);
+
+  /* Nav */
+  --mode-nav-text:    #94A3B8;
+  --mode-nav-active:  #4DD9AC;
+  --mode-nav-border:  #334155;
+
+  /* Cards */
+  --mode-card-bg:     #1E293B;
+  --mode-card-border: #334155;
+  --mode-card-shadow: 0 1px 8px rgba(0,0,0,0.3);
+
+  /* Code */
+  --mode-code-bg:     #334155;
+  --mode-code-text:   #E2E8F0;
+
+  /* Quote */
+  --mode-quote-bg:    #1E293B;
+  --mode-quote-border:#4DD9AC;
+
+  /* Table */
+  --mode-table-head:  #1E293B;
+  --mode-table-row:   #0F172A;
+  --mode-table-alt:   #1E293B;
+
+  /* Footer same — already dark */
+  --mode-footer-bg:   #020817;
+  --mode-footer-text: rgba(255,255,255,0.35);
+
+  /* Scrollbar */
+  --mode-scroll-track: #1E293B;
+  --mode-scroll-thumb: #475569;
+}
+
+/* ── SEPIA MODE ─────────────────────────────────────────────── */
+[data-mode="sepia"] {
+  color-scheme: light;
+
+  /* Backgrounds — warm amber tones */
+  --mode-bg:          #F5F0E8;
+  --mode-bg-alt:      #EDE8DE;
+  --mode-bg-card:     #FAF7F2;
+  --mode-bg-elevated: #FFFFFF;
+  --mode-bg-sidebar:  #EDE8DE;
+  --mode-bg-nav:      rgba(245,240,232,0.97);
+  --mode-bg-input:    #FAF7F2;
+  --mode-bg-hover:    #E8E2D6;
+  --mode-bg-active:   #DDD6C8;
+  --mode-bg-overlay:  rgba(60,40,20,0.5);
+
+  /* Text — warm dark browns */
+  --mode-text:        #2C1A0A;
+  --mode-text-2:      #5C3D20;
+  --mode-text-3:      #7A5535;
+  --mode-text-4:      #A07850;
+  --mode-text-inverse:#F5F0E8;
+  --mode-text-brand:  #7A4F28;
+
+  /* Borders — warm */
+  --mode-border:      #D6CCB8;
+  --mode-border-2:    #C4B89A;
+  --mode-border-focus:#7A4F28;
+
+  /* Accent — warm teal-brown */
+  --mode-accent:      #7A4F28;
+  --mode-accent-2:    #5C8A5A;
+  --mode-accent-amber:#C47B20;
+  --mode-accent-light:rgba(122,79,40,0.1);
+
+  /* Nav */
+  --mode-nav-text:    #5C3D20;
+  --mode-nav-active:  #7A4F28;
+  --mode-nav-border:  #D6CCB8;
+
+  /* Cards */
+  --mode-card-bg:     #FAF7F2;
+  --mode-card-border: #D6CCB8;
+  --mode-card-shadow: 0 1px 8px rgba(60,40,20,0.08);
+
+  /* Code */
+  --mode-code-bg:     #EDE8DE;
+  --mode-code-text:   #2C1A0A;
+
+  /* Quote */
+  --mode-quote-bg:    #EDE8DE;
+  --mode-quote-border:#7A4F28;
+
+  /* Table */
+  --mode-table-head:  #EDE8DE;
+  --mode-table-row:   #FAF7F2;
+  --mode-table-alt:   #EDE8DE;
+
+  /* Footer */
+  --mode-footer-bg:   #2C1A0A;
+  --mode-footer-text: rgba(245,240,232,0.45);
+
+  /* Scrollbar */
+  --mode-scroll-track: #EDE8DE;
+  --mode-scroll-thumb: #C4B89A;
+}
+
+/* ── FOCUS MODE ─────────────────────────────────────────────── */
+/* Extra clean, minimal distractions, slightly off-white */
+[data-mode="focus"] {
+  color-scheme: light;
+
+  --mode-bg:          #FAFAFA;
+  --mode-bg-alt:      #F4F4F4;
+  --mode-bg-card:     #FFFFFF;
+  --mode-bg-elevated: #FFFFFF;
+  --mode-bg-sidebar:  #F4F4F4;
+  --mode-bg-nav:      rgba(250,250,250,0.98);
+  --mode-bg-input:    #FFFFFF;
+  --mode-bg-hover:    #F0F0F0;
+  --mode-bg-active:   #E8E8E8;
+  --mode-bg-overlay:  rgba(0,0,0,0.4);
+
+  --mode-text:        #1A1A1A;
+  --mode-text-2:      #444444;
+  --mode-text-3:      #666666;
+  --mode-text-4:      #999999;
+  --mode-text-inverse:#FAFAFA;
+  --mode-text-brand:  #0E6163;
+
+  --mode-border:      #E8E8E8;
+  --mode-border-2:    #D0D0D0;
+  --mode-border-focus:#0E6163;
+
+  --mode-accent:      #0E6163;
+  --mode-accent-2:    #1D9E75;
+  --mode-accent-amber:#F59E0B;
+  --mode-accent-light:#F0F9F7;
+
+  --mode-nav-text:    #444444;
+  --mode-nav-active:  #0E6163;
+  --mode-nav-border:  #E8E8E8;
+
+  --mode-card-bg:     #FFFFFF;
+  --mode-card-border: #E8E8E8;
+  --mode-card-shadow: 0 1px 4px rgba(0,0,0,0.04);
+
+  --mode-code-bg:     #F4F4F4;
+  --mode-code-text:   #1A1A1A;
+
+  --mode-quote-bg:    #F4F4F4;
+  --mode-quote-border:#0E6163;
+
+  --mode-table-head:  #F4F4F4;
+  --mode-table-row:   #FFFFFF;
+  --mode-table-alt:   #F4F4F4;
+
+  --mode-footer-bg:   #1A1A1A;
+  --mode-footer-text: rgba(250,250,250,0.4);
+
+  --mode-scroll-track: #F0F0F0;
+  --mode-scroll-thumb: #C8C8C8;
+}
+
+/* ── GLOBAL APPLICATION ─────────────────────────────────────── */
+/* Apply mode variables to root elements */
+
+html, body {
+  background-color: var(--mode-bg);
+  color: var(--mode-text);
+  transition: var(--mode-transition);
+}
+
+/* All transitions on mode change */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--mode-scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--mode-scroll-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mode-text-4); }
+
+/* ── UTILITY CLASSES using mode variables ─────────────────────
+   Use these instead of hardcoded colors in every component      */
+
+/* Backgrounds */
+.bg-mode         { background-color: var(--mode-bg) !important; }
+.bg-mode-alt     { background-color: var(--mode-bg-alt) !important; }
+.bg-mode-card    { background-color: var(--mode-card-bg) !important; }
+.bg-mode-hover   { background-color: var(--mode-bg-hover) !important; }
+.bg-mode-active  { background-color: var(--mode-bg-active) !important; }
+
+/* Text */
+.text-mode       { color: var(--mode-text) !important; }
+.text-mode-2     { color: var(--mode-text-2) !important; }
+.text-mode-3     { color: var(--mode-text-3) !important; }
+.text-mode-4     { color: var(--mode-text-4) !important; }
+.text-mode-brand { color: var(--mode-text-brand) !important; }
+
+/* Borders */
+.border-mode     { border-color: var(--mode-border) !important; }
+.border-mode-2   { border-color: var(--mode-border-2) !important; }
+
+/* Cards — apply to any card element */
+.card-mode {
+  background-color: var(--mode-card-bg);
+  border: 1px solid var(--mode-card-border);
+  box-shadow: var(--mode-card-shadow);
+}
+
+/* Nav */
+.nav-mode {
+  background: var(--mode-bg-nav);
+  border-bottom: 1px solid var(--mode-nav-border);
+}
+.nav-link-mode {
+  color: var(--mode-nav-text);
+}
+.nav-link-mode:hover,
+.nav-link-mode.active {
+  color: var(--mode-nav-active);
+}
+
+/* Input */
+.input-mode {
+  background: var(--mode-bg-input);
+  color: var(--mode-text);
+  border: 1px solid var(--mode-border);
+}
+.input-mode:focus {
+  border-color: var(--mode-border-focus);
+  outline: none;
+}
+.input-mode::placeholder {
+  color: var(--mode-text-4);
+}
+
+/* Section backgrounds — alternate light/alt */
+.section-mode       { background-color: var(--mode-bg); }
+.section-mode-alt   { background-color: var(--mode-bg-alt); }
+
+/* Table */
+.table-mode thead tr { background: var(--mode-table-head); }
+.table-mode tbody tr { background: var(--mode-table-row); }
+.table-mode tbody tr:nth-child(even) { background: var(--mode-table-alt); }
+.table-mode th, .table-mode td { color: var(--mode-text-2); border-color: var(--mode-border); }
+
+/* Code blocks */
+.code-mode {
+  background: var(--mode-code-bg);
+  color: var(--mode-code-text);
+  border: 1px solid var(--mode-border);
+}
+
+/* Quote / callout */
+.quote-mode {
+  background: var(--mode-quote-bg);
+  border-left: 3px solid var(--mode-quote-border);
+  color: var(--mode-text-2);
+}
+
+/* ── COMPONENT-LEVEL DARK/SEPIA OVERRIDES ─────────────────────
+   For components that use hardcoded colors via inline styles,
+   these global selectors override them by targeting HTML tags   */
+
+/* Navbar override */
+[data-mode="dark"] nav,
+[data-mode="sepia"] nav,
+[data-mode="focus"] nav {
+  background: var(--mode-bg-nav) !important;
+  border-bottom-color: var(--mode-nav-border) !important;
+}
+
+[data-mode="dark"] nav a,
+[data-mode="sepia"] nav a {
+  color: var(--mode-nav-text) !important;
+}
+
+/* Page backgrounds */
+[data-mode="dark"] main,
+[data-mode="dark"] .page-bg,
+[data-mode="dark"] section,
+[data-mode="sepia"] main,
+[data-mode="sepia"] section,
+[data-mode="focus"] main,
+[data-mode="focus"] section {
+  background-color: var(--mode-bg);
+}
+
+/* White cards in dark mode */
+[data-mode="dark"] .card,
+[data-mode="dark"] [class*="card"],
+[data-mode="dark"] [style*="background: #fff"],
+[data-mode="dark"] [style*="background:#fff"],
+[data-mode="dark"] [style*="background: white"],
+[data-mode="dark"] [style*="background-color: #fff"] {
+  background-color: var(--mode-card-bg) !important;
+  border-color: var(--mode-card-border) !important;
+  color: var(--mode-text) !important;
+}
+
+/* Text color overrides in dark */
+[data-mode="dark"] h1,
+[data-mode="dark"] h2,
+[data-mode="dark"] h3,
+[data-mode="dark"] h4,
+[data-mode="dark"] h5,
+[data-mode="dark"] p,
+[data-mode="dark"] span:not([class*="badge"]):not([class*="tag"]):not([style*="background"]),
+[data-mode="dark"] li,
+[data-mode="dark"] label {
+  color: var(--mode-text);
+}
+
+[data-mode="sepia"] h1,
+[data-mode="sepia"] h2,
+[data-mode="sepia"] h3,
+[data-mode="sepia"] h4,
+[data-mode="sepia"] p,
+[data-mode="sepia"] li,
+[data-mode="sepia"] label {
+  color: var(--mode-text);
+}
+
+/* Input fields */
+[data-mode="dark"] input,
+[data-mode="dark"] textarea,
+[data-mode="dark"] select {
+  background-color: var(--mode-bg-input) !important;
+  color: var(--mode-text) !important;
+  border-color: var(--mode-border) !important;
+}
+
+[data-mode="sepia"] input,
+[data-mode="sepia"] textarea,
+[data-mode="sepia"] select {
+  background-color: var(--mode-bg-input) !important;
+  color: var(--mode-text) !important;
+  border-color: var(--mode-border) !important;
+}
+
+/* Dashboard sidebar */
+[data-mode="dark"] aside,
+[data-mode="sepia"] aside {
+  background-color: var(--mode-bg-sidebar) !important;
+  border-color: var(--mode-border) !important;
+}
+
+/* White sections that need to flip */
+[data-mode="dark"] .bg-white,
+[data-mode="sepia"] .bg-white {
+  background-color: var(--mode-card-bg) !important;
+}
+
+[data-mode="dark"] .bg-gray-50,
+[data-mode="dark"] .bg-slate-50,
+[data-mode="sepia"] .bg-gray-50,
+[data-mode="sepia"] .bg-slate-50 {
+  background-color: var(--mode-bg-alt) !important;
+}
+
+/* Border overrides */
+[data-mode="dark"] [class*="border"],
+[data-mode="sepia"] [class*="border"] {
+  border-color: var(--mode-border);
+}
+
+/* ── FLASH PREVENTION ───────────────────────────────────────── */
+/* Add this script tag in <head> BEFORE hydration to prevent
+   white flash in dark mode. See layout.tsx update below.
+
+   <script dangerouslySetInnerHTML={{ __html: `
+     (function(){
+       try {
+         var m = localStorage.getItem('fh_mode') || 
+           (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+         document.documentElement.setAttribute('data-mode', m);
+       } catch(e){}
+     })();
+   `}} />
+*/
+
+/* ── FOCUS MODE SPECIAL RULES ───────────────────────────────── */
+/* In focus mode: hide sidebars, reduce visual noise */
+[data-mode="focus"] .sidebar-ads,
+[data-mode="focus"] .promotional-banner,
+[data-mode="focus"] .floating-cta {
+  display: none !important;
+}
+
+[data-mode="focus"] {
+  /* Slightly larger text for reading comfort */
+  font-size: 17px;
+  line-height: 1.85;
+}
+
+[data-mode="focus"] .lesson-content p,
+[data-mode="focus"] .lesson-content li {
+  font-size: 17px;
+  line-height: 1.85;
+  color: #1A1A1A;
+}
+
+/* ── DARK MODE: SPECIFIC COMPONENT FIXES ───────────────────── */
+
+/* Lesson player */
+[data-mode="dark"] .lesson-sidebar {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+[data-mode="dark"] .lesson-toc a {
+  color: #94A3B8 !important;
+}
+[data-mode="dark"] .lesson-toc a.active {
+  color: #4DD9AC !important;
+}
+
+/* Dashboard */
+[data-mode="dark"] .dashboard-card {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Pricing cards */
+[data-mode="dark"] .pricing-card {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Glossary */
+[data-mode="dark"] .glossary-term {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Case studies */
+[data-mode="dark"] .case-study-card {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Explore page */
+[data-mode="dark"] .track-card {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Leaderboard */
+[data-mode="dark"] .leaderboard-row {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+[data-mode="dark"] .leaderboard-row:hover {
+  background: #334155 !important;
+}
+
+/* Quiz */
+[data-mode="dark"] .quiz-option {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+  color: #F1F5F9 !important;
+}
+
+/* Notes */
+[data-mode="dark"] .note-card {
+  background: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* AI Mentor chat */
+[data-mode="dark"] .chat-bubble-user {
+  background: #1E3A5F !important;
+  color: #E2E8F0 !important;
+}
+[data-mode="dark"] .chat-bubble-ai {
+  background: #1E293B !important;
+  color: #E2E8F0 !important;
+  border-color: #334155 !important;
+}
+
+/* ── SEPIA MODE: SPECIFIC FIXES ─────────────────────────────── */
+
+[data-mode="sepia"] .lesson-sidebar {
+  background: #EDE8DE !important;
+  border-color: #D6CCB8 !important;
+}
+
+[data-mode="sepia"] .dashboard-card {
+  background: #FAF7F2 !important;
+  border-color: #D6CCB8 !important;
+}
+
+[data-mode="sepia"] .pricing-card {
+  background: #FAF7F2 !important;
+  border-color: #D6CCB8 !important;
+}
+
+[data-mode="sepia"] blockquote,
+[data-mode="sepia"] .quote-block {
+  background: #EDE8DE !important;
+  border-left-color: #7A4F28 !important;
+}
+
+/* ── PRINT: ALWAYS LIGHT ────────────────────────────────────── */
+@media print {
+  :root {
+    --mode-bg:      #FFFFFF;
+    --mode-text:    #000000;
+    --mode-border:  #999999;
+    color-scheme: light;
+  }
+}

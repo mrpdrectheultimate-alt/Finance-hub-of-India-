@@ -10,6 +10,7 @@ import Script                       from "next/script";
 import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components/pwa/PWAInstall";
 import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ThemeProvider } from "@/components/ui/ThemeProvider";
 import FeedbackButton from "@/components/ui/FeedbackButton";
 import { AuthSessionHandler } from "@/components/auth/AuthSessionHandler";
 import "./globals.css";
@@ -124,6 +125,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-IN" className={`${inter.variable} ${lora.variable}`}>
       <head>
+        {/* Anti-flash theme initialization script */}
+        <script
+          id="theme-flash-prevention"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=localStorage.getItem('fh_mode')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-mode',m);}catch(e){}})();`,
+          }}
+        />
         {/* JSON-LD */}
         <script
           type="application/ld+json"
@@ -331,10 +339,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Page content */}
         <ErrorBoundary>
-          <PostHogProvider>
-            <PostHogPageView />
-            {children}
-          </PostHogProvider>
+          <ThemeProvider>
+            <PostHogProvider>
+              <PostHogPageView />
+              {children}
+            </PostHogProvider>
+          </ThemeProvider>
         </ErrorBoundary>
 
         {/* PWA components (client-side only) */}
