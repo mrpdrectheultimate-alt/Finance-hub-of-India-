@@ -11,3 +11,4 @@ CHECK (theme IN ('light', 'dark', 'sepia', 'focus'));
 
 -- Verify column presence
 SELECT id, email, theme FROM profiles LIMIT 5;
+
