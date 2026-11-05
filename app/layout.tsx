@@ -10,7 +10,7 @@ import Script                       from "next/script";
 import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components/pwa/PWAInstall";
 import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import { ThemeProvider }            from "@/components/ui/ThemeProvider";
 import FeedbackButton from "@/components/ui/FeedbackButton";
 import { AuthSessionHandler } from "@/components/auth/AuthSessionHandler";
 import "./globals.css";
@@ -30,17 +30,14 @@ const lora = Lora({
 
 // ─── Metadata ────────────────────────────────────────────────
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://finance-hub-of-india.vercel.app")
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://financehub.in"),
   title: {
     default:  "FinanceHub — Finance Education for India",
     template: "%s | FinanceHub",
   },
   description: "India's best finance education platform. Learn personal finance, investing, trading, tax planning, and crypto. Free lessons in Hindi and English.",
   keywords:    ["personal finance India","SIP calculator","income tax India","mutual funds","stock market basics","financial planning","NIFTY","sensex","hindi finance"],
-  authors:     [{ name: "FinanceHub", url: "https://finance-hub-of-india.vercel.app" }],
+  authors:     [{ name: "FinanceHub", url: "https://financehub.in" }],
   creator:     "FinanceHub Education",
   publisher:   "FinanceHub Education Private Limited",
   manifest:    "/manifest.json",
@@ -52,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     type:        "website",
     locale:      "en_IN",
-    url:         "https://finance-hub-of-india.vercel.app",
+    url:         "https://financehub.in",
     siteName:    "FinanceHub",
     title:       "FinanceHub — Finance Education for India",
     description: "Learn personal finance, investing, trading and more. Free in Hindi and English.",
@@ -63,17 +60,15 @@ export const metadata: Metadata = {
     title:       "FinanceHub — Finance Education for India",
     description: "Free finance education in Hindi and English",
     images:      ["/og-image.png"],
-    creator:     "@polymerhub_",
+    creator:     "@financehub_in",
   },
   icons: {
-    icon: [
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon.png", sizes: "48x48", type: "image/png" },
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    icon:        [
+      { url: "/icons/icon-32x32.png",  sizes: "32x32",   type: "image/png" },
+      { url: "/icons/icon-192x192.png",sizes: "192x192", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png",
-    shortcut: "/favicon.ico",
+    apple:       "/icons/icon-180x180.png",
+    shortcut:    "/favicon.ico",
   },
   alternates: {
     canonical:   "https://financehub.in",
@@ -100,7 +95,6 @@ const ORG_JSON_LD = {
   "@type":       "EducationalOrganization",
   "name":        "FinanceHub",
   "url":         "https://financehub.in",
-  "logo":        "https://financehub.in/logo.png",
   "description": "India's finance education platform — personal finance, investing, trading.",
   "foundingDate":"2024",
   "areaServed":  "IN",
@@ -112,7 +106,7 @@ const ORG_JSON_LD = {
     "description":  "Free finance education courses",
   },
   "sameAs": [
-    "https://x.com/polymerhub_",
+    "https://twitter.com/financehub_in",
     "https://www.linkedin.com/company/financehub-in",
   ],
 };
@@ -125,13 +119,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-IN" className={`${inter.variable} ${lora.variable}`}>
       <head>
-        {/* Anti-flash theme initialization script */}
-        <script
-          id="theme-flash-prevention"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('fh_mode')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-mode',m);}catch(e){}})();`,
-          }}
-        />
+        {/* ── Flash prevention: set data-mode BEFORE hydration ──
+            Prevents white flash when user has dark/sepia mode saved.
+            Must be first script in head, runs synchronously.      */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var m=localStorage.getItem('fh_mode');if(!m)m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-mode',m);}catch(e){}})();` }} />
+
         {/* JSON-LD */}
         <script
           type="application/ld+json"
