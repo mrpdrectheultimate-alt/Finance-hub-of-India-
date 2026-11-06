@@ -8,11 +8,10 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Lora }             from "next/font/google";
 import Script                       from "next/script";
 import { PWAInstallPrompt, SWUpdateBanner, OfflineIndicator } from "@/components/pwa/PWAInstall";
-import { PostHogProvider, PostHogPageView } from "@/components/analytics/PostHogProvider";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ThemeProvider }            from "@/components/ui/ThemeProvider";
-import FeedbackButton from "@/components/ui/FeedbackButton";
-import { AuthSessionHandler } from "@/components/auth/AuthSessionHandler";
+import { ErrorBoundary }            from "@/components/ui/ErrorBoundary";
+import { AuthSessionHandler }       from "@/components/auth/AuthSessionHandler";
+import FeedbackButton               from "@/components/ui/FeedbackButton";
 import "./globals.css";
 
 // ─── Fonts ───────────────────────────────────────────────────
@@ -157,7 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ── Service Worker registration ── */}
         <Script id="sw-register" strategy="afterInteractive">
           {`
-            if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
                   .then(function(reg) {
@@ -329,13 +328,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           .lesson-content hr { border: none; border-top: 1px solid var(--border-light); margin: 20px 0; }
         `}</style>
 
-        {/* Page content */}
+        {/* Page content — wrapped in ThemeProvider for sitewide modes */}
         <ErrorBoundary>
           <ThemeProvider>
-            <PostHogProvider>
-              <PostHogPageView />
-              {children}
-            </PostHogProvider>
+            {children}
           </ThemeProvider>
         </ErrorBoundary>
 
