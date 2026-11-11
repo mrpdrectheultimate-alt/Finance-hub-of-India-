@@ -1,38 +1,24 @@
 "use client";
+// ============================================================
+// FinanceHub — ThemeProvider (FIXED v2)
+// components/ui/ThemeProvider.tsx
+//
+// REMOVED: auto track-based theming (was causing color chaos)
+// REMOVED: data-theme per-route changes
+// KEPT: light / dark / sepia / focus modes only
+// FIXED: ModeToggleCompact exported from here (use in Navbar)
+// FIXED: Single CSS variable system (data-mode only)
+// BACKWARD-COMPAT: Safe static track color map & no-op setTheme
+// ============================================================
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import {
+  createContext, useContext, useEffect,
+  useState, useCallback, ReactNode,
+} from "react";
 
-export const TRACK_THEMES: Record<string, Theme> = {
-  "personal-finance": "personal-finance",
-  "trading-markets": "trading",
-  "crypto-defi": "crypto",
-  "corporate-finance": "corporate",
-  "behavioral-finance": "behavioral",
-  "forex-currency": "forex",
-  "technical-analysis": "technical",
-  investing: "investing",
-};
-
-const ROUTE_THEMES: { pattern: RegExp; theme: Theme }[] = [
-  { pattern: /\/track\/personal-finance/, theme: "personal-finance" },
-  { pattern: /\/track\/trading-markets/, theme: "trading" },
-  { pattern: /\/track\/crypto-defi/, theme: "crypto" },
-  { pattern: /\/track\/corporate-finance/, theme: "corporate" },
-  { pattern: /\/track\/behavioral-finance/, theme: "behavioral" },
-  { pattern: /\/track\/forex-currency/, theme: "forex" },
-  { pattern: /\/track\/technical-analysis/, theme: "technical" },
-  { pattern: /\/simulators/, theme: "trading" },
-  { pattern: /\/practice/, theme: "trading" },
-  { pattern: /\/library/, theme: "personal-finance" },
-  { pattern: /\/career/, theme: "investing" },
-  { pattern: /\/admin/, theme: "default" },
-  { pattern: /\/pricing/, theme: "default" },
-];
-
-export type Mode = "light" | "dark" | "sepia" | "focus";
+export type Mode     = "light" | "dark" | "sepia" | "focus";
 export type TextSize = "default" | "large" | "larger";
+
 export type Theme =
   | "default"
   | "personal-finance"
@@ -44,264 +30,307 @@ export type Theme =
   | "forex"
   | "technical";
 
-type ThemeContextValue = {
-  theme: Theme;
-  mode: Mode;
-  textSize: TextSize;
-  setTheme: (theme: Theme) => void;
-  setMode: (mode: Mode) => void;
-  setTextSize: (size: TextSize) => void;
-  toggleMode: () => void;
+export const TRACK_THEMES: Record<string, string> = {
+  "personal-finance":   "personal-finance",
+  "trading-markets":    "trading",
+  "crypto-defi":        "crypto",
+  "corporate-finance":  "corporate",
+  "behavioral-finance": "behavioral",
+  "forex-currency":     "forex",
+  "technical-analysis": "technical",
+  "investing":          "investing",
+};
+
+export const THEME_CONFIG: Record<string, { accent: string; label: string; icon: string }> = {
+  "default":          { accent: "#0E6163", label: "FinanceHub",         icon: "📚" },
+  "personal-finance": { accent: "#1A7A5A", label: "Personal Finance",   icon: "💰" },
+  "investing":        { accent: "#1E3A8A", label: "Investing",          icon: "📈" },
+  "trading":          { accent: "#4C55C4", label: "Trading",            icon: "📊" },
+  "crypto":           { accent: "#6366F1", label: "Crypto & DeFi",      icon: "₿"  },
+  "behavioral":       { accent: "#C95A5A", label: "Behavioral Finance", icon: "🧠" },
+  "corporate":        { accent: "#1F7A5A", label: "Corporate Finance",  icon: "🏢" },
+  "forex":            { accent: "#0369A1", label: "Forex",              icon: "💱" },
+  "technical":        { accent: "#0891B2", label: "Technical Analysis", icon: "📉" },
+};
+
+interface ThemeCtx {
+  mode:        Mode;
+  textSize:    TextSize;
+  setMode:     (m: Mode) => void;
+  setTextSize: (s: TextSize) => void;
+  toggleMode:  () => void;
+  theme:       Theme;
+  setTheme:    (t: any) => void;
   resetToAuto: () => void;
-  isAutoTheme: boolean;
-};
-
-const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-export const THEME_CONFIG: Record<Theme, { accent: string; label: string; icon: string }> = {
-  default: { accent: "#0E6163", label: "FinanceHub", icon: "FH" },
-  "personal-finance": { accent: "#1A7A5A", label: "Personal Finance", icon: "PF" },
-  investing: { accent: "#1E3A8A", label: "Investing", icon: "IN" },
-  trading: { accent: "#4C55C4", label: "Trading", icon: "TR" },
-  crypto: { accent: "#6366F1", label: "Crypto and DeFi", icon: "CR" },
-  behavioral: { accent: "#C95A5A", label: "Behavioral Finance", icon: "BF" },
-  corporate: { accent: "#1F7A5A", label: "Corporate Finance", icon: "CF" },
-  forex: { accent: "#0369A1", label: "Forex", icon: "FX" },
-  technical: { accent: "#0891B2", label: "Technical Analysis", icon: "TA" },
-};
-
-function getAutoTheme(pathname: string | null): Theme {
-  for (const routeTheme of ROUTE_THEMES) {
-    if (routeTheme.pattern.test(pathname || "")) return routeTheme.theme;
-  }
-  return "default";
 }
 
-function isMode(value: string | null): value is Mode {
-  return value === "light" || value === "dark" || value === "sepia" || value === "focus";
-}
-
-function isTextSize(value: string | null): value is TextSize {
-  return value === "default" || value === "large" || value === "larger";
-}
-
-const defaultThemeValue: ThemeContextValue = {
-  theme: "default",
-  mode: "light",
-  textSize: "default",
-  setTheme: () => {},
-  setMode: () => {},
-  setTextSize: () => {},
-  toggleMode: () => {},
-  resetToAuto: () => {},
-  isAutoTheme: true,
-};
+const Ctx = createContext<ThemeCtx | null>(null);
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  return context || defaultThemeValue;
+  const c = useContext(Ctx);
+  if (!c) {
+    return {
+      mode: "light" as Mode,
+      textSize: "default" as TextSize,
+      setMode: () => {},
+      setTextSize: () => {},
+      toggleMode: () => {},
+      theme: "default" as Theme,
+      setTheme: () => {},
+      resetToAuto: () => {},
+    };
+  }
+  return c;
 }
 
+// ── Provider ─────────────────────────────────────────────────
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const [mode, setModeState] = useState<Mode>("light");
+  const [mode,     setModeState]     = useState<Mode>("light");
   const [textSize, setTextSizeState] = useState<TextSize>("default");
-  const [manualTheme, setManualTheme] = useState<Theme | null>(null);
-
-  const autoTheme = getAutoTheme(pathname);
-  const theme = manualTheme || autoTheme;
-  const isAutoTheme = manualTheme === null;
 
   useEffect(() => {
-    const savedMode = localStorage.getItem("fh_mode");
-    const savedSize = localStorage.getItem("fh_textsize");
-
-    if (isMode(savedMode)) {
-      setModeState(savedMode);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setModeState("dark");
-    }
-
-    if (isTextSize(savedSize)) setTextSizeState(savedSize);
+    try {
+      const savedMode = localStorage.getItem("fh_mode") as Mode | null;
+      const savedSize = localStorage.getItem("fh_textsize") as TextSize | null;
+      if (savedMode && ["light", "dark", "sepia", "focus"].includes(savedMode)) {
+        setModeState(savedMode);
+      } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        setModeState("dark");
+      }
+      if (savedSize && ["default", "large", "larger"].includes(savedSize)) {
+        setTextSizeState(savedSize);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    root.setAttribute("data-theme", theme);
+    // ONLY data-mode — NO track-based data-theme changes
     root.setAttribute("data-mode", mode);
     root.setAttribute("data-size", textSize);
+    root.classList.toggle("dark", mode === "dark");
+    document.body.style.background = "var(--mode-bg, #ffffff)";
+    document.body.style.color      = "var(--mode-text, #0B1A2B)";
+    document.body.style.transition = "background 0.2s ease, color 0.15s ease";
+  }, [mode, textSize]);
 
-    if (mode === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
-  }, [theme, mode, textSize]);
-
-  const setMode = useCallback((nextMode: Mode) => {
-    setModeState(nextMode);
-    localStorage.setItem("fh_mode", nextMode);
+  const setMode = useCallback((m: Mode) => {
+    setModeState(m);
+    try { localStorage.setItem("fh_mode", m); } catch {}
   }, []);
 
-  const setTextSize = useCallback((nextSize: TextSize) => {
-    setTextSizeState(nextSize);
-    localStorage.setItem("fh_textsize", nextSize);
+  const setTextSize = useCallback((s: TextSize) => {
+    setTextSizeState(s);
+    try { localStorage.setItem("fh_textsize", s); } catch {}
   }, []);
 
-  const setTheme = useCallback((nextTheme: Theme) => {
-    setManualTheme(nextTheme);
+  const CYCLE: Mode[] = ["light", "dark", "sepia", "focus"];
+  const toggleMode = useCallback(() => {
+    setMode(CYCLE[(CYCLE.indexOf(mode) + 1) % CYCLE.length]);
+  }, [mode, setMode]);
+
+  const setTheme = useCallback(() => {
+    // No-op: page background never changes by track
   }, []);
 
   const resetToAuto = useCallback(() => {
-    setManualTheme(null);
+    // No-op
   }, []);
 
-  const toggleMode = useCallback(() => {
-    setMode(mode === "light" ? "dark" : mode === "dark" ? "sepia" : mode === "sepia" ? "focus" : "light");
-  }, [mode, setMode]);
-
   return (
-    <ThemeContext.Provider value={{ theme, mode, textSize, setTheme, setMode, setTextSize, toggleMode, resetToAuto, isAutoTheme }}>
+    <Ctx.Provider value={{
+      mode, textSize, setMode, setTextSize, toggleMode,
+      theme: "default", setTheme, resetToAuto,
+    }}>
       {children}
-    </ThemeContext.Provider>
+    </Ctx.Provider>
   );
 }
 
-export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
+// ── Full ThemeSwitcher (Settings page) ───────────────────────
+export function ThemeSwitcher() {
   const { mode, textSize, setMode, setTextSize } = useTheme();
 
+  const MODES = [
+    { id: "light" as Mode, icon: "☀️", label: "Light",  desc: "Clean white — default" },
+    { id: "dark"  as Mode, icon: "🌙", label: "Dark",   desc: "Easy on eyes at night" },
+    { id: "sepia" as Mode, icon: "📜", label: "Sepia",  desc: "Warm amber — best for reading" },
+    { id: "focus" as Mode, icon: "🎯", label: "Focus",  desc: "Minimal — max concentration" },
+  ];
+
+  const SIZES = [
+    { id: "default" as TextSize, label: "A",  px: 14 },
+    { id: "large"   as TextSize, label: "A",  px: 17 },
+    { id: "larger"  as TextSize, label: "A",  px: 20 },
+  ];
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: compact ? 8 : 12, flexWrap: "wrap" }}>
-      <div style={s.modeToggle}>
-        {[
-          { id: "light" as const, label: "Light", short: "LT" },
-          { id: "sepia" as const, label: "Reading", short: "RD" },
-          { id: "dark" as const, label: "Dark", short: "DK" },
-          { id: "focus" as const, label: "Focus", short: "FC" },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setMode(item.id)}
-            title={`${item.label} mode`}
-            style={{ ...s.modeBtn, ...(mode === item.id ? s.modeBtnActive : {}) }}
-            type="button"
-          >
-            <span style={s.shortLabel}>{item.short}</span>
-            {!compact ? <span style={s.buttonLabel}>{item.label}</span> : null}
-          </button>
-        ))}
+    <div style={{ fontFamily: "inherit" }}>
+      <div style={{
+        fontSize: 12, fontWeight: 600, color: "var(--mode-text-3)",
+        letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 12,
+      }}>
+        Display Mode
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+        {MODES.map(m => {
+          const active = mode === m.id;
+          return (
+            <button key={m.id} onClick={() => setMode(m.id)}
+              style={{
+                padding: "12px", borderRadius: 11, cursor: "pointer",
+                fontFamily: "inherit", textAlign: "left" as const,
+                border: active ? "2px solid var(--mode-accent)" : "1.5px solid var(--mode-border)",
+                background: active ? "var(--mode-bg-active)" : "var(--mode-card-bg, #ffffff)",
+                transition: "all 0.15s",
+              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 18 }}>{m.icon}</span>
+                <span style={{
+                  fontSize: 13, fontWeight: 700,
+                  color: active ? "var(--mode-accent)" : "var(--mode-text)",
+                }}>
+                  {m.label}
+                </span>
+                {active && (
+                  <span style={{
+                    marginLeft: "auto", fontSize: 10, fontWeight: 700,
+                    color: "var(--mode-accent)", background: "var(--mode-accent-light)",
+                    padding: "1px 7px", borderRadius: 9,
+                  }}>Active</span>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--mode-text-3)" }}>{m.desc}</div>
+            </button>
+          );
+        })}
       </div>
 
-      {!compact ? (
-        <div style={s.sizeToggle}>
-          {[
-            { id: "default" as const, label: "A", fontSize: 13 },
-            { id: "large" as const, label: "A", fontSize: 15 },
-            { id: "larger" as const, label: "A", fontSize: 17 },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTextSize(item.id)}
-              title={`Text size: ${item.id}`}
-              style={{ ...s.sizeBtn, fontSize: item.fontSize, ...(textSize === item.id ? s.sizeBtnActive : {}) }}
-              type="button"
-            >
-              {item.label}
+      <div style={{
+        fontSize: 12, fontWeight: 600, color: "var(--mode-text-3)",
+        letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 10,
+      }}>
+        Text Size
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        {SIZES.map(s => {
+          const active = textSize === s.id;
+          return (
+            <button key={s.id} onClick={() => setTextSize(s.id)}
+              style={{
+                flex: 1, padding: "10px", borderRadius: 9, cursor: "pointer",
+                fontFamily: "inherit", textAlign: "center" as const,
+                fontSize: s.px, fontWeight: 700,
+                border: active ? "2px solid var(--mode-accent)" : "1.5px solid var(--mode-border)",
+                background: active ? "var(--mode-bg-active)" : "var(--mode-card-bg, #ffffff)",
+                color: active ? "var(--mode-accent)" : "var(--mode-text-2)",
+                transition: "all 0.15s",
+              }}>
+              {s.label}
             </button>
-          ))}
-        </div>
-      ) : null}
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-export function ThemeToggle() {
-  const { mode, toggleMode } = useTheme();
-  const label = mode === "dark" ? "Dark" : mode === "sepia" ? "Read" : mode === "focus" ? "Focus" : "Light";
+export { ThemeSwitcher as ThemeToggle, ThemeSwitcher as ModeToggle };
+
+// ── ModeToggleCompact — Navbar button ─────────────────────────
+export function ModeToggleCompact() {
+  const { mode, setMode } = useTheme();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      const el = document.getElementById("fh-mode-btn");
+      if (el && !el.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const MODES = [
+    { id: "light" as Mode, icon: "☀️", label: "Light"  },
+    { id: "dark"  as Mode, icon: "🌙", label: "Dark"   },
+    { id: "sepia" as Mode, icon: "📜", label: "Sepia"  },
+    { id: "focus" as Mode, icon: "🎯", label: "Focus"  },
+  ];
+
+  const icons: Record<Mode, string> = { light: "☀️", dark: "🌙", sepia: "📜", focus: "🎯" };
 
   return (
-    <button onClick={toggleMode} title={`Theme mode: ${label}. Click to cycle.`} style={s.toggleButton} type="button">
-      <span style={s.shortLabel}>{label}</span>
-    </button>
+    <div id="fh-mode-btn" style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title={`Mode: ${mode}`}
+        style={{
+          width: 36, height: 36, borderRadius: 8,
+          border: "1px solid var(--mode-border)",
+          background: "var(--mode-card-bg, #ffffff)",
+          cursor: "pointer", fontSize: 17,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.15s",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = "var(--mode-accent)";
+          e.currentTarget.style.background = "var(--mode-bg-hover)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = "var(--mode-border)";
+          e.currentTarget.style.background = "var(--mode-card-bg, #ffffff)";
+        }}>
+        {icons[mode]}
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0,
+          background: "var(--mode-card-bg, #ffffff)",
+          border: "1px solid var(--mode-border)",
+          borderRadius: 12, padding: 6, minWidth: 155,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.14)", zIndex: 999,
+        }}>
+          <div style={{
+            fontSize: 10, fontWeight: 700, color: "var(--mode-text-4)",
+            letterSpacing: "0.1em", textTransform: "uppercase" as const,
+            padding: "5px 10px 7px", borderBottom: "1px solid var(--mode-border)", marginBottom: 4,
+          }}>
+            Display mode
+          </div>
+          {MODES.map(m => (
+            <button key={m.id} onClick={() => { setMode(m.id); setOpen(false); }}
+              style={{
+                width: "100%", padding: "9px 10px",
+                display: "flex", alignItems: "center", gap: 9,
+                border: "none", borderRadius: 8, cursor: "pointer",
+                fontFamily: "inherit", textAlign: "left" as const,
+                background: mode === m.id ? "var(--mode-bg-active)" : "transparent",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={e => { if (mode !== m.id) e.currentTarget.style.background = "var(--mode-bg-hover)"; }}
+              onMouseLeave={e => { if (mode !== m.id) e.currentTarget.style.background = "transparent"; }}>
+              <span style={{ fontSize: 16 }}>{m.icon}</span>
+              <span style={{
+                fontSize: 13, fontWeight: mode === m.id ? 700 : 500,
+                color: mode === m.id ? "var(--mode-accent)" : "var(--mode-text-2)",
+              }}>
+                {m.label}
+              </span>
+              {mode === m.id && (
+                <span style={{ marginLeft: "auto", color: "var(--mode-accent)", fontSize: 14 }}>✓</span>
+              )}
+            </button>
+          ))}
+          <div style={{
+            borderTop: "1px solid var(--mode-border)", marginTop: 4,
+            padding: "6px 10px 2px", fontSize: 10, color: "var(--mode-text-4)",
+          }}>
+            Applies to entire website
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
-const s: Record<string, CSSProperties> = {
-  modeToggle: {
-    display: "flex",
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-md)",
-    padding: 3,
-    gap: 2,
-  },
-  modeBtn: {
-    display: "flex",
-    alignItems: "center",
-    gap: 5,
-    padding: "5px 10px",
-    border: "none",
-    borderRadius: "var(--radius-sm)",
-    background: "transparent",
-    color: "var(--text-muted)",
-    cursor: "pointer",
-    fontFamily: "var(--font-ui)",
-    transition: "all 0.15s",
-  },
-  modeBtnActive: {
-    background: "var(--bg-card)",
-    color: "var(--text-primary)",
-    boxShadow: "var(--shadow-xs)",
-  },
-  sizeToggle: {
-    display: "flex",
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-md)",
-    padding: 3,
-    gap: 2,
-  },
-  sizeBtn: {
-    padding: "4px 10px",
-    border: "none",
-    borderRadius: "var(--radius-sm)",
-    background: "transparent",
-    color: "var(--text-muted)",
-    cursor: "pointer",
-    fontFamily: "var(--font-ui)",
-    fontWeight: 700,
-    transition: "all 0.15s",
-    lineHeight: 1.2,
-  },
-  sizeBtnActive: {
-    background: "var(--bg-card)",
-    color: "var(--text-primary)",
-    boxShadow: "var(--shadow-xs)",
-  },
-  toggleButton: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 52,
-    padding: "6px 10px",
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "var(--radius-md)",
-    color: "var(--text-secondary)",
-    cursor: "pointer",
-    fontFamily: "var(--font-ui)",
-    fontSize: 12,
-    fontWeight: 700,
-    transition: "all 0.15s",
-  },
-  shortLabel: {
-    fontSize: 11,
-    fontWeight: 800,
-    letterSpacing: "0.04em",
-  },
-  buttonLabel: {
-    fontSize: 11,
-    fontWeight: 600,
-  },
-};
-
-
-export { ModeToggle } from "@/components/ui/ModeToggle";
-export { ModeToggleCompact } from "@/components/ui/ModeToggleCompact";
