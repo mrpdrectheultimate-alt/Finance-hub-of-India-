@@ -182,6 +182,282 @@ She redeemed ₹65,000 from her index fund. Logical choice, right?
 
 Investing is step 2. Step 1 is building a 6-month liquid emergency fund in a high-yield savings account or liquid mutual fund.`,
   },
+  "rahuls-fd-illusion": {
+    id: "cs-02",
+    slug: "rahuls-fd-illusion",
+    title: "Rahul's FD Illusion: The Hidden Inflation Tax",
+    subtitle: "How 20 years of 'safe' fixed deposits silently destroyed ₹10 lakh of purchasing power while appearing to grow.",
+    category: "personal-finance",
+    difficulty: "beginner",
+    duration_minutes: 10,
+    protagonist: "Rahul, 48, government employee in Delhi",
+    key_lesson: "After 7% inflation and 30% slab tax, the real compounded return on standard fixed deposits is negative.",
+    tags: ["fixed-deposit", "inflation", "taxation", "purchasing-power", "debt"],
+    content_mdx: `# Rahul's FD Illusion: The Hidden Inflation Tax
+
+## The Setup
+In 2004, Rahul received a ₹10,00,000 inheritance. Risk-averse and prioritizing capital safety above all, he put the entire sum into 5-year rolling bank Fixed Deposits yielding 7.5% per annum.
+
+For 20 years, he renewed the principal and reinvested the interest. In 2024, his bank balance had grown from ₹10 Lakhs to approximately ₹38.7 Lakhs. Rahul felt triumphant.
+
+---
+
+## The Reality Check
+In 2004, ₹10 Lakhs could purchase a spacious 2BHK apartment in an emerging sector of Gurgaon.
+
+In 2024, that exact same apartment was valued at ₹1.35 Crores. Rahul's ₹38.7 Lakhs could not even cover the 30% down payment for the same property today.
+
+---
+
+## The Mathematics of the Trap
+- **Nominal Growth**: ₹10 Lakh $\\rightarrow$ ₹38.7 Lakh (approx 3.8x)
+- **TDS and Income Tax**: As Rahul's salary rose into the 30% tax bracket, 30.9% of his annual FD interest was deducted as income tax.
+- **Real Post-Tax Return**: $7.5\\% \\times (1 - 0.309) = 5.18\\%$
+- **Average Inflation in India (2004–2024)**: $6.8\\%$
+- **Net Real Wealth Creation**: $5.18\\% - 6.8\\% = -1.62\\%$ per year!
+
+Rahul experienced negative real purchasing power growth every single year. The safety of FDs was an illusion created by looking at nominal numbers rather than purchasing power.
+
+---
+
+## Key Takeaways
+1. **FDs are for liquidity, not wealth creation:** Keep your 6-month emergency fund in FDs, but never your 20-year retirement nest egg.
+2. **Always calculate post-tax, post-inflation returns:** If your asset yields 7% but inflation is 6% and tax is 2%, you are losing 1% in purchasing power every year.
+3. **Equities protect purchasing power:** High-quality Indian equities (Nifty 50) compounded at 14.2% CAGR over the same 2004–2024 period, beating inflation handsomely.`,
+  },
+  "the-50-lakh-fo-trap": {
+    id: "cs-03",
+    slug: "the-50-lakh-fo-trap",
+    title: "The ₹50 Lakh F&O Trap: From Hero to Zero",
+    subtitle: "How a bull-run win streak created false confidence and led to total capital annihilation in 3 weeks.",
+    category: "trading-markets",
+    difficulty: "advanced",
+    duration_minutes: 15,
+    protagonist: "Vikas, 29, software engineering lead in Pune",
+    key_lesson: "Leverage works both ways. SEBI verified that 89% of individual retail derivative traders lose money.",
+    tags: ["fno", "derivatives", "options", "leverage", "risk-management"],
+    content_mdx: `# The ₹50 Lakh F&O Trap: From Hero to Zero
+
+## The Winning Streak
+During the post-2020 liquidity surge, Vikas started trading out-of-the-money (OTM) Bank Nifty weekly call options. Starting with ₹5,00,000 in savings, he caught 3 massive trend days and compounded his capital to ₹52,00,000 in just 8 months.
+
+He quit his tech job to trade full-time, convinced he had cracked the market code.
+
+---
+
+## The Trap Springs
+In October, market volatility compressed into an erratic multi-week trading range. Vikas continued aggressively buying weekly options with expiry in 2 to 3 days.
+
+1. **Theta Decay (Time Decay)**: Out-of-the-money options lose value every hour even if the underlying index moves sideways.
+2. **Revenge Trading**: After losing ₹8 Lakhs in one session, Vikas doubled his lot sizes on expiry day to "win it back".
+3. **Overnight Gap Risk**: Holding 200 lots overnight, the market gapped down 450 points on geopolitical headlines. The options expired completely worthless (₹0.05).
+
+Within 18 trading sessions, Vikas lost the entire ₹52,00,000, plus an additional ₹6 Lakh personal loan he had taken to fund margin requirements.
+
+---
+
+## SEBI's Stark Reality
+A landmark SEBI study analyzing over 45 lakh active retail derivative traders revealed:
+- **89% of active retail F&O traders incur net financial losses.**
+- The average loss per retail trader was **₹1.25 Lakh per year**.
+- The top 1% of institutional algorithms and high-frequency market makers capture over 95% of all option profits.
+
+---
+
+## The Lesson
+- Never confuse a bull market with skill.
+- Naked option buying without defined stop-losses and strict position sizing ($< 1\\%$ of capital per trade) is mathematical gambling.`,
+  },
+  "the-coffee-can-portfolio": {
+    id: "cs-04",
+    slug: "the-coffee-can-portfolio",
+    title: "The Coffee Can Portfolio: Compounding in Peace",
+    subtitle: "A classic Indian investing experiment: buying 10 clean, high-ROCE cash-flow generating businesses and never touching them.",
+    category: "investing",
+    difficulty: "intermediate",
+    duration_minutes: 8,
+    protagonist: "Arun, 52, long-term investor in Mumbai",
+    key_lesson: "Patience is the ultimate edge. High-quality businesses compound wealth when you remove emotional meddling.",
+    tags: ["investing", "coffee-can", "compounding", "roce", "equity"],
+    content_mdx: `# The Coffee Can Portfolio: Compounding in Peace
+
+## The Concept
+Originated by Robert Kirby in 1984, the Coffee Can approach involves selecting 10 to 15 companies with stellar capital allocation track records, buying their stock, and placing them in an imaginary "coffee can" under the mattress for a minimum of 10 years without trading them.
+
+---
+
+## The Selection Criteria in India
+In 2004, Arun selected 10 Indian franchise businesses meeting three strict rules:
+1. **ROCE (Return on Capital Employed) > 15%** every year for the past decade.
+2. **Revenue growth > 10%** every year without unmanageable debt.
+3. **Pristine corporate governance** and clear consumer brand moats.
+
+---
+
+## The Result (2004–2024)
+- Arun invested ₹1,00,000 in each of the 10 stocks (Total: ₹10,00,000).
+- 2 stocks lagged and delivered sub-par returns (5% CAGR).
+- 5 stocks delivered steady index-matching returns (13% CAGR).
+- 3 phenomenal compounding titans (Titan, Asian Paints, HDFC Bank) compounded at **> 22% CAGR**.
+
+Because Arun never traded in or out, never paid brokerage fees, and never triggered short-term capital gains tax, the winners multiplied by over 30x and dominated the portfolio. The initial ₹10 Lakhs grew into over **₹1.48 Crores** (a 14.4% net portfolio CAGR over 20 years).
+
+---
+
+## Key Takeaway
+Activity is the enemy of investment returns. High ROCE businesses compound cash flows internally. Your job as an investor is to buy quality and get out of the way.`,
+  },
+  "the-ilfs-liquidity-crisis": {
+    id: "cs-05",
+    slug: "the-ilfs-liquidity-crisis",
+    title: "The IL&FS Liquidity Crisis: When AAA Failed",
+    subtitle: "How the sudden collapse of a AAA-rated infrastructure giant froze the Indian credit market and tanked debt mutual funds.",
+    category: "corporate-finance",
+    difficulty: "advanced",
+    duration_minutes: 20,
+    protagonist: "Institutional market investigation",
+    key_lesson: "Credit ratings are opinions, not guarantees. Always scrutinize asset-liability duration mismatches.",
+    tags: ["ilfs", "nbfc", "debt-crisis", "credit-risk", "liquidity"],
+    content_mdx: `# The IL&FS Liquidity Crisis: When AAA Failed
+
+## The Colossus
+Infrastructure Leasing & Financial Services (IL&FS) was considered quasi-sovereign in India. Backed by institutional shareholders including LIC, ORIX of Japan, and Abu Dhabi Investment Authority, it carried the highest possible credit rating: **AAA**.
+
+By 2018, IL&FS had accumulated a colossal debt burden of over **₹91,000 Crores**.
+
+---
+
+## The Structural Flaw: Asset-Liability Mismatch (ALM)
+IL&FS financed long-gestation infrastructure projects (highways, tunnels, and thermal power plants taking 15 to 25 years to generate cash flows) using **short-term commercial paper (CPs) and 90-day bank loans**.
+
+As interest rates rose in 2018, the short-term credit market refused to roll over IL&FS commercial paper. On September 4, 2018, IL&FS defaulted on a ₹1,000 Crore loan from SIDBI.
+
+Within 10 days, rating agencies downgraded IL&FS from AAA directly to **D (Default)** — an unprecedented catastrophic drop.
+
+---
+
+## The Contagion
+- Indian debt mutual funds with exposure to IL&FS commercial paper suffered instant Net Asset Value (NAV) drops.
+- NBFC funding froze across India, triggering liquidity crises at DHFL and Reliance Capital.
+- The Government of India superseded the IL&FS board under the Companies Act to prevent complete systemic collapse.
+
+---
+
+## The Lesson
+Never blindly trust credit rating agencies. Always check the cash flow statement and asset-liability maturity profiles of financial institutions.`,
+  },
+  "the-esop-tax-shock": {
+    id: "cs-06",
+    slug: "the-esop-tax-shock",
+    title: "The ESOP Tax Shock: Cashless Tax Demand",
+    subtitle: "Neha exercised unlisted unicorn options and was hit with ₹28 lakhs in Section 17(2) perquisite tax with zero secondary liquidity.",
+    category: "corporate-finance",
+    difficulty: "advanced",
+    duration_minutes: 14,
+    protagonist: "Neha, 33, VP of Product at a Bengaluru Unicorn",
+    key_lesson: "Never exercise private startup options without guaranteed secondary liquidity or an official company buyback.",
+    tags: ["esop", "startups", "perquisite-tax", "section-17", "income-tax"],
+    content_mdx: `# The ESOP Tax Shock: Cashless Tax Demand
+
+## The Excitement
+Neha joined an Indian fintech unicorn as an early product lead. Over 4 years, she vested 15,000 employee stock options (ESOPs) with an exercise strike price of ₹10 per share.
+
+When the company raised a Series E round at a $1.5 Billion valuation, the Fair Market Value (FMV) of each share was determined by a merchant banker to be ₹600.
+
+Neha's options were on paper worth **₹90 Lakhs**!
+
+---
+
+## The Trap: Section 17(2) Perquisite Tax
+When Neha decided to exercise her options to convert them into actual shares, she paid the company ₹1,50,000 (15,000 shares $\\times$ ₹10).
+
+Under Indian Income Tax Law (Section 17(2)), the difference between the Fair Market Value (₹600) and the Exercise Price (₹10) is taxed as **Perquisite Salary Income** in the month of exercise:
+- **Taxable Perquisite Income**: $15,000 \\times (₹600 - ₹10) = ₹88,50,000$
+- **TDS at Highest Slab (31.2%)**: **₹27,61,200!**
+
+Her employer withheld her salary entirely and asked her to deposit ₹27.6 Lakhs in cash to remit the tax to the government.
+
+---
+
+## The Nightmare
+The shares were in an unlisted private company. Neha could not sell the shares on NSE/BSE to pay the tax. She had to empty her family savings and borrow from parents to pay ₹27.6 Lakhs in cash tax for paper wealth she could not liquidate.
+
+---
+
+## Key Takeaway
+Never exercise private startup options upon vesting unless:
+1. There is an immediate company-sponsored buyback program.
+2. The startup is filing for an imminent public IPO (DRHP filed with SEBI).`,
+  },
+  "step-up-sip-compounding": {
+    id: "cs-07",
+    slug: "step-up-sip-compounding",
+    title: "The 10% Step-Up SIP: Beating Active Funds",
+    subtitle: "Starting with just ₹5,000/month and increasing by 10% each year created ₹1.42 Cr more than a flat ₹10,000 SIP.",
+    category: "investing",
+    difficulty: "beginner",
+    duration_minutes: 9,
+    protagonist: "Kavita, 26, fintech analyst in Hyderabad",
+    key_lesson: "Step-up SIPs capture salary increments automatically and overcome the psychological drag of market timing.",
+    tags: ["sip", "step-up", "compounding", "mutual-funds", "nifty-50"],
+    content_mdx: `# The 10% Step-Up SIP: Beating Active Funds
+
+## The Tale of Two Investors
+- **Rohan (Flat SIP)**: Started investing ₹10,000 every single month into a Nifty 50 Index Fund for 25 years. Total invested capital: ₹30,00,000.
+- **Kavita (Step-Up SIP)**: Started with only ₹5,000 per month, but enabled an automated **10% annual Step-Up** to mirror her annual salary hike. In year 2, she invested ₹5,500/mo; in year 3, ₹6,050/mo, and so on.
+
+---
+
+## The 25-Year Outcome (at 12.5% CAGR)
+- **Rohan's Wealth (Flat SIP)**: **₹1.89 Crores**
+- **Kavita's Wealth (Step-Up SIP)**: **₹3.31 Crores!**
+
+Kavita ended up with **₹1.42 Crores more** wealth than Rohan, despite starting with half his initial monthly amount, because her investments expanded in lockstep with her prime earning years.
+
+---
+
+## Key Takeaway
+Always enable an annual 10% Step-Up mandate on your SIPs. It neutralizes lifestyle creep and supercharges long-term compounding.`,
+  },
+  "the-builder-delay-ravis-wait": {
+    id: "cs-08",
+    slug: "the-builder-delay-ravis-wait",
+    title: "The Builder Delay: Ravi's 7-Year Pre-EMI Drain",
+    subtitle: "How an under-construction Noida flat was delayed by 7 years, forcing Ravi to pay double rent and interest concurrently.",
+    category: "personal-finance",
+    difficulty: "intermediate",
+    duration_minutes: 13,
+    protagonist: "Ravi, 36, marketing manager in Gurgaon",
+    key_lesson: "Under-construction projects carry massive completion risks. Enforce RERA Section 18 compensation immediately.",
+    tags: ["real-estate", "rera", "home-loan", "pre-emi", "delay"],
+    content_mdx: `# The Builder Delay: Ravi's 7-Year Pre-EMI Drain
+
+## The Dream
+In 2014, Ravi booked an under-construction 3BHK flat in Sector 75, Noida for ₹65 Lakhs. The builder promised possession within 36 months (by 2017).
+
+Ravi took a ₹50 Lakh home loan at 9.25% interest and opted for a pre-EMI construction-linked payment plan.
+
+---
+
+## The Trap
+In 2017, the builder halted construction citing contractor disputes. Construction crawled for the next 7 years.
+
+During this entire period:
+- Ravi was paying **₹28,000/month rent** for his existing apartment in Gurgaon.
+- Concurrently, he was paying **₹42,000/month pre-EMI interest** to the bank on the disbursed loan.
+- Over 7 years of delay, Ravi paid over **₹35.2 Lakhs in rent** and **₹35.2 Lakhs in pre-EMI interest** — paying more than the original cost of the flat while living in a rented house!
+
+---
+
+## The RERA Resolution
+In 2021, Ravi joined a collective of home buyers and filed a petition before UP RERA under **Section 18 of RERA Act, 2016**. RERA mandated the builder to pay interest at SBI MCLR + 2% for every month of delay, eventually forcing a forensic audit and completion under an authorized court-appointed administrator.
+
+---
+
+## Key Takeaway
+1. Buy ready-to-move properties whenever possible to eliminate execution risk.
+2. If buying under construction, verify escrow accounts under RERA and never hesitate to invoke Section 18 compensation.`,
+  },
 };
 
 export default function CaseStudyDetailPage() {
