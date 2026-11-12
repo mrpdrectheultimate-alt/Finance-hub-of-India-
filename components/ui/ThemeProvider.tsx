@@ -94,8 +94,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const savedSize = localStorage.getItem("fh_textsize") as TextSize | null;
       if (savedMode && ["light", "dark", "sepia", "focus"].includes(savedMode)) {
         setModeState(savedMode);
-      } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        setModeState("dark");
+      } else {
+        setModeState("light");
       }
       if (savedSize && ["default", "large", "larger"].includes(savedSize)) {
         setTextSizeState(savedSize);
@@ -110,7 +110,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.setAttribute("data-size", textSize);
     root.classList.toggle("dark", mode === "dark");
     document.body.style.background = "var(--mode-bg, #ffffff)";
-    document.body.style.color      = "var(--mode-text, #0B1A2B)";
+    document.body.style.color      = "var(--mode-text, #090D16)";
     document.body.style.transition = "background 0.2s ease, color 0.15s ease";
   }, [mode, textSize]);
 

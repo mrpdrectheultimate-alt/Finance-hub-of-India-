@@ -307,7 +307,7 @@ export default function KnowledgeGraph({
       {/* Main graph */}
       <div ref={containerRef} style={{
         position:  "relative",
-        background: "var(--bg-base,#f7f4ee)",
+        background: "var(--bg-base,#ffffff)",
         border:    "1px solid #e2e8f0",
         borderRadius: 14,
         overflow:  "hidden",

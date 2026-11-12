@@ -13,8 +13,11 @@ export function ModeToggleCompact() {
 
   useEffect(() => {
     const saved = localStorage.getItem("fh_mode") as any;
-    if (saved) setModeState(saved);
-    else if (window.matchMedia("(prefers-color-scheme: dark)").matches) setModeState("dark");
+    if (saved && ["light", "dark", "sepia", "focus"].includes(saved)) {
+      setModeState(saved);
+    } else {
+      setModeState("light");
+    }
 
     // Close on outside click
     const handler = (e: MouseEvent) => {

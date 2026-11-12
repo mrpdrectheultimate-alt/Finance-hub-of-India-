@@ -118,10 +118,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-IN" className={`${inter.variable} ${lora.variable}`}>
       <head>
-        {/* ── Flash prevention: set data-mode BEFORE hydration ──
-            Prevents white flash when user has dark/sepia mode saved.
-            Must be first script in head, runs synchronously.      */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var m=localStorage.getItem('fh_mode');if(!m)m=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-mode',m);}catch(e){}})();` }} />
+        {/* ── Flash prevention: default to 'light' ── */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var m=localStorage.getItem('fh_mode');if(m&&['light','dark','sepia','focus'].indexOf(m)!==-1){document.documentElement.setAttribute('data-mode',m);}else{document.documentElement.setAttribute('data-mode','light');}}catch(e){document.documentElement.setAttribute('data-mode','light');}})();` }} />
 
         {/* JSON-LD */}
         <script
@@ -133,8 +131,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{
         margin:          0,
         padding:         0,
-        background:      "var(--bg-base, #f7f4ee)",
-        color:           "var(--text-primary, #1c2b3a)",
+        background:      "#ffffff",
+        color:           "#090D16",
         fontFamily:      "var(--font-ui, system-ui)",
         WebkitFontSmoothing: "antialiased",
         MozOsxFontSmoothing: "grayscale",
@@ -181,19 +179,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Brand colours */
             --brand-primary:   #0E6163;
             --brand-secondary: #1D9E75;
-            --brand-dark:      #1c2b3a;
+            --brand-dark:      #090D16;
             --brand-accent:    #D4A017;
 
-            /* Backgrounds */
-            --bg-base:         #f7f4ee;
+            /* Backgrounds — Pure White Baseline */
+            --bg-base:         #ffffff;
             --bg-card:         #ffffff;
-            --bg-subtle:       #f8f9fa;
+            --bg-subtle:       #f8fafc;
 
             /* Text */
-            --text-primary:    #1c2b3a;
-            --text-secondary:  #4a5568;
-            --text-muted:      #718096;
-            --text-faint:      #a0aec0;
+            --text-primary:    #090d16;
+            --text-secondary:  #475569;
+            --text-muted:      #64748b;
+            --text-faint:      #94a3b8;
 
             /* Borders */
             --border-light:    #e2e8f0;
@@ -214,40 +212,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* Font stacks */
             --font-ui:        'Inter', system-ui, -apple-system, sans-serif;
             --font-reading:   'Lora', Georgia, serif;
-          }
-
-          @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
-              --bg-base:         #0D1117;
-              --bg-card:         #161B22;
-              --bg-subtle:       #1c2b3a;
-              --text-primary:    #e6edf3;
-              --text-secondary:  #8b949e;
-              --text-muted:      #6e7681;
-              --text-faint:      #484f58;
-              --border-light:    #30363d;
-              --border-medium:   #21262d;
-            }
-          }
-
-          :root[data-theme="dark"] {
-            --bg-base:         #0D1117;
-            --bg-card:         #161B22;
-            --bg-subtle:       #1c2b3a;
-            --text-primary:    #e6edf3;
-            --text-secondary:  #8b949e;
-            --text-muted:      #6e7681;
-            --text-faint:      #484f58;
-            --border-light:    #30363d;
-            --border-medium:   #21262d;
-          }
-
-          :root[data-theme="sepia"] {
-            --bg-base:         #f5ead3;
-            --bg-card:         #fdf6e3;
-            --text-primary:    #433422;
-            --text-secondary:  #6b5344;
-            --border-light:    #ddd0b8;
           }
 
           /* Global resets */

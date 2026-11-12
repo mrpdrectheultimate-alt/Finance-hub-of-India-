@@ -15,8 +15,7 @@ export function DarkModeToggle({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("fh-theme") as "light"|"dark"|"sepia" | null;
-    const system = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    const initial = saved || system;
+    const initial = saved || "light";
     setTheme(initial);
     applyTheme(initial);
   }, []);

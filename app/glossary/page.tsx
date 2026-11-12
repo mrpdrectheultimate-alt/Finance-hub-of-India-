@@ -109,7 +109,7 @@ export default function GlossaryPage() {
   const lettersWithTerms = Object.keys(grouped).sort();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base, #f7f4ee)", fontFamily: "var(--font-ui, system-ui)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base, #ffffff)", fontFamily: "var(--font-ui, system-ui)" }}>
 
       {/* Hero */}
       <div style={{

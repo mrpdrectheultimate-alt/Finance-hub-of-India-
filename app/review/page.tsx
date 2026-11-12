@@ -155,7 +155,7 @@ export default function ReviewPage() {
   // ─── PHASE: Intro ─────────────────────────────────────────
   if (phase === "intro") {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base,#f7f4ee)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "var(--font-ui,system-ui)" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base,#ffffff)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "var(--font-ui,system-ui)" }}>
         <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
           <div style={{ fontSize: 64, marginBottom: 20 }}>🧠</div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#1c2b3a", marginBottom: 10, letterSpacing: "-0.4px" }}>
@@ -207,7 +207,7 @@ export default function ReviewPage() {
     const totalXP = results.reduce((s, r) => s + (r.quality >= 4 ? 10 : r.quality >= 3 ? 5 : 2), 0);
 
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg-base,#f7f4ee)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "var(--font-ui,system-ui)" }}>
+      <div style={{ minHeight: "100vh", background: "var(--bg-base,#ffffff)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "var(--font-ui,system-ui)" }}>
         <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
           <div style={{ fontSize: 72, marginBottom: 20 }}>
             {perfect === results.length ? "🏆" : perfect > results.length / 2 ? "🎉" : "📚"}
@@ -278,7 +278,7 @@ export default function ReviewPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "var(--bg-base,#f7f4ee)",
+      background: "var(--bg-base,#ffffff)",
       display: "flex", flexDirection: "column",
       fontFamily: "var(--font-ui,system-ui)",
     }}>
