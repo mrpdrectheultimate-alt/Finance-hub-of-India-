@@ -48,6 +48,16 @@ const nextConfig = {
     ];
   },
 
+  // Rewrites so /simulators/:tool routes cleanly to /practice/:tool
+  async rewrites() {
+    return [
+      { source: "/simulators/paper-trading", destination: "/practice/trading" },
+      { source: "/simulators/startup", destination: "/practice/startup-cash-flow" },
+      { source: "/simulators/step-up-sip", destination: "/practice/compound-visualizer" },
+      { source: "/simulators/:slug", destination: "/practice/:slug" },
+    ];
+  },
+
   // Experimental features
   experimental: {
     // optimizePackageImports improves tree-shaking
