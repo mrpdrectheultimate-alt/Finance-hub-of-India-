@@ -3,11 +3,11 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
-import { 
-  ArrowRight, CheckCircle2, ShieldCheck, 
-  TrendingUp, BookOpen, Brain, GraduationCap, 
+import {
+  ArrowRight, CheckCircle2, ShieldCheck,
+  TrendingUp, BookOpen, Brain, GraduationCap,
   Briefcase, Rocket, LineChart, AlertTriangle,
-  Calculator, Sparkles, Clock, ChevronDown, 
+  Calculator, Sparkles, Clock, ChevronDown,
   ChevronRight, Star, Sliders, Compass, Lock,
   PieChart, HelpCircle, Check, ExternalLink,
   Layers, Award, Zap
@@ -240,7 +240,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-[#1A1A2E] selection:bg-emerald-100 selection:text-emerald-900">
-      
+
       {/* ══════════════════════════════════════════ */}
       {/* 0. STICKY INSTITUTIONAL HEADER */}
       {/* ══════════════════════════════════════════ */}
@@ -260,14 +260,14 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="text-[13px] font-bold text-gray-700 hover:text-[#0A1628] px-3 py-1.5 rounded-lg transition-colors hidden sm:inline-block"
             >
               Sign In
             </Link>
-            <Link 
-              href="/auth/signup" 
+            <Link
+              href="/auth/signup"
               className="text-[13px] font-bold bg-[#0A1628] hover:bg-[#0E6163] text-white px-4 py-2 rounded-xl transition-all shadow-2xs hover:shadow"
             >
               Start Free
@@ -282,32 +282,32 @@ export default function HomePage() {
       <section className="relative pt-12 sm:pt-20 pb-20 sm:pb-28 bg-[#F9FAFB] border-b border-gray-200/80 overflow-hidden">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
+
             {/* Left: Headline & Pitch */}
             <div className="lg:col-span-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-widest uppercase mb-6 border border-emerald-200/60">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" /> India's Premier Financial Academy
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Built for India&apos;s Financial Future
               </div>
-              
+
               <h1 className="text-4xl sm:text-5xl lg:text-[58px] font-black leading-[1.08] tracking-tight mb-6 text-[#0A1628]">
                 Master the Language<br />
                 of Money. <span className="text-[#0E6163]">Built for India.</span>
               </h1>
-              
+
               <p className="text-[16px] sm:text-[17.5px] text-[#4A5568] leading-relaxed mb-8 max-w-xl">
                 From your first ₹500 SIP to reading corporate balance sheets and trading options risk-free. Learn through 375+ structured lessons, 15 interactive simulators, and 24/7 AI tutoring.
               </p>
 
               {/* CTAs */}
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
-                <Link 
-                  href="/auth/signup" 
+                <Link
+                  href="/auth/signup"
                   className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#0A1628] hover:bg-[#0E6163] text-white rounded-xl text-[15px] font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
                 >
                   Start Learning Free <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link 
-                  href="/explore" 
+                <Link
+                  href="/explore"
                   className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-[#0A1628] border-2 border-gray-200 hover:border-[#0A1628] rounded-xl text-[15px] font-bold transition-all"
                 >
                   Explore Curriculum
@@ -331,7 +331,7 @@ export default function HomePage() {
             {/* Right: Interactive SIP Simulator Card (Plan 1 & 3) */}
             <div className="lg:col-span-6">
               <div className="bg-white rounded-3xl border border-gray-200 shadow-xl p-6 sm:p-7 relative">
-                
+
                 {/* Micro-Lab Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
                   <div className="flex items-center gap-2.5">
@@ -349,7 +349,7 @@ export default function HomePage() {
                     Live Preview
                   </span>
                 </div>
-                
+
                 {/* Sliders */}
                 <div className="space-y-4 mb-6">
                   {/* Slider 1: Monthly Investment */}
@@ -360,7 +360,7 @@ export default function HomePage() {
                         ₹{monthly.toLocaleString('en-IN')}/mo
                       </span>
                     </div>
-                    <input 
+                    <input
                       type="range"
                       min={1000}
                       max={100000}
@@ -384,7 +384,7 @@ export default function HomePage() {
                         {years} Years ({years * 12} mo)
                       </span>
                     </div>
-                    <input 
+                    <input
                       type="range"
                       min={3}
                       max={30}
@@ -408,7 +408,7 @@ export default function HomePage() {
                         {rate}% p.a. {rate === 12 ? '(Nifty 50 Avg)' : ''}
                       </span>
                     </div>
-                    <input 
+                    <input
                       type="range"
                       min={6}
                       max={18}
@@ -458,7 +458,7 @@ export default function HomePage() {
                     Open Lab <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
-                
+
                 {/* Data Integrity Disclaimer (Plan 3) */}
                 <p className="text-[10.5px] text-gray-400 text-center mt-3 leading-relaxed">
                   *Calculations assume annual compounding at {rate}% CAGR. Illustrative mathematical model, not a guaranteed return.
@@ -505,7 +505,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          
+
           <div className="text-center mb-14">
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               The Indian Reality
@@ -520,33 +520,33 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {[
-              { 
+              {
                 icon: GraduationCap,
                 tag: 'THE CURRICULUM GAP',
-                title: 'School taught quadratics. Never money.', 
-                desc: '12 to 16 years of formal education, but not a single lesson on SIPs, salary deductions, inflation, or how compound interest defines your retirement.' 
+                title: 'School taught quadratics. Never money.',
+                desc: '12 to 16 years of formal education, but not a single lesson on SIPs, salary deductions, inflation, or how compound interest defines your retirement.'
               },
-              { 
+              {
                 icon: AlertTriangle,
                 tag: 'THE TIP TRAP',
-                title: '₹3 Lakh wiped out on a WhatsApp stock tip.', 
-                desc: 'An IT engineer in Pune trusts an unverified group recommendation. Within 4 months, hard-earned capital is decimated. This reality repeats across India daily.' 
+                title: '₹3 Lakh wiped out on a WhatsApp stock tip.',
+                desc: 'An IT engineer in Pune trusts an unverified group recommendation. Within 4 months, hard-earned capital is decimated. This reality repeats across India daily.'
               },
-              { 
+              {
                 icon: Brain,
                 tag: 'THE INTIMIDATION WALL',
-                title: 'Financial jargon stops beginners cold.', 
-                desc: 'P/E ratio, LTCG, Delta & Theta, XIRR, FEMA. By the time you search for the second term, you have forgotten the first. Finance has too many gatekeeping walls.' 
+                title: 'Financial jargon stops beginners cold.',
+                desc: 'P/E ratio, LTCG, Delta & Theta, XIRR, FEMA. By the time you search for the second term, you have forgotten the first. Finance has too many gatekeeping walls.'
               },
-              { 
+              {
                 icon: ShieldCheck,
                 tag: 'CONFLICTED ADVICE',
-                title: 'The financial advice you get isn\'t for you.', 
-                desc: 'Banks push funds with high distributor commissions. Traditional agents earn hefty commissions on low-yielding insurance policies. The system wasn\'t built for your growth.' 
+                title: 'The financial advice you get isn\'t for you.',
+                desc: 'Banks push funds with high distributor commissions. Traditional agents earn hefty commissions on low-yielding insurance policies. The system wasn\'t built for your growth.'
               },
             ].map((card, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="bg-white p-7 sm:p-8 rounded-3xl border border-gray-200/90 hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
@@ -582,7 +582,7 @@ export default function HomePage() {
                 No distributor commissions, zero sales pitches, and no hidden agendas. Just clear, structured financial education built for Indian learners.
               </p>
             </div>
-            <Link 
+            <Link
               href="/auth/signup"
               className="px-6 py-3 bg-[#0E6163] hover:bg-[#0A4A4C] text-white rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap shadow-sm"
             >
@@ -598,7 +598,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          
+
           <div className="text-center mb-16">
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               The Learning Loop
@@ -613,30 +613,30 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { 
-                icon: BookOpen, 
-                step: '01', 
+              {
+                icon: BookOpen,
+                step: '01',
                 badge: 'STRUCTURED CURRICULUM',
-                title: 'Understand the First Principles', 
-                desc: 'Bite-sized, jargon-free lessons. Each lesson breaks down complex finance into plain English and Hindi: concept first, real Indian company examples, and key takeaways.' 
+                title: 'Understand the First Principles',
+                desc: 'Bite-sized, jargon-free lessons. Each lesson breaks down complex finance into plain English and Hindi: concept first, real Indian company examples, and key takeaways.'
               },
-              { 
-                icon: Calculator, 
-                step: '02', 
+              {
+                icon: Calculator,
+                step: '02',
                 badge: 'FINANCE LABS',
-                title: 'Model It with Real Numbers', 
-                desc: 'Don\'t just read about wealth creation. Use our 15 interactive simulators to compare Old vs New tax regimes, plan your retirement, and paper-trade risk-free.' 
+                title: 'Model It with Real Numbers',
+                desc: 'Don\'t just read about wealth creation. Use our 15 interactive simulators to compare Old vs New tax regimes, plan your retirement, and paper-trade risk-free.'
               },
-              { 
-                icon: Brain, 
-                step: '03', 
+              {
+                icon: Brain,
+                step: '03',
                 badge: 'FRONTIER AI MENTOR',
-                title: 'Clarify Any Doubt 24/7', 
-                desc: 'Stuck on a tricky concept like indexation, ELSS lock-in, or option Greeks? Ask our frontier AI Mentor. Receive plain-language, source-cited explanations in seconds.' 
+                title: 'Clarify Any Doubt 24/7',
+                desc: 'Stuck on a tricky concept like indexation, ELSS lock-in, or option Greeks? Ask our frontier AI Mentor. Receive plain-language, source-cited explanations in seconds.'
               },
             ].map((item, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="bg-white rounded-3xl border border-gray-200 p-8 relative overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
               >
                 {/* Massive Faint Background Number (Plan 1 & 2) */}
@@ -670,7 +670,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          
+
           <div className="text-center mb-12">
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               Personalized Starting Point
@@ -692,15 +692,13 @@ export default function HomePage() {
                 <button
                   key={persona.id}
                   onClick={() => setActivePersonaId(persona.id)}
-                  className={`flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer ${
-                    isSelected
+                  className={`flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer ${isSelected
                       ? 'border-[#0E6163] bg-white shadow-md ring-2 ring-[#0E6163]/10'
                       : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
+                    }`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                    isSelected ? 'bg-emerald-50 text-[#0E6163]' : 'bg-gray-50 text-gray-400'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${isSelected ? 'bg-emerald-50 text-[#0E6163]' : 'bg-gray-50 text-gray-400'
+                    }`}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <span className={`text-[14px] font-bold block ${isSelected ? 'text-[#0A1628]' : 'text-gray-700'}`}>
@@ -717,7 +715,7 @@ export default function HomePage() {
           {/* Dynamic Persona Content Area */}
           <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-2xs">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-              
+
               {/* Left Column: Context & CTA */}
               <div className="lg:col-span-6">
                 <span className="text-[11px] font-bold text-[#0E6163] uppercase tracking-wider block mb-2">
@@ -729,7 +727,7 @@ export default function HomePage() {
                 <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
                   {activePersona.description}
                 </p>
-                
+
                 {/* Common Friction Point Callout Box */}
                 <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 sm:p-5 mb-6">
                   <div className="flex items-center gap-2 text-[12px] font-bold text-amber-900 mb-1">
@@ -760,8 +758,8 @@ export default function HomePage() {
 
                 <div className="space-y-3">
                   {activePersona.starterLessons.map((lesson, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-white border border-gray-200/70 shadow-2xs hover:border-[#0E6163] transition-colors"
                     >
                       <div className="flex items-center gap-3">
@@ -791,7 +789,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-14">
             <div>
               <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
@@ -844,7 +842,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
             <div>
               <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
@@ -931,7 +929,7 @@ export default function HomePage() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="bg-[#0A1628] rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-              
+
               <div className="lg:col-span-6">
                 <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-widest block mb-2">
                   Frontier AI Financial Tutor
@@ -942,7 +940,7 @@ export default function HomePage() {
                 <p className="text-sm sm:text-base text-gray-300 leading-relaxed mb-6">
                   Stuck comparing Section 80C deductions, calculating XIRR on mutual funds, or understanding option Greeks? Our AI mentor provides source-cited explanations grounded in SEBI, RBI, and Income Tax regulations.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/ai-tutor"
@@ -1001,7 +999,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[840px] mx-auto px-4 sm:px-6">
-          
+
           <div className="text-center mb-12">
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               Common Inquiries
@@ -1018,8 +1016,8 @@ export default function HomePage() {
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all shadow-2xs"
                 >
                   <button
@@ -1079,7 +1077,7 @@ export default function HomePage() {
       <footer className="bg-[#090D16] text-white pt-16 pb-12 border-t border-white/10">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-white/10">
-            
+
             {/* Brand Column */}
             <div className="md:col-span-4">
               <Logo size="md" href="/" dark />
