@@ -10,13 +10,14 @@ import {
   Calculator, Sparkles, Clock, ChevronDown,
   ChevronRight, Star, Sliders, Compass, Lock,
   PieChart, HelpCircle, Check, ExternalLink,
-  Layers, Award, Zap
+  Layers, Award, Zap, Search
 } from 'lucide-react';
 
 // ============================================================
 // FinanceHub of India — 10/10 World-Class Homepage
 // app/page.tsx
-// Visual Polish · Narrative Structure · Data Integrity & Trust
+// Benchmark: PolymerHub 9.5/10 Standard + AI Titan UX
+// Visual Polish · Narrative Structure · Product Architecture
 // ============================================================
 
 // ─── Persona Roadmaps Data ──────────────────────────────────
@@ -100,6 +101,46 @@ const PERSONAS: PersonaData[] = [
   },
 ];
 
+// ─── PolymerHub Benchmark: Flagship Core Pathways ────────────
+const CORE_PATHWAYS = [
+  {
+    id: 'personal-finance',
+    title: 'Personal Finance & Wealth Creation',
+    level: 'Beginner',
+    modules: 4,
+    lessons: 100,
+    tags: ['50/30/20 Budget', 'SIP Compounding', 'Emergency Fund', 'Term & Health Insurance'],
+    href: '/explore/personal-finance',
+  },
+  {
+    id: 'stock-markets',
+    title: 'Stock Markets & Equity Analysis',
+    level: 'Intermediate',
+    modules: 4,
+    lessons: 45,
+    tags: ['NIFTY 50 & SENSEX', 'P/E & Valuation', 'Balance Sheets', 'Technical Charts'],
+    href: '/explore/trading-and-markets',
+  },
+  {
+    id: 'derivatives',
+    title: 'F&O Derivatives & Risk Management',
+    level: 'Advanced',
+    modules: 3,
+    lessons: 40,
+    tags: ['Call & Put Options', 'Options Greeks', '1% Risk Rule', 'Stop-Loss Execution'],
+    href: '/explore/trading-and-markets',
+  },
+  {
+    id: 'taxation-corporate',
+    title: 'Indian Taxation & Corporate Strategy',
+    level: 'Intermediate',
+    modules: 4,
+    lessons: 60,
+    tags: ['Old vs New Regime', 'Section 80C & 80D', 'Working Capital', 'ESOP Tax'],
+    href: '/explore/corporate-finance',
+  },
+];
+
 // ─── The 8 Master Disciplines ───────────────────────────────
 const DISCIPLINES = [
   {
@@ -177,6 +218,9 @@ const DISCIPLINES = [
 ];
 
 export default function HomePage() {
+  // Search query for discovery hub
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   // Hero Interactive Simulator State
   const [monthly, setMonthly] = useState<number>(10000);
   const [years, setYears] = useState<number>(15);
@@ -277,7 +321,7 @@ export default function HomePage() {
       </header>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 1. HERO SECTION */}
+      {/* 1. HERO SECTION (PolymerHub 9.5/10 Standard) */}
       {/* ══════════════════════════════════════════ */}
       <section className="relative pt-12 sm:pt-20 pb-20 sm:pb-28 bg-[#F9FAFB] border-b border-gray-200/80 overflow-hidden">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative">
@@ -285,16 +329,19 @@ export default function HomePage() {
 
             {/* Left: Headline & Pitch */}
             <div className="lg:col-span-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-widest uppercase mb-6 border border-emerald-200/60">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-widest uppercase mb-6 border border-emerald-200/60 shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" /> Built for India&apos;s Financial Future
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-[58px] font-black leading-[1.08] tracking-tight mb-6 text-[#0A1628]">
+              <h1
+                className="text-4xl sm:text-5xl lg:text-[62px] font-bold leading-[1.06] tracking-tight mb-6 text-[#0A1628]"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
                 Master the Language<br />
                 of Money. <span className="text-[#0E6163]">Built for India.</span>
               </h1>
 
-              <p className="text-[16px] sm:text-[17.5px] text-[#4A5568] leading-relaxed mb-8 max-w-xl">
+              <p className="text-[16px] sm:text-[18px] text-[#4A5568] leading-relaxed mb-8 max-w-xl">
                 From your first ₹500 SIP to reading corporate balance sheets and trading options risk-free. Learn through 375+ structured lessons, 15 interactive simulators, and 24/7 AI tutoring.
               </p>
 
@@ -328,9 +375,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right: Interactive SIP Simulator Card (Plan 1 & 3) */}
+            {/* Right: Interactive SIP Simulator Card (PolymerHub High-Tech Widget Model) */}
             <div className="lg:col-span-6">
-              <div className="bg-white rounded-3xl border border-gray-200 shadow-xl p-6 sm:p-7 relative">
+              <div className="bg-white rounded-3xl border border-gray-200 shadow-2xl p-6 sm:p-7 relative">
 
                 {/* Micro-Lab Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
@@ -459,9 +506,9 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                {/* Data Integrity Disclaimer (Plan 3) */}
-                <p className="text-[10.5px] text-gray-400 text-center mt-3 leading-relaxed">
-                  *Calculations assume annual compounding at {rate}% CAGR. Illustrative mathematical model, not a guaranteed return.
+                {/* Data Integrity Disclaimer */}
+                <p className="text-[10px] text-gray-400 text-center mt-3 leading-relaxed">
+                  *Assumes annual compounding at {rate}% CAGR. Illustrative mathematical model, not a guarantee.
                 </p>
               </div>
             </div>
@@ -477,26 +524,160 @@ export default function HomePage() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-200 text-center">
             <div className="pt-2 md:pt-0">
-              <p className="text-3xl sm:text-4xl font-black text-[#0A1628] font-mono">375+</p>
+              <p
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                375+
+              </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Curated Lessons</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">From zero to valuation</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Zero to corporate valuation</p>
             </div>
             <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-4xl font-black text-[#0A1628] font-mono">8</p>
+              <p
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                8
+              </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Master Disciplines</p>
               <p className="text-[11px] text-gray-400 mt-0.5">Personal finance to F&O</p>
             </div>
             <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-4xl font-black text-[#0A1628] font-mono">15</p>
+              <p
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                15
+              </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Interactive Labs</p>
               <p className="text-[11px] text-gray-400 mt-0.5">100% risk-free practice</p>
             </div>
             <div className="pt-4 md:pt-0">
-              <p className="text-3xl sm:text-4xl font-black text-[#0A1628] font-mono">100%</p>
+              <p
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                100%
+              </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Free Core Access</p>
               <p className="text-[11px] text-gray-400 mt-0.5">No credit card required</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════ */}
+      {/* 2.5 POLYMERHUB BENCHMARK: WHERE WOULD YOU LIKE TO START TODAY? */}
+      {/* ══════════════════════════════════════════ */}
+      <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+
+          <div className="text-center mb-12">
+            <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
+              Curriculum Launchpad
+            </span>
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Where Would You Like to Start Today?
+            </h2>
+            <p className="text-[15px] sm:text-[16px] text-gray-500 mt-2.5 max-w-2xl mx-auto leading-relaxed">
+              Choose your learning pathway or search our comprehensive curriculum covering personal wealth, market trading, and corporate finance.
+            </p>
+
+            {/* PolymerHub Search Bar */}
+            <div className="mt-8 max-w-2xl mx-auto relative">
+              <div className="relative flex items-center">
+                <Search className="w-5 h-5 text-gray-400 absolute left-4 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search 375+ lessons, topics, tax sections, or simulators..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      window.location.href = `/explore?q=${encodeURIComponent(searchQuery.trim())}`;
+                    }
+                  }}
+                  className="w-full pl-12 pr-28 py-4 bg-[#F9FAFB] border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0E6163] focus:bg-white transition-all shadow-2xs"
+                />
+                <Link
+                  href={searchQuery.trim() ? `/explore?q=${encodeURIComponent(searchQuery.trim())}` : '/explore'}
+                  className="absolute right-2 px-4 py-2 bg-[#0A1628] hover:bg-[#0E6163] text-white text-xs font-bold rounded-xl transition-all"
+                >
+                  Explore
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Flagship Core Pathway Cards (PolymerHub 2x2 Grid) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {CORE_PATHWAYS.map((path) => (
+              <div
+                key={path.id}
+                className="bg-white rounded-3xl border border-gray-200 p-7 sm:p-8 hover:shadow-lg hover:border-[#0E6163] transition-all flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                      {path.level}
+                    </span>
+                    <span className="text-xs font-semibold text-gray-400">
+                      {path.modules} Modules · {path.lessons} Lessons
+                    </span>
+                  </div>
+
+                  <h3
+                    className="text-xl sm:text-[22px] font-bold text-[#0A1628] group-hover:text-[#0E6163] transition-colors mb-3 leading-snug"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    {path.title}
+                  </h3>
+
+                  {/* Topic Tags */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {path.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <Link
+                  href={path.href}
+                  className="w-full py-3.5 bg-[#0A1628] group-hover:bg-[#0E6163] text-white rounded-xl text-sm font-bold transition-all text-center flex items-center justify-center gap-2 shadow-2xs"
+                >
+                  Explore Pathway <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {/* Assessment Prompt Banner */}
+          <div className="p-4 sm:p-5 bg-gray-50 border border-gray-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                <Compass className="w-4 h-4" />
+              </div>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">
+                Not sure where to begin? Follow our guided curriculum pathway or try our persona roadmap below.
+              </span>
+            </div>
+            <Link
+              href="/explore"
+              className="text-xs sm:text-sm font-bold text-[#0E6163] hover:underline flex items-center gap-1 shrink-0"
+            >
+              Browse Full Catalog <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
         </div>
       </section>
 
@@ -510,8 +691,11 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               The Indian Reality
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
-              Finance is hard. <span className="text-[#0E6163]">It doesn't have to be.</span>
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Finance is hard. <span className="text-[#0E6163]">It doesn&apos;t have to be.</span>
             </h2>
             <p className="text-[15px] sm:text-[16px] text-gray-500 mt-2.5 max-w-xl mx-auto leading-relaxed">
               These are the four real reasons why millions of hardworking Indians stay broke or lose capital. FinanceHub solves all four.
@@ -603,7 +787,10 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               The Learning Loop
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               From confusion to mastery in three steps.
             </h2>
             <p className="text-[15px] sm:text-[16px] text-gray-500 mt-2 max-w-xl mx-auto leading-relaxed">
@@ -639,7 +826,7 @@ export default function HomePage() {
                 key={i}
                 className="bg-white rounded-3xl border border-gray-200 p-8 relative overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
               >
-                {/* Massive Faint Background Number (Plan 1 & 2) */}
+                {/* Massive Faint Background Number */}
                 <div className="absolute top-2 right-4 text-[80px] font-black text-gray-100 select-none pointer-events-none leading-none">
                   {item.step}
                 </div>
@@ -666,6 +853,100 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
+      {/* 4.5 POLYMERHUB BENCHMARK: INTERACTIVE LAB SPOTLIGHT */}
+      {/* "Understand Finance Beyond the Textbook" */}
+      {/* ══════════════════════════════════════════ */}
+      <section className="py-20 sm:py-24 bg-[#0A1628] text-white border-b border-gray-800">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <span className="text-[11px] font-extrabold text-emerald-400 tracking-widest uppercase block mb-2">
+                Hands-On Interactive Labs
+              </span>
+              <h2
+                className="text-3xl sm:text-4xl font-bold tracking-tight text-white"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                Understand Finance Beyond the Textbook.
+              </h2>
+              <p className="text-[15px] sm:text-[16px] text-gray-300 mt-2 max-w-xl leading-relaxed">
+                Risk-free simulators, mathematical modelers, and real Indian tax calculation engines. Test every financial decision before committing real capital.
+              </p>
+            </div>
+            <Link
+              href="/simulators"
+              className="inline-flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-md shrink-0"
+            >
+              Explore All 15 Labs <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* 4 Featured Interactive Simulators */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                title: 'SIP & Wealth Modeler',
+                badge: 'Compounding',
+                desc: 'Model monthly contributions with annual inflation step-ups and Nifty historical CAGR.',
+                href: '/practice/sip',
+                metric: '₹25.23L Corpus',
+              },
+              {
+                title: 'Income Tax FY 2025-26',
+                badge: 'New vs Old',
+                desc: 'Compare Section 80C, 80D, and standard deduction break-evens to legally save tax.',
+                href: '/practice/tax',
+                metric: 'Zero-Tax upto ₹7.75L',
+              },
+              {
+                title: 'Loan EMI & Prepayment',
+                badge: 'Debt Freedom',
+                desc: 'Calculate how a single extra EMI per year slashes a 20-year home loan down to 13 years.',
+                href: '/practice/emi',
+                metric: 'Save ₹18.4L Interest',
+              },
+              {
+                title: 'Paper Trading Terminal',
+                badge: 'Zero Risk',
+                desc: 'Trade Indian equities and Nifty 50 with ₹10 Lakh in virtual capital before trading live.',
+                href: '/practice/trading',
+                metric: '₹10,00,000 Balance',
+              },
+            ].map((lab, i) => (
+              <Link
+                key={i}
+                href={lab.href}
+                className="bg-white/5 border border-white/10 hover:border-emerald-500/50 rounded-2xl p-6 transition-all hover:bg-white/10 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded">
+                      {lab.badge}
+                    </span>
+                    <span className="text-[12px] font-mono text-gray-300 font-semibold">
+                      {lab.metric}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-300 transition-colors">
+                    {lab.title}
+                  </h3>
+                  <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                    {lab.desc}
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-bold text-emerald-400">
+                  <span>Launch Simulator</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════ */}
       {/* 5. PERSONA SELECTOR (Roadmaps) */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
@@ -675,7 +956,10 @@ export default function HomePage() {
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
               Personalized Starting Point
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               Where are you starting from?
             </h2>
             <p className="text-[15px] sm:text-[16px] text-gray-500 mt-2 max-w-xl mx-auto">
@@ -693,8 +977,8 @@ export default function HomePage() {
                   key={persona.id}
                   onClick={() => setActivePersonaId(persona.id)}
                   className={`flex flex-col items-center text-center p-5 sm:p-6 rounded-2xl border transition-all cursor-pointer ${isSelected
-                      ? 'border-[#0E6163] bg-white shadow-md ring-2 ring-[#0E6163]/10'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                    ? 'border-[#0E6163] bg-white shadow-md ring-2 ring-[#0E6163]/10'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
                     }`}
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors ${isSelected ? 'bg-emerald-50 text-[#0E6163]' : 'bg-gray-50 text-gray-400'
@@ -721,7 +1005,10 @@ export default function HomePage() {
                 <span className="text-[11px] font-bold text-[#0E6163] uppercase tracking-wider block mb-2">
                   Curated Pathway
                 </span>
-                <h3 className="text-2xl font-bold text-[#0A1628] mb-3 leading-tight">
+                <h3
+                  className="text-2xl font-bold text-[#0A1628] mb-3 leading-tight"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
                   {activePersona.headline}
                 </h3>
                 <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
@@ -747,7 +1034,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Right Column: Recommended Starter Lessons */}
+              {/* Right Column: Recommended Starter Lessons Checklist */}
               <div className="lg:col-span-6 bg-gray-50 border border-gray-200/80 rounded-2xl p-6">
                 <div className="flex items-center justify-between pb-3 border-b border-gray-200/80 mb-4">
                   <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -795,7 +1082,10 @@ export default function HomePage() {
               <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
                 Comprehensive Curriculum
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
+              <h2
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
                 Eight Master Disciplines. Zero Blindspots.
               </h2>
               <p className="text-[15px] text-gray-500 mt-2 max-w-xl">
@@ -839,6 +1129,7 @@ export default function HomePage() {
 
       {/* ══════════════════════════════════════════ */}
       {/* 7. REAL INDIAN CASE STUDIES SPOTLIGHT */}
+      {/* "The Failure & Recovery Files" */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -846,9 +1137,12 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
             <div>
               <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
-                Outcome-First Learning
+                Outcome-First Forensic Case Studies
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
+              <h2
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
                 Learn from real mistakes and wins.
               </h2>
               <p className="text-[15px] text-gray-500 mt-2 max-w-xl">
@@ -912,7 +1206,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <div className="mt-6 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#0E6163]">
-                  <span>Read Breakdown</span>
+                  <span>Read Forensic Breakdown</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
@@ -934,7 +1228,10 @@ export default function HomePage() {
                 <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-widest block mb-2">
                   Frontier AI Financial Tutor
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">
+                <h2
+                  className="text-3xl sm:text-4xl font-bold leading-tight mb-4"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
                   Never get stuck on a financial concept again.
                 </h2>
                 <p className="text-sm sm:text-base text-gray-300 leading-relaxed mb-6">
@@ -949,41 +1246,47 @@ export default function HomePage() {
                     Chat with AI Mentor <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
-                    href="/simulators"
+                    href="/explore"
                     className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all text-center"
                   >
-                    Open Simulators
+                    Explore Syllabus
                   </Link>
                 </div>
               </div>
 
-              {/* Mock AI Conversation Card */}
-              <div className="lg:col-span-6 bg-[#0F1E36] border border-white/10 rounded-2xl p-5 sm:p-6 text-xs sm:text-[13px] space-y-4 font-sans">
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
-                    Q
-                  </div>
-                  <div className="bg-white/5 p-3 rounded-xl rounded-tl-none text-gray-200">
-                    "My CTC is ₹15 Lakh. Should I choose the Old or New Tax Regime for FY 2025-26?"
-                  </div>
+              {/* Chat Preview Terminal */}
+              <div className="lg:col-span-6 bg-[#0F172A] rounded-2xl border border-white/10 p-5 font-mono text-xs">
+                <div className="flex items-center gap-2 pb-3 border-b border-white/10 text-gray-400 mb-4">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <span className="text-white font-bold">FinanceHub AI Tutor</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded ml-auto">
+                    Live Demo
+                  </span>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
-                    <Sparkles className="w-3.5 h-3.5" />
+                <div className="space-y-3">
+                  <div className="bg-white/5 p-3 rounded-lg text-gray-300">
+                    <p className="text-[11px] text-gray-400 mb-1">You asked:</p>
+                    <p className="text-white font-sans text-xs">
+                      &quot;Should I choose the Old or New Tax Regime for a ₹15 Lakh salary?&quot;
+                    </p>
                   </div>
-                  <div className="bg-white/10 p-3.5 rounded-xl rounded-tl-none text-gray-100 space-y-2 leading-relaxed">
-                    <p className="font-semibold text-white">
-                      💡 Mathematical Break-Even Analysis:
+
+                  <div className="bg-emerald-950/40 border border-emerald-800/40 p-3.5 rounded-lg text-gray-200">
+                    <p className="text-[11px] text-emerald-400 mb-1.5 font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                      AI Mentor Answer:
                     </p>
-                    <p>
-                      At ₹15 Lakh CTC, the <strong>New Tax Regime</strong> (with ₹75,000 standard deduction) results in tax of approx <strong>₹1,40,400</strong>.
+                    <p className="font-sans text-xs leading-relaxed text-gray-200 mb-2">
+                      For ₹15 Lakh income in FY 2025-26, the mathematical break-even point is <strong>₹3,75,000</strong> in total deductions (Section 80C + 80D + HRA/Home Loan interest).
                     </p>
-                    <p>
-                      To beat this under the <strong>Old Regime</strong>, you need total deductions exceeding <strong>₹4.25 Lakh</strong> (e.g. 80C ₹1.5L + 80D ₹25k + HRA/Home Loan interest ₹2.5L).
-                    </p>
-                    <div className="pt-2 border-t border-white/10 text-[11px] text-emerald-400 font-medium">
-                      ✓ Grounded in Finance Act FY 2025-26 Tax Slabs
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-emerald-900/50 text-[10px]">
+                      <span className="px-2 py-0.5 bg-emerald-900/60 rounded text-emerald-300">
+                        📚 Income Tax Act 1961
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-900/60 rounded text-emerald-300">
+                        📚 Finance Act 2024
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1002,30 +1305,36 @@ export default function HomePage() {
 
           <div className="text-center mb-12">
             <span className="text-[11px] font-bold text-[#0E6163] tracking-widest uppercase block mb-2">
-              Common Inquiries
+              Got Questions?
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#0A1628] tracking-tight">
+            <h2
+              className="text-3xl sm:text-4xl font-bold text-[#0A1628] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               Frequently Asked Questions
             </h2>
-            <p className="text-[14px] text-gray-500 mt-2">
-              Everything you need to know about the platform, pricing, and compliance.
+            <p className="text-[15px] text-gray-500 mt-2">
+              Everything you need to know about FinanceHub before you start.
             </p>
           </div>
 
           <div className="space-y-3">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
+            {faqs.map((faq, i) => {
+              const isOpen = openFaq === i;
               return (
                 <div
-                  key={index}
+                  key={i}
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden transition-all shadow-2xs"
                 >
                   <button
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-bold text-[#0A1628] text-[15px] cursor-pointer hover:bg-gray-50/50 transition-colors"
+                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-[#0A1628] hover:text-[#0E6163] transition-colors"
                   >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <span className="text-[15px] sm:text-[16px]">{faq.q}</span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-[#0E6163]' : ''
+                        }`}
+                    />
                   </button>
                   {isOpen && (
                     <div className="px-6 pb-5 text-[13.5px] text-gray-600 leading-relaxed border-t border-gray-100 pt-3">
@@ -1043,10 +1352,13 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════ */}
       {/* 10. FINAL CALL TO ACTION */}
       {/* ══════════════════════════════════════════ */}
-      <section className="py-20 sm:py-24 bg-white">
+      <section className="py-20 sm:py-24 bg-white relative isolate">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
-          <div className="bg-gradient-to-br from-[#0A1628] to-[#0A2628] rounded-3xl p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-xl">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-4">
+          <div className="bg-gradient-to-br from-[#0A1628] via-[#0F2338] to-[#0A1628] rounded-3xl p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-2xl">
+            <h2
+              className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-4"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
               The best time to understand money<br />
               <span className="text-emerald-400">was 10 years ago.</span>
             </h2>
@@ -1082,10 +1394,10 @@ export default function HomePage() {
             <div className="md:col-span-4">
               <Logo size="md" href="/" dark />
               <p className="text-xs sm:text-[13px] text-gray-400 mt-4 leading-relaxed max-w-sm">
-                India's premier national financial education academy. 375+ lessons, 15 simulators, and AI tutoring. Free forever.
+                India&apos;s premier national financial education academy. 375+ lessons, 15 simulators, and AI tutoring. Free forever.
               </p>
               <div className="mt-4 text-xs font-semibold text-emerald-400">
-                🇮🇳 Built for Indian Investors & Learners
+                🇮🇳 Built for Indian Investors &amp; Learners
               </div>
             </div>
 
@@ -1098,7 +1410,7 @@ export default function HomePage() {
                 <div className="space-y-2.5 text-xs text-gray-300">
                   <Link href="/explore/personal-finance" className="block hover:text-white transition-colors">Personal Finance</Link>
                   <Link href="/explore/trading-and-markets" className="block hover:text-white transition-colors">Stock Market Basics</Link>
-                  <Link href="/explore/trading-and-markets" className="block hover:text-white transition-colors">F&O Trading</Link>
+                  <Link href="/explore/trading-and-markets" className="block hover:text-white transition-colors">F&amp;O Trading</Link>
                   <Link href="/explore/corporate-finance" className="block hover:text-white transition-colors">Corporate Finance</Link>
                   <Link href="/case-studies" className="block hover:text-white transition-colors">Case Studies</Link>
                 </div>
@@ -1110,7 +1422,7 @@ export default function HomePage() {
                 </p>
                 <div className="space-y-2.5 text-xs text-gray-300">
                   <Link href="/practice/sip" className="block hover:text-white transition-colors">SIP Calculator</Link>
-                  <Link href="/practice/emi" className="block hover:text-white transition-colors">Loan & EMI Calculator</Link>
+                  <Link href="/practice/emi" className="block hover:text-white transition-colors">Loan &amp; EMI Calculator</Link>
                   <Link href="/practice/tax" className="block hover:text-white transition-colors">Tax Calculator FY 2025-26</Link>
                   <Link href="/practice/trading" className="block hover:text-white transition-colors">Paper Trading Terminal</Link>
                   <Link href="/simulators" className="block hover:text-white transition-colors">All 15 Simulators</Link>
@@ -1122,7 +1434,7 @@ export default function HomePage() {
                   Institutional
                 </p>
                 <div className="space-y-2.5 text-xs text-gray-300">
-                  <Link href="/pricing" className="block hover:text-white transition-colors">Pricing & Plans</Link>
+                  <Link href="/pricing" className="block hover:text-white transition-colors">Pricing &amp; Plans</Link>
                   <Link href="/legal/privacy" className="block hover:text-white transition-colors">Privacy Policy</Link>
                   <Link href="/legal/terms" className="block hover:text-white transition-colors">Terms of Service</Link>
                   <Link href="/legal/disclaimer" className="block hover:text-white transition-colors">SEBI Compliance</Link>
