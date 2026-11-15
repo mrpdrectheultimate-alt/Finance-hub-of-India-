@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
 import {
@@ -10,15 +10,165 @@ import {
   Calculator, Sparkles, Clock, ChevronDown,
   ChevronRight, Star, Sliders, Compass, Lock,
   PieChart, HelpCircle, Check, ExternalLink,
-  Layers, Award, Zap, Search
+  Layers, Award, Zap, Search, CandlestickChart,
+  Bitcoin, Landmark, Globe, DollarSign, BarChart3,
+  Percent, ArrowUpRight
 } from 'lucide-react';
 
 // ============================================================
-// FinanceHub of India — 10/10 World-Class Homepage
+// FinanceHub of India — 10/10 Master Visual & Product Ecosystem
 // app/page.tsx
-// Benchmark: PolymerHub 9.5/10 Standard + AI Titan UX
-// Visual Polish · Narrative Structure · Product Architecture
+// Synthesis: Visual Polish · Colorful Domain Accents · Live Animations
+// Bespoke Financial Vector Motifs · Complete 11-Section Academy
 // ============================================================
+
+// ─── Bespoke Financial Vector Visuals (Zero Latency, High-Res) ───
+
+function CandlestickVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      {/* Candle 1 (Green) */}
+      <line x1="20" y1="10" x2="20" y2="50" stroke="#10B981" strokeWidth="1.5" />
+      <rect x="15" y="20" width="10" height="22" rx="1.5" fill="#10B981" />
+      {/* Candle 2 (Red) */}
+      <line x1="45" y1="15" x2="45" y2="55" stroke="#EF4444" strokeWidth="1.5" />
+      <rect x="40" y="24" width="10" height="18" rx="1.5" fill="#EF4444" />
+      {/* Candle 3 (Green) */}
+      <line x1="70" y1="8" x2="70" y2="48" stroke="#10B981" strokeWidth="1.5" />
+      <rect x="65" y="16" width="10" height="24" rx="1.5" fill="#10B981" />
+      {/* Candle 4 (Green) */}
+      <line x1="95" y1="5" x2="95" y2="42" stroke="#10B981" strokeWidth="1.5" />
+      <rect x="90" y="12" width="10" height="22" rx="1.5" fill="#10B981" />
+      {/* Candle 5 (Red) */}
+      <line x1="120" y1="12" x2="120" y2="48" stroke="#EF4444" strokeWidth="1.5" />
+      <rect x="115" y="18" width="10" height="16" rx="1.5" fill="#EF4444" />
+      {/* Candle 6 (Bullish Breakout) */}
+      <line x1="145" y1="2" x2="145" y2="38" stroke="#10B981" strokeWidth="1.5" />
+      <rect x="140" y="6" width="10" height="26" rx="1.5" fill="#10B981" />
+      {/* Moving Average Line */}
+      <path d="M 10 40 Q 45 35, 75 25 T 150 14" stroke="#3B82F6" strokeWidth="2" strokeDasharray="3 3" fill="none" />
+    </svg>
+  );
+}
+
+function CryptoMeshVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <line x1="25" y1="30" x2="60" y2="15" stroke="#A78BFA" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+      <line x1="25" y1="30" x2="60" y2="45" stroke="#A78BFA" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+      <line x1="60" y1="15" x2="100" y2="20" stroke="#8B5CF6" strokeWidth="1.5" />
+      <line x1="60" y1="45" x2="100" y2="40" stroke="#8B5CF6" strokeWidth="1.5" />
+      <line x1="100" y1="20" x2="140" y2="30" stroke="#A78BFA" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+      <line x1="100" y1="40" x2="140" y2="30" stroke="#A78BFA" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+      
+      <circle cx="25" cy="30" r="9" fill="#8B5CF6" fillOpacity="0.15" stroke="#8B5CF6" strokeWidth="1.5" />
+      <text x="25" y="34" fontSize="10" fontWeight="bold" fill="#8B5CF6" textAnchor="middle">₿</text>
+      
+      <circle cx="60" cy="15" r="8" fill="#8B5CF6" fillOpacity="0.2" stroke="#8B5CF6" strokeWidth="1.5" />
+      <text x="60" y="19" fontSize="9" fontWeight="bold" fill="#7C3AED" textAnchor="middle">Ξ</text>
+
+      <circle cx="60" cy="45" r="5" fill="#C4B5FD" />
+      <circle cx="100" cy="20" r="6" fill="#7C3AED" />
+
+      <circle cx="100" cy="40" r="8" fill="#8B5CF6" fillOpacity="0.2" stroke="#8B5CF6" strokeWidth="1.5" />
+      <text x="100" y="44" fontSize="8" fontWeight="bold" fill="#7C3AED" textAnchor="middle">SOL</text>
+      
+      <circle cx="140" cy="30" r="10" fill="#8B5CF6" fillOpacity="0.25" stroke="#7C3AED" strokeWidth="2" />
+      <text x="140" y="34" fontSize="9" fontWeight="bold" fill="#6D28D9" textAnchor="middle">⛓</text>
+    </svg>
+  );
+}
+
+function CompoundingGrowthVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <defs>
+        <linearGradient id="compGradHome" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <path d="M 10 50 Q 80 48, 110 32 T 150 8 L 150 55 L 10 55 Z" fill="url(#compGradHome)" />
+      <path d="M 10 50 Q 80 48, 110 32 T 150 8" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="150" cy="8" r="4" fill="#10B981" />
+      <circle cx="150" cy="8" r="8" stroke="#10B981" strokeWidth="1" opacity="0.4" className="animate-ping" />
+      <rect x="94" y="6" width="46" height="16" rx="4" fill="#0A1628" />
+      <text x="117" y="18" fontSize="9" fontWeight="bold" fill="#10B981" textAnchor="middle" fontFamily="monospace">₹1.48Cr</text>
+    </svg>
+  );
+}
+
+function CorporateRunwayVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <line x1="10" y1="52" x2="150" y2="52" stroke="#CBD5E1" strokeWidth="1" />
+      <rect x="25" y="38" width="12" height="14" rx="2" fill="#F59E0B" fillOpacity="0.6" />
+      <rect x="55" y="30" width="12" height="22" rx="2" fill="#F59E0B" fillOpacity="0.75" />
+      <rect x="85" y="20" width="12" height="32" rx="2" fill="#F59E0B" fillOpacity="0.9" />
+      <rect x="115" y="8" width="12" height="44" rx="2" fill="#F59E0B" />
+      <path d="M 20 22 L 60 30 L 95 38 L 135 48" stroke="#EF4444" strokeWidth="1.5" strokeDasharray="3 3" />
+      <circle cx="85" cy="20" r="3.5" fill="#10B981" />
+      <text x="85" y="13" fontSize="8" fontWeight="bold" fill="#10B981" textAnchor="middle">Break-Even</text>
+    </svg>
+  );
+}
+
+function TechnicalWaveVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      {/* Resistance & Support Levels */}
+      <line x1="10" y1="12" x2="150" y2="12" stroke="#06B6D4" strokeWidth="1" strokeDasharray="4 2" opacity="0.4" />
+      <line x1="10" y1="48" x2="150" y2="48" stroke="#06B6D4" strokeWidth="1" strokeDasharray="4 2" opacity="0.4" />
+      {/* Sine Wave Price Action */}
+      <path d="M 10 30 Q 30 10, 50 30 T 90 30 T 130 30 T 150 18" stroke="#0891B2" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="150" cy="18" r="4" fill="#06B6D4" />
+      <text x="80" y="8" fontSize="8" fontWeight="bold" fill="#0891B2" textAnchor="middle">RSI 68 (Overbought)</text>
+    </svg>
+  );
+}
+
+function BehavioralSynapseVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <path d="M 20 30 Q 50 10, 80 30 T 140 30" stroke="#F43F5E" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.6" />
+      <path d="M 20 30 Q 50 50, 80 30 T 140 30" stroke="#F43F5E" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.6" />
+      <circle cx="20" cy="30" r="7" fill="#F43F5E" fillOpacity="0.2" stroke="#F43F5E" strokeWidth="1.5" />
+      <text x="20" y="33" fontSize="8" fontWeight="bold" fill="#E11D48" textAnchor="middle">FOMO</text>
+      <circle cx="80" cy="30" r="10" fill="#F43F5E" fillOpacity="0.25" stroke="#E11D48" strokeWidth="2" />
+      <text x="80" y="34" fontSize="9" fontWeight="bold" fill="#BE123C" textAnchor="middle">Logic</text>
+      <circle cx="140" cy="30" r="7" fill="#F43F5E" fillOpacity="0.2" stroke="#F43F5E" strokeWidth="1.5" />
+      <text x="140" y="33" fontSize="8" fontWeight="bold" fill="#E11D48" textAnchor="middle">Panic</text>
+    </svg>
+  );
+}
+
+function ForexOrbitVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <ellipse cx="80" cy="30" rx="55" ry="20" stroke="#0D9488" strokeWidth="1.5" strokeDasharray="4 2" />
+      <circle cx="35" cy="22" r="9" fill="#0D9488" fillOpacity="0.2" stroke="#0D9488" strokeWidth="1.5" />
+      <text x="35" y="26" fontSize="9" fontWeight="bold" fill="#0F766E" textAnchor="middle">₹ INR</text>
+      <circle cx="125" cy="38" r="9" fill="#0D9488" fillOpacity="0.2" stroke="#0D9488" strokeWidth="1.5" />
+      <text x="125" y="42" fontSize="9" fontWeight="bold" fill="#0F766E" textAnchor="middle">$ USD</text>
+      <circle cx="80" cy="10" r="7" fill="#14B8A6" />
+      <text x="80" y="14" fontSize="8" fontWeight="bold" fill="#FFFFFF" textAnchor="middle">€</text>
+    </svg>
+  );
+}
+
+function TaxRegimeVisual({ className = "w-full h-16" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 160 60" className={className} fill="none">
+      <rect x="25" y="15" width="45" height="35" rx="3" fill="#F97316" fillOpacity="0.15" stroke="#F97316" strokeWidth="1.5" />
+      <text x="47" y="27" fontSize="8" fontWeight="bold" fill="#EA580C" textAnchor="middle">Old Regime</text>
+      <text x="47" y="40" fontSize="10" fontWeight="black" fill="#C2410C" textAnchor="middle" fontFamily="monospace">80C/80D</text>
+
+      <rect x="90" y="10" width="45" height="40" rx="3" fill="#10B981" fillOpacity="0.15" stroke="#10B981" strokeWidth="1.5" />
+      <text x="112" y="24" fontSize="8" fontWeight="bold" fill="#047857" textAnchor="middle">New Regime</text>
+      <text x="112" y="38" fontSize="10" fontWeight="black" fill="#065F46" textAnchor="middle" fontFamily="monospace">₹7.75L Nil</text>
+    </svg>
+  );
+}
 
 // ─── Persona Roadmaps Data ──────────────────────────────────
 interface PersonaData {
@@ -101,7 +251,7 @@ const PERSONAS: PersonaData[] = [
   },
 ];
 
-// ─── PolymerHub Benchmark: Flagship Core Pathways ────────────
+// ─── 4 Flagship Core Pathways (Launchpad) ────────────────────
 const CORE_PATHWAYS = [
   {
     id: 'personal-finance',
@@ -111,6 +261,9 @@ const CORE_PATHWAYS = [
     lessons: 100,
     tags: ['50/30/20 Budget', 'SIP Compounding', 'Emergency Fund', 'Term & Health Insurance'],
     href: '/explore/personal-finance',
+    visual: CompoundingGrowthVisual,
+    colorTheme: 'from-emerald-500/10 to-teal-500/5',
+    accentColor: '#10B981',
   },
   {
     id: 'stock-markets',
@@ -120,6 +273,9 @@ const CORE_PATHWAYS = [
     lessons: 45,
     tags: ['NIFTY 50 & SENSEX', 'P/E & Valuation', 'Balance Sheets', 'Technical Charts'],
     href: '/explore/trading-and-markets',
+    visual: CandlestickVisual,
+    colorTheme: 'from-blue-500/10 to-indigo-500/5',
+    accentColor: '#2563EB',
   },
   {
     id: 'derivatives',
@@ -129,6 +285,9 @@ const CORE_PATHWAYS = [
     lessons: 40,
     tags: ['Call & Put Options', 'Options Greeks', '1% Risk Rule', 'Stop-Loss Execution'],
     href: '/explore/trading-and-markets',
+    visual: TechnicalWaveVisual,
+    colorTheme: 'from-cyan-500/10 to-blue-500/5',
+    accentColor: '#06B6D4',
   },
   {
     id: 'taxation-corporate',
@@ -138,10 +297,13 @@ const CORE_PATHWAYS = [
     lessons: 60,
     tags: ['Old vs New Regime', 'Section 80C & 80D', 'Working Capital', 'ESOP Tax'],
     href: '/explore/corporate-finance',
+    visual: TaxRegimeVisual,
+    colorTheme: 'from-orange-500/10 to-amber-500/5',
+    accentColor: '#F97316',
   },
 ];
 
-// ─── The 8 Master Disciplines ───────────────────────────────
+// ─── The 8 Master Disciplines (Vibrant Domain Matrix) ────────
 const DISCIPLINES = [
   {
     id: 'personal-finance',
@@ -150,52 +312,24 @@ const DISCIPLINES = [
     lessons: 100,
     levels: 'Level 1–3',
     color: '#10B981',
+    bgGradient: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
+    iconBg: 'bg-emerald-50 text-emerald-600',
+    visual: CompoundingGrowthVisual,
+    icon: TrendingUp,
     href: '/explore/personal-finance',
   },
   {
     id: 'stock-market',
-    title: 'Stock Market Fundamentals',
+    title: 'Stock Market & Indices',
     tagline: 'Understand how Indian businesses create value on NSE and BSE.',
     lessons: 45,
     levels: 'Level 1–3',
-    color: '#0E6163',
+    color: '#2563EB',
+    bgGradient: 'from-blue-500/15 via-blue-500/5 to-transparent',
+    iconBg: 'bg-blue-50 text-blue-600',
+    visual: CandlestickVisual,
+    icon: CandlestickChart,
     href: '/explore/trading-and-markets',
-  },
-  {
-    id: 'fo-trading',
-    title: 'F&O Derivatives Trading',
-    tagline: 'Demystify futures, options Greeks, and risk mitigation strategies.',
-    lessons: 40,
-    levels: 'Level 1–3',
-    color: '#EF4444',
-    href: '/explore/trading-and-markets',
-  },
-  {
-    id: 'technical-analysis',
-    title: 'Technical Analysis',
-    tagline: 'Read price action, volume confirmation, and chart patterns.',
-    lessons: 35,
-    levels: 'Level 1–3',
-    color: '#6366F1',
-    href: '/explore/trading-and-markets',
-  },
-  {
-    id: 'mutual-funds',
-    title: 'Mutual Funds & ETFs',
-    tagline: 'Direct vs regular plans, expense ratios, and asset allocation.',
-    lessons: 30,
-    levels: 'Level 1–2',
-    color: '#F59E0B',
-    href: '/explore/personal-finance',
-  },
-  {
-    id: 'tax-planning',
-    title: 'Income Tax & Optimization',
-    tagline: 'Old vs New Regime, 80C, 80D, capital gains, and ITR filing.',
-    lessons: 25,
-    levels: 'Level 1–2',
-    color: '#06B6D4',
-    href: '/explore/personal-finance',
   },
   {
     id: 'crypto-web3',
@@ -204,27 +338,114 @@ const DISCIPLINES = [
     lessons: 40,
     levels: 'Level 1–3',
     color: '#8B5CF6',
+    bgGradient: 'from-purple-500/15 via-purple-500/5 to-transparent',
+    iconBg: 'bg-purple-50 text-purple-600',
+    visual: CryptoMeshVisual,
+    icon: Bitcoin,
     href: '/explore/trading-and-markets',
   },
   {
     id: 'corporate-finance',
     title: 'Corporate Finance',
-    tagline: 'DCF valuation, working capital, ESOPs, and M&A deals.',
+    tagline: 'DCF valuation, working capital, ESOPs, and venture runway.',
     lessons: 60,
     levels: 'Level 1–3',
-    color: '#0A1628',
+    color: '#F59E0B',
+    bgGradient: 'from-amber-500/15 via-amber-500/5 to-transparent',
+    iconBg: 'bg-amber-50 text-amber-600',
+    visual: CorporateRunwayVisual,
+    icon: Briefcase,
     href: '/explore/corporate-finance',
+  },
+  {
+    id: 'technical-analysis',
+    title: 'Technical Analysis',
+    tagline: 'Read price action, volume confirmation, and chart wave patterns.',
+    lessons: 35,
+    levels: 'Level 1–3',
+    color: '#06B6D4',
+    bgGradient: 'from-cyan-500/15 via-cyan-500/5 to-transparent',
+    iconBg: 'bg-cyan-50 text-cyan-600',
+    visual: TechnicalWaveVisual,
+    icon: LineChart,
+    href: '/explore/trading-and-markets',
+  },
+  {
+    id: 'behavioral-finance',
+    title: 'Behavioral Finance',
+    tagline: 'Unpack FOMO, loss aversion, and psychological market traps.',
+    lessons: 23,
+    levels: 'Level 1–2',
+    color: '#F43F5E',
+    bgGradient: 'from-rose-500/15 via-rose-500/5 to-transparent',
+    iconBg: 'bg-rose-50 text-rose-600',
+    visual: BehavioralSynapseVisual,
+    icon: Brain,
+    href: '/explore/personal-finance',
+  },
+  {
+    id: 'forex-currency',
+    title: 'Forex & Currency',
+    tagline: 'Global currency pairs, RBI LRS remittance, and hedging.',
+    lessons: 20,
+    levels: 'Level 1–2',
+    color: '#0D9488',
+    bgGradient: 'from-teal-500/15 via-teal-500/5 to-transparent',
+    iconBg: 'bg-teal-50 text-teal-600',
+    visual: ForexOrbitVisual,
+    icon: Globe,
+    href: '/explore/trading-and-markets',
+  },
+  {
+    id: 'tax-planning',
+    title: 'Indian Taxation & Regimes',
+    tagline: 'Old vs New Regime, 80C, 80D, capital gains, and ITR filing.',
+    lessons: 25,
+    levels: 'Level 1–2',
+    color: '#F97316',
+    bgGradient: 'from-orange-500/15 via-orange-500/5 to-transparent',
+    iconBg: 'bg-orange-50 text-orange-600',
+    visual: TaxRegimeVisual,
+    icon: Landmark,
+    href: '/explore/personal-finance',
   },
 ];
 
 export default function HomePage() {
-  // Search query for discovery hub
+  // Search query for discovery launchpad
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Hero Interactive Simulator State
   const [monthly, setMonthly] = useState<number>(10000);
   const [years, setYears] = useState<number>(15);
   const [rate, setRate] = useState<number>(12);
+
+  // Animated Numerical Counters
+  const [statsCounter, setStatsCounter] = useState({ lessons: 0, tracks: 0, labs: 0, free: 0 });
+
+  useEffect(() => {
+    const duration = 1200; // ms
+    const steps = 30;
+    const intervalTime = duration / steps;
+    let step = 0;
+
+    const timer = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      setStatsCounter({
+        lessons: Math.min(375, Math.round(375 * progress)),
+        tracks: Math.min(8, Math.round(8 * progress)),
+        labs: Math.min(15, Math.round(15 * progress)),
+        free: Math.min(100, Math.round(100 * progress)),
+      });
+
+      if (step >= steps) {
+        clearInterval(timer);
+      }
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Persona State
   const [activePersonaId, setActivePersonaId] = useState<string>('student');
@@ -283,7 +504,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#1A1A2E] selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-white font-sans text-[#1A1A2E] selection:bg-emerald-100 selection:text-emerald-900 overflow-x-hidden">
 
       {/* ══════════════════════════════════════════ */}
       {/* 0. STICKY INSTITUTIONAL HEADER */}
@@ -321,15 +542,28 @@ export default function HomePage() {
       </header>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 1. HERO SECTION (PolymerHub 9.5/10 Standard) */}
+      {/* 1. HERO SECTION (Immersive Financial World) */}
       {/* ══════════════════════════════════════════ */}
       <section className="relative pt-12 sm:pt-20 pb-20 sm:pb-28 bg-[#F9FAFB] border-b border-gray-200/80 overflow-hidden">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative">
+        {/* Subtle Ambient Glowing Orbs & Faint Vector Silhouettes */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-300/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+          {/* Subtle Financial Vector Silhouettes in Background */}
+          <div className="absolute top-28 right-12 opacity-[0.04] transform rotate-12 pointer-events-none">
+            <CandlestickChart className="w-64 h-64 text-[#0A1628]" />
+          </div>
+          <div className="absolute bottom-12 left-8 opacity-[0.04] transform -rotate-12 pointer-events-none">
+            <Bitcoin className="w-48 h-48 text-[#8B5CF6]" />
+          </div>
+        </div>
+
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
             {/* Left: Headline & Pitch */}
             <div className="lg:col-span-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-widest uppercase mb-6 border border-emerald-200/60 shadow-2xs">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold tracking-widest uppercase mb-6 border border-emerald-200/60 shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" /> Built for India&apos;s Financial Future
               </div>
 
@@ -349,13 +583,13 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
                 <Link
                   href="/auth/signup"
-                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#0A1628] hover:bg-[#0E6163] text-white rounded-xl text-[15px] font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-[#0A1628] hover:bg-[#0E6163] text-white rounded-xl text-[15px] font-bold transition-all shadow-md hover:shadow-xl hover:scale-[1.02] flex items-center gap-2"
                 >
                   Start Learning Free <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="/explore"
-                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-[#0A1628] border-2 border-gray-200 hover:border-[#0A1628] rounded-xl text-[15px] font-bold transition-all"
+                  className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-[#0A1628] border-2 border-gray-200 hover:border-[#0A1628] rounded-xl text-[15px] font-bold transition-all hover:shadow-sm"
                 >
                   Explore Curriculum
                 </Link>
@@ -375,26 +609,31 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right: Interactive SIP Simulator Card (PolymerHub High-Tech Widget Model) */}
+            {/* Right: Interactive SIP Simulator Card with Live Compounding Vector */}
             <div className="lg:col-span-6">
-              <div className="bg-white rounded-3xl border border-gray-200 shadow-2xl p-6 sm:p-7 relative">
+              <div className="bg-white rounded-3xl border border-gray-200 shadow-2xl p-6 sm:p-7 relative transition-all">
 
                 {/* Micro-Lab Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#10B981]">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#10B981] shadow-2xs">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[13px] font-extrabold text-[#0A1628] block leading-tight">
+                      <span className="text-[13.5px] font-extrabold text-[#0A1628] block leading-tight">
                         Wealth Modeler / SIP Calculator
                       </span>
                       <span className="text-[11px] text-gray-400">Compounding in Indian Markets</span>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider rounded-md">
-                    Live Preview
+                  <span className="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live
                   </span>
+                </div>
+
+                {/* Real-time SVG Compounding Curve Visual */}
+                <div className="mb-5 p-3 rounded-2xl bg-[#F8FAFC] border border-gray-100">
+                  <CompoundingGrowthVisual className="w-full h-14" />
                 </div>
 
                 {/* Sliders */}
@@ -489,7 +728,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Dark Result Box */}
-                <div className="p-4 bg-[#0A1628] rounded-2xl flex items-center justify-between">
+                <div className="p-4 bg-[#0A1628] rounded-2xl flex items-center justify-between shadow-md">
                   <div>
                     <p className="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
                       Total Estimated Corpus
@@ -518,47 +757,47 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 2. STATS BAR (Data Integrity & Trust) */}
+      {/* 2. ANIMATED STATS BAR */}
       {/* ══════════════════════════════════════════ */}
       <section className="border-b border-gray-200 bg-white">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-200 text-center">
             <div className="pt-2 md:pt-0">
               <p
-                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] font-mono"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                375+
+                {statsCounter.lessons}+
               </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Curated Lessons</p>
               <p className="text-[11px] text-gray-400 mt-0.5">Zero to corporate valuation</p>
             </div>
             <div className="pt-4 md:pt-0">
               <p
-                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] font-mono"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                8
+                {statsCounter.tracks}
               </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Master Disciplines</p>
               <p className="text-[11px] text-gray-400 mt-0.5">Personal finance to F&O</p>
             </div>
             <div className="pt-4 md:pt-0">
               <p
-                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] font-mono"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                15
+                {statsCounter.labs}
               </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Interactive Labs</p>
               <p className="text-[11px] text-gray-400 mt-0.5">100% risk-free practice</p>
             </div>
             <div className="pt-4 md:pt-0">
               <p
-                className="text-3xl sm:text-4xl font-bold text-[#0A1628]"
+                className="text-3xl sm:text-4xl font-bold text-[#0A1628] font-mono"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                100%
+                {statsCounter.free}%
               </p>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Free Core Access</p>
               <p className="text-[11px] text-gray-400 mt-0.5">No credit card required</p>
@@ -568,7 +807,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 2.5 POLYMERHUB BENCHMARK: WHERE WOULD YOU LIKE TO START TODAY? */}
+      {/* 2.5 POLYMERHUB LAUNCHPAD: WHERE WOULD YOU LIKE TO START TODAY? */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -613,51 +852,65 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 4 Flagship Core Pathway Cards (PolymerHub 2x2 Grid) */}
+          {/* 4 Flagship Core Pathway Cards (2x2 Grid with Embedded Visuals) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {CORE_PATHWAYS.map((path) => (
-              <div
-                key={path.id}
-                className="bg-white rounded-3xl border border-gray-200 p-7 sm:p-8 hover:shadow-lg hover:border-[#0E6163] transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-                      {path.level}
-                    </span>
-                    <span className="text-xs font-semibold text-gray-400">
-                      {path.modules} Modules · {path.lessons} Lessons
-                    </span>
-                  </div>
-
-                  <h3
-                    className="text-xl sm:text-[22px] font-bold text-[#0A1628] group-hover:text-[#0E6163] transition-colors mb-3 leading-snug"
-                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                  >
-                    {path.title}
-                  </h3>
-
-                  {/* Topic Tags */}
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {path.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <Link
-                  href={path.href}
-                  className="w-full py-3.5 bg-[#0A1628] group-hover:bg-[#0E6163] text-white rounded-xl text-sm font-bold transition-all text-center flex items-center justify-center gap-2 shadow-2xs"
+            {CORE_PATHWAYS.map((path) => {
+              const VisualComponent = path.visual;
+              return (
+                <div
+                  key={path.id}
+                  className="bg-white rounded-3xl border border-gray-200 p-7 sm:p-8 hover:shadow-xl hover:border-gray-300 transition-all flex flex-col justify-between group relative overflow-hidden"
                 >
-                  Explore Pathway <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            ))}
+                  {/* Subtle Gradient Atmosphere */}
+                  <div className={`absolute top-0 right-0 w-64 h-36 bg-gradient-to-bl ${path.colorTheme} rounded-bl-full pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                  <div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span
+                        className="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border"
+                        style={{ color: path.accentColor, borderColor: `${path.accentColor}30`, backgroundColor: `${path.accentColor}10` }}
+                      >
+                        {path.level}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-400">
+                        {path.modules} Modules · {path.lessons} Lessons
+                      </span>
+                    </div>
+
+                    <h3
+                      className="text-xl sm:text-[22px] font-bold text-[#0A1628] group-hover:text-[#0E6163] transition-colors mb-3 leading-snug relative z-10"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      {path.title}
+                    </h3>
+
+                    {/* Embedded Vector Graphic */}
+                    <div className="my-4 p-3 rounded-2xl bg-[#F8FAFC] border border-gray-100 relative z-10">
+                      <VisualComponent className="w-full h-14" />
+                    </div>
+
+                    {/* Topic Tags */}
+                    <div className="flex flex-wrap gap-2 mb-6 relative z-10">
+                      {path.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-xs font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Link
+                    href={path.href}
+                    className="w-full py-3.5 bg-[#0A1628] group-hover:bg-[#0E6163] text-white rounded-xl text-sm font-bold transition-all text-center flex items-center justify-center gap-2 shadow-2xs relative z-10"
+                  >
+                    Explore Pathway <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              );
+            })}
           </div>
 
           {/* Assessment Prompt Banner */}
@@ -826,7 +1079,6 @@ export default function HomePage() {
                 key={i}
                 className="bg-white rounded-3xl border border-gray-200 p-8 relative overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between"
               >
-                {/* Massive Faint Background Number */}
                 <div className="absolute top-2 right-4 text-[80px] font-black text-gray-100 select-none pointer-events-none leading-none">
                   {item.step}
                 </div>
@@ -853,8 +1105,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 4.5 POLYMERHUB BENCHMARK: INTERACTIVE LAB SPOTLIGHT */}
-      {/* "Understand Finance Beyond the Textbook" */}
+      {/* 4.5 INTERACTIVE LAB SPOTLIGHT ("Understand Finance Beyond the Textbook") */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#0A1628] text-white border-b border-gray-800">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -1072,7 +1323,7 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 6. THE 8 MASTER DISCIPLINES PREVIEW */}
+      {/* 6. THE 8 MASTER DISCIPLINES (The Living Financial Worlds) */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -1089,7 +1340,7 @@ export default function HomePage() {
                 Eight Master Disciplines. Zero Blindspots.
               </h2>
               <p className="text-[15px] text-gray-500 mt-2 max-w-xl">
-                A progressive learning path from everyday personal finance to institutional corporate valuation.
+                Every domain has a unique visual signature and mathematical reality. Master them all.
               </p>
             </div>
             <Link
@@ -1100,28 +1351,51 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {DISCIPLINES.map((discipline) => (
-              <Link
-                key={discipline.id}
-                href={discipline.href}
-                className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md hover:border-[#0E6163] transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="h-1 w-8 rounded-full mb-4" style={{ backgroundColor: discipline.color }} />
-                  <h3 className="text-[16.5px] font-bold text-[#0A1628] mb-2 group-hover:text-[#0E6163] transition-colors leading-snug">
-                    {discipline.title}
-                  </h3>
-                  <p className="text-[12.5px] text-gray-500 leading-relaxed mb-4 line-clamp-2">
-                    {discipline.tagline}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-[11px] font-semibold text-gray-400">
-                  <span>{discipline.lessons} Lessons</span>
-                  <span>{discipline.levels}</span>
-                </div>
-              </Link>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {DISCIPLINES.map((discipline) => {
+              const VisualComponent = discipline.visual;
+              const Icon = discipline.icon;
+              return (
+                <Link
+                  key={discipline.id}
+                  href={discipline.href}
+                  className="bg-white rounded-3xl border border-gray-200 p-6 hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col justify-between group relative overflow-hidden"
+                >
+                  {/* Background Ambient Gradient per Track */}
+                  <div className={`absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl ${discipline.bgGradient} rounded-bl-full pointer-events-none opacity-40 group-hover:opacity-80 transition-opacity`} />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${discipline.iconBg} shadow-2xs`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[11px] font-bold text-gray-400 font-mono">
+                        {discipline.lessons} Lessons
+                      </span>
+                    </div>
+
+                    <h3 className="text-[18px] font-bold text-[#0A1628] mb-2 group-hover:text-[#0E6163] transition-colors leading-snug">
+                      {discipline.title}
+                    </h3>
+                    <p className="text-[12.5px] text-gray-500 leading-relaxed mb-4 line-clamp-2">
+                      {discipline.tagline}
+                    </p>
+
+                    {/* Embedded Bespoke Financial Vector Graphic */}
+                    <div className="p-2.5 rounded-xl bg-gray-50/70 border border-gray-100 my-2">
+                      <VisualComponent className="w-full h-12" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-[11px] font-semibold text-gray-400 relative z-10">
+                    <span>{discipline.levels}</span>
+                    <span className="text-[#0E6163] font-bold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                      Enter Track <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
         </div>
@@ -1129,7 +1403,6 @@ export default function HomePage() {
 
       {/* ══════════════════════════════════════════ */}
       {/* 7. REAL INDIAN CASE STUDIES SPOTLIGHT */}
-      {/* "The Failure & Recovery Files" */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-[#F9FAFB] border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
@@ -1217,11 +1490,14 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 8. AI MENTOR SPOTLIGHT */}
+      {/* 8. AI MENTOR SPOTLIGHT (Animated Terminal) */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white border-b border-gray-200">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="bg-[#0A1628] rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden">
+            {/* Ambient Pulse Light in Terminal */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
 
               <div className="lg:col-span-6">
@@ -1241,7 +1517,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/ai-tutor"
-                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+                    className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:scale-[1.02]"
                   >
                     Chat with AI Mentor <ArrowRight className="w-4 h-4" />
                   </Link>
@@ -1255,12 +1531,12 @@ export default function HomePage() {
               </div>
 
               {/* Chat Preview Terminal */}
-              <div className="lg:col-span-6 bg-[#0F172A] rounded-2xl border border-white/10 p-5 font-mono text-xs">
+              <div className="lg:col-span-6 bg-[#0F172A] rounded-2xl border border-white/10 p-5 font-mono text-xs shadow-2xl">
                 <div className="flex items-center gap-2 pb-3 border-b border-white/10 text-gray-400 mb-4">
                   <Sparkles className="w-4 h-4 text-emerald-400" />
                   <span className="text-white font-bold">FinanceHub AI Tutor</span>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded ml-auto">
-                    Live Demo
+                  <span className="text-[10px] px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded ml-auto flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Demo
                   </span>
                 </div>
 
@@ -1350,25 +1626,29 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════ */}
-      {/* 10. FINAL CALL TO ACTION */}
+      {/* 10. FINAL CALL TO ACTION (Floating Financial Motifs) */}
       {/* ══════════════════════════════════════════ */}
       <section className="py-20 sm:py-24 bg-white relative isolate">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
           <div className="bg-gradient-to-br from-[#0A1628] via-[#0F2338] to-[#0A1628] rounded-3xl p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-2xl">
+            {/* Ambient Background Motifs */}
+            <div className="absolute top-0 left-1/4 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
             <h2
-              className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-4"
+              className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-4 relative z-10"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
               The best time to understand money<br />
               <span className="text-emerald-400">was 10 years ago.</span>
             </h2>
-            <p className="text-sm sm:text-base text-gray-300 max-w-xl mx-auto mb-8 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-300 max-w-xl mx-auto mb-8 leading-relaxed relative z-10">
               The second best time is right now. 375+ structured lessons, 15 risk-free simulators, and 24/7 AI tutoring. Free forever. No jargon. True clarity.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 relative z-10">
               <Link
                 href="/auth/signup"
-                className="px-8 py-4 bg-[#10B981] hover:bg-[#059669] text-white rounded-xl text-base font-bold transition-all shadow-md flex items-center gap-2"
+                className="px-8 py-4 bg-[#10B981] hover:bg-[#059669] text-white rounded-xl text-base font-bold transition-all shadow-md hover:scale-[1.02] flex items-center gap-2"
               >
                 Start Learning Free Today <ArrowRight className="w-4 h-4" />
               </Link>
